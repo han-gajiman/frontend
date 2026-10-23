@@ -1,122 +1,97 @@
 # Frontend
 
-이 디렉터리는 모바일 서비스의 프론트엔드 앱을 담당하는 Expo + React Native 프로젝트입니다.
+한 가지만(2026 단디톤) 모바일 앱입니다. 소원 하나를 정하고 30일 동안 매일 돌을 쌓으며, 경북 명소를 방문해 이어가는 서비스입니다.
 
-## 프로젝트 개요
-
-- 앱 유형: 모바일 우선(Mobile First) React Native 앱
-- 프레임워크: Expo SDK 57
-- 네비게이션: Expo Router
-- UI 라이브러리: React Native
-- 언어: TypeScript
-- 주요 목적: 서비스 소개 화면, 로그인 진입점, 메인 화면 확장을 위한 기반 구조 마련
-
-현재 구현 상태는 기본 랜딩 페이지 형태이며, 이후에 온보딩, 로그인, 메인 대시보드, 탭 네비게이션 등으로 확장할 수 있도록 구성되어 있습니다.
+- 개발 규칙과 코드 패턴: `CLAUDE.md`
+- 기능·API·ERD 기준 문서: `docs/`
 
 ## 기술 스택
 
-- React Native 0.86.3
-- React 19.2.3
-- Expo 57
-- Expo Router
-- TypeScript 6.0.3
-- React Native Web
+- Expo SDK 57 · React Native 0.86 · React 19 · TypeScript
+- Expo Router (파일 기반 라우팅)
+- NativeWind 4 (Tailwind 3 문법 스타일링)
+- Zustand (상태 관리)
+- Reanimated (애니메이션)
+- react-native-maps (명소 지도, 웹 미지원)
 
-## 폴더 구조
-
-```text
-frontend/
-├── src/
-│   └── app/
-│       ├── _layout.tsx      # 앱 루트 레이아웃
-│       └── index.tsx        # 메인 홈 화면
-├── app.json                 # Expo 앱 설정
-├── babel.config.js          # Babel 설정
-├── eslint.config.js         # ESLint 설정
-├── package.json             # 프로젝트 의존성 및 스크립트
-├── tsconfig.json            # TypeScript 설정
-└── README.md                # 프론트엔드 문서
-```
-
-## 실행 방법
-
-1. 의존성 설치
+## 처음 받았을 때
 
 ```bash
 cd frontend
 npm install
+cp .env.example .env.local
+npx expo start -c
 ```
 
-2. 개발 서버 실행
+`.env.local`은 git에 올라가지 않는 개인 설정 파일입니다. 값은 `.env.example`의 설명을 참고하세요.
+
+## git pull 받은 뒤
+
+라이브러리가 추가됐을 수 있으니 항상 아래를 실행하세요.
 
 ```bash
-npm start
+npm install
+npx expo start -c
 ```
 
-3. 실행 환경 선택
+- `.env.example`에 새 값이 추가됐다면 `.env.local`에도 같이 추가하세요.
+- 설정 파일이나 `.env.local`을 바꾼 뒤에는 `-c`(캐시 삭제)를 꼭 붙여서 다시 실행하세요.
+
+## 화면 보기
+
+`npx expo start -c` 실행 후:
+
+- **폰 (추천)**: Expo Go 앱을 설치하고 터미널의 QR 코드를 찍습니다. PC와 폰이 같은 와이파이에 있어야 합니다.
+- **웹**: 터미널에서 `w`. 지도는 웹에서 목록으로 대신 보입니다.
+- **iOS 시뮬레이터**: 터미널에서 `i`. Xcode 26.4 이상이 필요합니다.
+
+## 목 데이터로 실행하기
+
+백엔드 없이 화면을 확인할 수 있도록 목 서버(`src/api/mockServer.ts`)가 들어 있습니다. 데이터는 메모리에만 있어서 앱을 새로 켜면 초기화됩니다.
+
+`.env.local` 설정:
+
+| 값 | 설명 |
+| --- | --- |
+| `EXPO_PUBLIC_USE_MOCK=true` | 목 서버 사용 (`false`면 `EXPO_PUBLIC_API_URL`의 실제 서버) |
+| `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
+| `EXPO_PUBLIC_DEMO=true` | 돌탑 화면에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
+
+## 현재 화면
+
+| 화면 | 파일 | 기능 ID |
+| --- | --- | --- |
+| 로그인 | `src/app/login.tsx` | AUTH-01 (지금은 목 로그인) |
+| 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
+| 홈 | `src/app/index.tsx` | HOME-01 |
+| 소원 적기 → 명소 고르기 → 다짐 확인 | `src/app/wish/` | WISH-01, SPOT-01, WISH-03 |
+| 돌탑 | `src/app/tower.tsx` | STONE-01, STONE-02, DEMO-01 |
+| 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
+| 모아보기 | `src/app/collection.tsx` | TOWER-03 |
+| 명소 지도 | `src/app/spots.tsx` | SPOT-02 |
+| 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
+
+아직 없는 화면(P1): 방문 인증·엽서, 친구, 알림함, AI 실천 목표 추천
+
+## 폴더 구조
+
+```text
+src/
+├── app/          화면(라우트). 파일 하나 = 화면 하나, _layout.tsx에서 로그인 상태별 접근 제어
+├── features/     도메인별 types.ts(API 타입) · api.ts(API 함수) · components/
+│   ├── auth/  user/  wish/  stone/  spot/  demo/
+├── shared/       공통 컴포넌트(Screen, Button, TextField, ScreenState)와 훅(useApi, useSubmit)
+├── api/          API 클라이언트(client.ts), 목 서버(mock.ts, mockServer.ts)
+└── global.css    NativeWind 진입점
+```
+
+## 스크립트
 
 ```bash
-npm run android
-npm run ios
-npm run web
-```
-4. 실행 방법
-- 모바일 환경 구동 시 터미널에 생성 된 qr코드 스캔
-- EXPO GO 모바일 앱 다운로드 후 PC와 모바일을 같은 와이파이에 연결
-- web환경에서 구동 시 바로 실행 가능
-
-## 스크립트 설명
-
-```json
-{
-  "start": "expo start",
-  "android": "expo start --android",
-  "ios": "expo start --ios",
-  "web": "expo start --web",
-  "lint": "expo lint"
-}
+npx expo start -c      # 개발 서버 (캐시 삭제)
+npx expo lint          # 린트
+npx tsc --noEmit       # 타입 검사
+npx expo install 패키지  # 라이브러리 추가 (npm install 대신, SDK 호환 버전으로 설치)
 ```
 
-- `npm start`: Expo 개발 서버 실행
-- `npm run android`: Android 에뮬레이터/디바이스 연결 실행
-- `npm run ios`: iOS 시뮬레이터 실행
-- `npm run web`: 웹 브라우저에서 테스트
-- `npm run lint`: 코드 린트 검사
-
-## 현재 화면 구성
-
-`src/app/index.tsx`에는 다음 내용을 중심으로 한 기본 화면이 구현되어 있습니다.
-
-- 상단 Hero 영역
-- 서비스 소개 문구
-- 주요 기능 카드
-- CTA 버튼
-- 모바일 첫 UI 디자인
-
-이 화면은 이후에 실제 비즈니스 기능과 연결되어 다음 화면으로 확장될 수 있습니다.
-
-- 온보딩 화면
-- 로그인/회원가입 화면
-- 메인 대시보드
-- 알림/설정/마이페이지
-- 탭 기반 네비게이션
-
-## 개발 원칙
-
-- 모바일 우선 UX 설계
-- Expo Router 기반 화면 구조 유지
-- 화면 단위 코드는 `src/app/` 아래에 구성
-- 공통 컴포넌트, 훅, 유틸은 별도 디렉터리로 분리 가능
-- 네이티브 코드 수정은 `ios/`, `android/` 직접 수정 대신 Expo 설정을 통해 처리
-
-## 다음 단계 제안
-
-1. 로그인/회원가입 화면 추가
-2. 하단 탭 네비게이션 구성
-3. API 연동용 서비스 레이어 구축
-4. 사용자 상태 관리 구조 추가
-5. 실제 서비스 흐름에 맞는 페이지 설계
-
-## 참고
-
-본 프로젝트는 백엔드와 함께 동작하는 전체 서비스 구조에서 프론트엔드 진입점 역할을 수행합니다. 현재는 초기 앱 시안과 구조 설계 단계이며, 이후 기능 구현을 통해 실제 사용자 플로우를 완성해 나가면 됩니다.
+작업을 마치기 전에 린트와 타입 검사를 실행하세요.
