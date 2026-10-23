@@ -1,234 +1,92 @@
-import { StatusBar } from 'expo-status-bar';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
 
+import { getCurrentWish } from '@/features/wish/api';
+import type { CurrentWish } from '@/features/wish/types';
+import { Button } from '@/shared/components/Button';
+import { Screen } from '@/shared/components/Screen';
+import { AsyncContent, EmptyState } from '@/shared/components/ScreenState';
+import { useApi } from '@/shared/hooks/useApi';
+
+// HOME-01 홈: 진행 중 돌탑이 있으면 요약, 없으면 빈 홈
 export default function HomeScreen() {
+  const state = useApi(getCurrentWish);
+
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      <StatusBar style="light" />
-
-      <View style={styles.backgroundGlowTop} />
-      <View style={styles.backgroundGlowBottom} />
-
-      <View style={styles.hero}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>MOBILE FIRST</Text>
-        </View>
-
-        <Text style={styles.title}>한가지만의 모바일 경험을 시작합니다.</Text>
-        <Text style={styles.subtitle}>
-          Expo Router 기반의 첫 화면입니다. 바로 서비스 소개, 로그인, 기능 진입점으로 확장할 수 있게
-          설계했습니다.
-        </Text>
-
-        <View style={styles.metricsRow}>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>57</Text>
-            <Text style={styles.metricLabel}>Expo SDK</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>TS</Text>
-            <Text style={styles.metricLabel}>TypeScript</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>RN</Text>
-            <Text style={styles.metricLabel}>React Native</Text>
-          </View>
-        </View>
-
-        <View style={styles.actions}>
-          <Pressable style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>지금 시작하기</Text>
-          </Pressable>
-          <Pressable style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>앱 둘러보기</Text>
-          </Pressable>
+    <Screen scroll={false}>
+      <View className="h-12 flex-row items-center justify-between px-6">
+        <Text className="text-lg font-bold text-gray-900">한 가지만</Text>
+        <View className="flex-row gap-4">
+          <HeaderLink label="명소" onPress={() => router.push('/spots')} />
+          <HeaderLink label="모아보기" onPress={() => router.push('/collection')} />
+          <HeaderLink label="내 정보" onPress={() => router.push('/me')} />
+          {/* TODO(NOTI-01): 알림함 진입점 */}
         </View>
       </View>
 
-      <View style={styles.previewCard}>
-        <Text style={styles.sectionTitle}>오늘부터 만들 수 있는 화면</Text>
-
-        <View style={styles.featureRow}>
-          <View style={styles.dot} />
-          <View style={styles.featureTextBlock}>
-            <Text style={styles.featureTitle}>온보딩</Text>
-            <Text style={styles.featureDescription}>첫 방문 사용자를 위한 소개와 회원가입 진입점</Text>
-          </View>
-        </View>
-
-        <View style={styles.featureRow}>
-          <View style={styles.dot} />
-          <View style={styles.featureTextBlock}>
-            <Text style={styles.featureTitle}>메인 대시보드</Text>
-            <Text style={styles.featureDescription}>핵심 콘텐츠와 빠른 액션을 보여주는 중심 화면</Text>
-          </View>
-        </View>
-
-        <View style={styles.featureRow}>
-          <View style={styles.dot} />
-          <View style={styles.featureTextBlock}>
-            <Text style={styles.featureTitle}>탭 네비게이션</Text>
-            <Text style={styles.featureDescription}>홈, 검색, 즐겨찾기 같은 주요 진입점을 분리</Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      <AsyncContent
+        state={state}
+        isEmpty={(wish) => wish === null}
+        empty={
+          <EmptyState
+            title="아직 쌓고 있는 돌탑이 없어요"
+            description="소원 하나를 정하고 30일 동안 매일 돌을 쌓아 보세요."
+            actionLabel="새 소원 시작하기"
+            onAction={() => router.push('/wish/new')}
+          />
+        }>
+        {(wish) => <TowerSummary wish={wish!} />}
+      </AsyncContent>
+    </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#07111f',
-    padding: 20,
-    paddingTop: 56,
-    paddingBottom: 36,
-    position: 'relative',
-  },
-  backgroundGlowTop: {
-    position: 'absolute',
-    top: -70,
-    right: -40,
-    width: 220,
-    height: 220,
-    borderRadius: 999,
-    backgroundColor: 'rgba(90, 166, 255, 0.18)',
-  },
-  backgroundGlowBottom: {
-    position: 'absolute',
-    bottom: 60,
-    left: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 999,
-    backgroundColor: 'rgba(81, 215, 182, 0.12)',
-  },
-  hero: {
-    gap: 18,
-    marginBottom: 16,
-    padding: 24,
-    borderRadius: 32,
-    backgroundColor: 'rgba(16, 35, 61, 0.96)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(139, 193, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(139, 193, 255, 0.2)',
-  },
-  badgeText: {
-    color: '#8bc1ff',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 2,
-  },
-  title: {
-    color: '#f7fbff',
-    fontSize: 34,
-    lineHeight: 42,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: 'rgba(247,251,255,0.8)',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  metricCard: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
-    alignItems: 'center',
-  },
-  metricValue: {
-    color: '#f7fbff',
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  metricLabel: {
-    color: 'rgba(247,251,255,0.68)',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  primaryButton: {
-    backgroundColor: '#8bc1ff',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 999,
-  },
-  primaryButtonText: {
-    color: '#07111f',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  secondaryButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  secondaryButtonText: {
-    color: '#f7fbff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  previewCard: {
-    gap: 16,
-    padding: 20,
-    borderRadius: 28,
-    backgroundColor: 'rgba(13, 26, 45, 0.95)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  sectionTitle: {
-    color: '#f7fbff',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 999,
-    marginTop: 4,
-    backgroundColor: '#8bc1ff',
-  },
-  featureTextBlock: {
-    flex: 1,
-    gap: 4,
-  },
-  featureTitle: {
-    color: '#f7fbff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  featureDescription: {
-    color: 'rgba(247,251,255,0.72)',
-    fontSize: 13,
-    lineHeight: 20,
-  },
-});
+function TowerSummary({ wish }: { wish: CurrentWish }) {
+  const completed = wish.status === 'COMPLETED';
+
+  return (
+    <View className="flex-1 justify-between px-6 pb-4">
+      <View className="gap-4 pt-6">
+        <Text className="text-sm text-gray-500">{wish.spot.name}</Text>
+        <Text className="text-2xl font-bold text-gray-900">{wish.content}</Text>
+        <Text className="text-gray-600">{wish.actionGoal}</Text>
+
+        <View className="mt-4 flex-row gap-3">
+          <Stat value={wish.stoneCount} label="쌓은 돌" />
+          <Stat value={wish.daysLeft} label="남은 날" />
+        </View>
+
+        <Text className="text-center text-gray-500">
+          {completed
+            ? '30일이 지났어요. 돌탑을 돌아볼 시간이에요.'
+            : wish.stonedToday
+              ? '오늘의 돌을 쌓았어요'
+              : '오늘의 돌을 아직 쌓지 않았어요'}
+        </Text>
+      </View>
+
+      {completed ? (
+        <Button label="완성 회고하기" onPress={() => router.push('/reflection')} />
+      ) : (
+        <Button label="돌탑 보러 가기" onPress={() => router.push('/tower')} />
+      )}
+    </View>
+  );
+}
+
+function HeaderLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={8}>
+      <Text className="text-gray-500">{label}</Text>
+    </Pressable>
+  );
+}
+
+function Stat({ value, label }: { value: number; label: string }) {
+  return (
+    <View className="flex-1 rounded-2xl bg-gray-100 p-4">
+      <Text className="text-3xl font-bold text-gray-900">{value}</Text>
+      <Text className="text-gray-500">{label}</Text>
+    </View>
+  );
+}

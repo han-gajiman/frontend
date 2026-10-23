@@ -30,6 +30,18 @@ src/
 - `src/app/` 안에는 화면 파일만 두고, 컴포넌트·훅·유틸은 밖에 둡니다.
 - 백엔드 도메인 구조와 이름을 맞추면 소통이 쉽습니다.
 - API 주소는 `.env.example`을 `.env.local`로 복사해서 `EXPO_PUBLIC_API_URL`로 설정합니다. API 호출은 `src/api/client.ts`의 `apiRequest`를 쓰고, 실패하면 `ApiError.code`(서버 에러 코드 또는 `NETWORK_ERROR`)로 분기합니다.
+- 경로는 `@/`로 씁니다. (`@/` = `src/`)
+- 스타일은 NativeWind `className`으로 씁니다. (Tailwind v3 문법, 설정: `tailwind.config.js`)
+
+## API·화면 상태 패턴 (예시: `features/wish/`, `src/app/tower.tsx`)
+- 도메인별로 `features/<도메인>/types.ts`(API 명세서 타입), `api.ts`(API 함수)를 둡니다. 여러 화면이 공유하는 입력값은 Zustand 스토어(예: `wish/draftStore.ts`)에 둡니다.
+- `api.ts` 함수는 `USE_MOCK`이면 `mockCall(() => mockServer.xxx())`를, 아니면 `apiRequest`를 반환합니다. 화면 코드는 목인지 실제인지 몰라도 됩니다.
+- 목 서버(`src/api/mockServer.ts`)는 메모리에서 실제 서버처럼 동작합니다(등록·돌 쌓기·시간 이동 반영, 명세서 에러 코드 반환). 새 API를 추가하면 여기에도 같이 추가하세요.
+- 불러오기: `useApi(API 함수)` + `<AsyncContent>`로 감싸면 로딩·에러·오프라인·빈 상태가 자동 처리됩니다. 다른 화면에서 돌아오면 다시 불러옵니다.
+- 버튼 요청: `useSubmit(API 함수)`의 `run()`은 `{ ok, data }`를 돌려줍니다. 실패하면 `<ErrorText error={error} />`로 보여주세요.
+- 화면 틀은 `<Screen title showBack footer>`, 버튼은 `<Button>`, 입력은 `<TextField>`를 씁니다. (`src/shared/components/`)
+- 로그인·온보딩 여부에 따른 화면 접근은 `src/app/_layout.tsx`의 `Stack.Protected`가 처리합니다. 새 화면은 여기에 등록하세요.
+- 상태 확인: `.env.local`의 `EXPO_PUBLIC_MOCK_SCENARIO`를 `normal | empty | error | offline | slow`로 바꾸고 Metro를 재시작(`npx expo start -c`)하세요. 시연 경로를 처음부터 보려면 `empty`, 시간 이동 버튼은 `EXPO_PUBLIC_DEMO=true`.
 
 ## 반드시 지킬 규칙
 1. **날짜·시간 판단은 서버 기준**: "오늘 돌을 쌓았는지", "30일이 지났는지"는 클라이언트 시계로 계산하지 말고 서버 응답을 쓰세요. 시연용 시간 가속이 서버 시계를 바꾸기 때문에, 클라이언트 시간을 쓰면 화면이 어긋납니다.
@@ -60,7 +72,8 @@ src/
 ## 미결정 항목 🟡 — 임의 결정 금지
 - 다짐 기간 2주의 의미, 진행 중 돌탑 개수, 익명 소원지기 방식, 명소 카테고리 기준
 - 방문 인증·엽서의 P0 승격 여부, "소원 좁히기" 단계 유지 여부
-- 애니메이션 라이브러리, `src/app/` 밖의 폴더 구조 확정, 브랜치·커밋 규칙
+- `src/app/` 밖의 폴더 구조 확정, 브랜치·커밋 규칙
+- (결정됨 10/23) 애니메이션은 Reanimated. 웹은 spring 미지원이라 `springify()` 대신 시간 기반 프리셋을 씁니다. `Animated.View`에는 NativeWind `className`이 적용되지 않으니 `style`로 쓰세요.
 
 ## 작업 방식
 - 코드를 쓰기 전에 관련 문서를 읽고, 이해한 내용과 계획을 먼저 짧게 알려주세요.
