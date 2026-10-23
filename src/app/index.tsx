@@ -22,7 +22,7 @@ export default function HomeScreen() {
 
         <View style={styles.metricsRow}>
           <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>58</Text>
+            <Text style={styles.metricValue}>57</Text>
             <Text style={styles.metricLabel}>Expo SDK</Text>
           </View>
           <View style={styles.metricCard}>
