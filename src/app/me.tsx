@@ -51,7 +51,7 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
       <View className="gap-6 pt-2">
         <View className="gap-1">
           <Text className="text-2xl font-bold text-gray-900">{me.nickname}</Text>
-          <Text className="text-gray-500">{me.provider === 'KAKAO' ? '카카오' : 'Apple'} 계정으로 로그인</Text>
+          <Text className="text-gray-500">{me.provider === 'KAKAO' ? '카카오' : 'Google'} 계정으로 로그인</Text>
         </View>
 
         {me.journey && (

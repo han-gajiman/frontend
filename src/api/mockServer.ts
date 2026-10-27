@@ -2,7 +2,7 @@
 // 실제 서버처럼 "오늘", "30일 경과" 판단을 여기서 하고, 화면은 응답 값만 씁니다.
 // 응답·에러 형식은 docs/API명세서.md를 따릅니다.
 
-import type { LoginResponse, OnboardingRequest } from '@/features/auth/types';
+import type { LoginResponse, OnboardingRequest, SocialProvider } from '@/features/auth/types';
 import type { Spot } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneType } from '@/features/stone/types';
 import type {
@@ -84,6 +84,7 @@ const spots: Spot[] = [
 const emptyDb = () => ({
   dayOffset: 0, // 시연용 시간 이동 (DEMO-01)
   onboarded: false,
+  provider: 'KAKAO' as SocialProvider,
   nickname: '',
   locationAgreed: false,
   journeyStartedOn: null as string | null,
@@ -173,7 +174,8 @@ function findWish(wishId: number) {
 const spotOf = (spotId: number) => spots.find((s) => s.id === spotId)!;
 
 export const mockServer = {
-  login(): LoginResponse {
+  login(provider: SocialProvider): LoginResponse {
+    db.provider = provider;
     return {
       accessToken: 'mock-access-token',
       refreshToken: 'mock-refresh-token',
@@ -197,7 +199,7 @@ export const mockServer = {
       id: 1,
       nickname: db.nickname,
       profileImageUrl: null,
-      provider: 'KAKAO',
+      provider: db.provider,
       agreements: { location: db.locationAgreed },
       hasActiveWish: openWish() !== undefined,
       journey: db.journeyStartedOn
