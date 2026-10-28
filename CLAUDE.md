@@ -9,12 +9,12 @@
 - 일정: 제출 11/20 23:59, 본선 11/21
 
 ## 기술 스택
-React Native · Expo SDK 57 · TypeScript · Expo Router (파일 기반 라우팅, 내부적으로 React Navigation 사용) · Zustand · NativeWind · React Native Maps · Expo Location · Expo Notifications · EAS Build
+React Native 0.88 · Expo SDK 58 · TypeScript · Expo Router (파일 기반 라우팅, 내부적으로 React Navigation 사용) · Zustand · NativeWind · React Native Maps · Expo Location · Expo Notifications · EAS Build
 
 ## 기준 문서 (구현 전에 반드시 읽기)
 - 기능명세서: `docs/기능명세서.md` (원본: Notion "기능명세서"). 화면과 상태의 기준입니다.
 - API 명세서: `docs/API명세서.md` (원본: Notion "API 명세서")
-- Expo 사용법: `AGENTS.md` (Expo는 버전마다 API가 바뀌니 SDK 57 문서 기준으로 확인)
+- Expo 사용법: `AGENTS.md` (Expo는 버전마다 API가 바뀌니 SDK 58 문서 기준으로 확인, 10/28 57 → 58 업그레이드)
 - 디자인: 🟡 Figma 링크 (미정)
 - 문서끼리 충돌하면 개발자에게 알리세요. 구버전 "MVP 범위 & 기능 명세" 페이지(10/17 이전)는 참고하지 마세요.
 

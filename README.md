@@ -7,7 +7,7 @@
 
 ## 기술 스택
 
-- Expo SDK 57 · React Native 0.86 · React 19 · TypeScript
+- Expo SDK 58 · React Native 0.88 · React 19 · TypeScript (폰의 Expo Go도 SDK 58 버전이어야 합니다)
 - Expo Router (파일 기반 라우팅)
 - NativeWind 4 (Tailwind 3 문법 스타일링)
 - Zustand (상태 관리)
