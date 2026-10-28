@@ -4,6 +4,7 @@
 
 import type { LoginResponse, OnboardingRequest, SocialProvider } from '@/features/auth/types';
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
+import type { AppNotification, NotificationType } from '@/features/notification/types';
 import type { Spot } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneType } from '@/features/stone/types';
 import type {
@@ -100,6 +101,7 @@ const emptyDb = () => ({
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
   friends: [] as MockFriend[],
+  notifications: [] as AppNotification[], // 최신이 앞
   cheers: {} as Record<number, Cheer[]>, // wishId → 응원 (최신이 앞)
   myInviteCodes: [] as string[],
   acceptedInviteCodes: [] as string[],
@@ -185,13 +187,30 @@ function seed() {
   db.cheers[10] = [
     { cheerId: 902, writerNickname: '지기', isAnonymous: false, message: '오늘도 하나 쌓자!', createdAt: now },
   ];
+  notify('NUDGE', 10, '돌돌이님이 콕 찔렀어요! 오늘의 돌을 쌓아 보세요.');
+  notify('CHEER', 902, '지기님이 응원을 보냈어요.');
+}
+
+// 알림함에 추가 (실제 서버는 이때 푸시도 보냄)
+function notify(type: NotificationType, targetId: number, message: string) {
+  db.notifications.unshift({
+    id: db.nextId++,
+    type,
+    targetId,
+    message,
+    isRead: false,
+    createdAt: new Date().toISOString(),
+  });
 }
 seed();
 
 // 스케줄러(TOWER-01): 기간이 끝난 돌탑을 COMPLETED로 전환
 function runScheduler() {
   for (const wish of db.wishes) {
-    if (wish.status === 'ACTIVE' && wish.endDate < today()) wish.status = 'COMPLETED';
+    if (wish.status === 'ACTIVE' && wish.endDate < today()) {
+      wish.status = 'COMPLETED';
+      notify('TOWER_COMPLETED', wish.id, '30일 돌탑이 완성됐어요');
+    }
   }
 }
 
@@ -415,6 +434,18 @@ export const mockServer = {
     }
     if (friend.lastNudgedOn === today()) throw new ApiError('NUDGE_LIMIT', '오늘은 이미 콕 찔렀어요.', 429);
     friend.lastNudgedOn = today();
+  },
+
+  // --- 알림 (NOTI-01) ---
+
+  getNotifications(): Page<AppNotification> {
+    return { content: db.notifications, page: 0, size: 50, hasNext: false };
+  },
+
+  markNotificationRead(id: number): void {
+    const notification = db.notifications.find((n) => n.id === id);
+    if (!notification) throw new ApiError('NOTIFICATION_NOT_FOUND', '알림을 찾을 수 없어요.', 404);
+    notification.isRead = true;
   },
 
   timeTravel(days: number): { serverNow: string } {

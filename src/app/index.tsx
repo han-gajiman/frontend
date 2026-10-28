@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { usePendingInviteStore } from '@/features/friend/pendingInviteStore';
+import { getNotifications } from '@/features/notification/api';
 import { getCurrentWish } from '@/features/wish/api';
 import type { CurrentWish } from '@/features/wish/types';
 import { Button } from '@/shared/components/Button';
@@ -13,6 +14,9 @@ import { useApi } from '@/shared/hooks/useApi';
 // HOME-01 홈: 진행 중 돌탑이 있으면 요약, 없으면 빈 홈
 export default function HomeScreen() {
   const state = useApi(getCurrentWish);
+  // 알림 점: 최근 알림 중 안 읽은 게 있으면 표시 (화면에 돌아올 때마다 다시 확인)
+  const notifications = useApi(getNotifications);
+  const hasUnread = notifications.data?.content.some((n) => !n.isRead) ?? false;
   const pendingInvite = usePendingInviteStore((s) => s.code);
   const clearPendingInvite = usePendingInviteStore((s) => s.clear);
 
@@ -27,12 +31,12 @@ export default function HomeScreen() {
     <Screen scroll={false}>
       <View className="h-12 flex-row items-center justify-between px-6">
         <Text className="text-lg font-bold text-gray-900">한 가지만</Text>
-        <View className="flex-row gap-4">
+        <View className="flex-row gap-3">
+          <HeaderLink label="알림" onPress={() => router.push('/notifications')} dot={hasUnread} />
           <HeaderLink label="친구" onPress={() => router.push('/friends')} />
           <HeaderLink label="명소" onPress={() => router.push('/spots')} />
           <HeaderLink label="모아보기" onPress={() => router.push('/collection')} />
           <HeaderLink label="내 정보" onPress={() => router.push('/me')} />
-          {/* TODO(NOTI-01): 알림함 진입점 */}
         </View>
       </View>
 
@@ -86,10 +90,11 @@ function TowerSummary({ wish }: { wish: CurrentWish }) {
   );
 }
 
-function HeaderLink({ label, onPress }: { label: string; onPress: () => void }) {
+function HeaderLink({ label, onPress, dot = false }: { label: string; onPress: () => void; dot?: boolean }) {
   return (
-    <Pressable onPress={onPress} hitSlop={8}>
+    <Pressable onPress={onPress} hitSlop={8} accessibilityLabel={dot ? `${label}, 새 알림 있음` : label}>
       <Text className="text-gray-500">{label}</Text>
+      {dot && <View className="absolute -right-1.5 -top-0.5 h-2 w-2 rounded-full bg-red-500" />}
     </Pressable>
   );
 }

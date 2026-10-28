@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { DEMO_ENABLED, timeTravel } from '@/features/demo/api';
 import { createStone } from '@/features/stone/api';
@@ -49,9 +49,14 @@ function Tower({ wish, reload }: { wish: CurrentWish; reload: () => void }) {
   return (
     <View className="flex-1 px-6 pb-4">
       <View className="gap-1 pb-3">
-        <Text className="text-sm text-gray-500">
-          {wish.spot.name} · {wish.dayIndex}일째 · 돌 {wish.stoneCount}/30
-        </Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-sm text-gray-500">
+            {wish.spot.name} · {wish.dayIndex}일째 · 돌 {wish.stoneCount}/30
+          </Text>
+          <Pressable onPress={() => router.push('/cheers')} hitSlop={8}>
+            <Text className="text-sm text-gray-500 underline">받은 응원</Text>
+          </Pressable>
+        </View>
         <Text className="text-xl font-bold text-gray-900">{wish.content}</Text>
       </View>
 

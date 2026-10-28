@@ -90,8 +90,10 @@ EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원,
 | 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |
 | 친구 돌탑 (응원, 콕 찌르기) | `src/app/friends/[friendId].tsx` | FRIEND-02, FRIEND-03, FRIEND-04 |
 | 초대 링크로 열기 (로그인 전이면 로그인 후 이어서) | `src/app/invite/[code].tsx` | FRIEND-01 |
+| 알림함 (안 읽은 알림 점, 누르면 관련 화면으로) | `src/app/notifications.tsx` | NOTI-01 |
+| 받은 응원 (내 진행 중 돌탑) | `src/app/cheers.tsx` | FRIEND-03 |
 
-아직 없는 화면(P1): 방문 인증·엽서, 알림함, AI 실천 목표 추천
+아직 없는 화면(P1): 방문 인증·엽서, AI 실천 목표 추천. 푸시 알림 받기(기기 푸시 토큰 등록)는 개발 빌드에서 추가 예정
 
 ## 폴더 구조
 

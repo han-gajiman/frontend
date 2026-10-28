@@ -59,6 +59,7 @@
 403 ONBOARDING_REQUIRED        온보딩 미완료
 400 REQUIRED_AGREEMENT_MISSING 필수 약관 미동의
 403 LOCATION_CONSENT_REQUIRED  위치정보 미동의 상태에서 방문 인증
+404 WISH_NOT_FOUND             없는 돌탑
 409 WISH_ALREADY_ACTIVE        진행 중 돌탑이 있는데 새로 등록
 403 WISH_NOT_OWNER             본인 돌탑 아님
 400 WISH_NOT_ACTIVE            기간 끝난 돌탑에 돌 쌓기
@@ -69,9 +70,12 @@
 400 FRIEND_SELF_INVITE         본인 초대 수락
 409 FRIEND_ALREADY             이미 친구
 404 FRIEND_INVITE_NOT_FOUND    잘못되거나 만료된 초대 코드
+404 FRIEND_NOT_FOUND           친구가 아닌 회원(본인 포함)에게 콕 찌르기
 403 CHEER_NOT_ALLOWED          친구 아님 / 비공개 돌탑
 400 CHEER_TOO_LONG             응원 글자 수 초과
+400 NUDGE_NOT_ALLOWED          친구 공개 진행 중 돌탑이 없거나 오늘 이미 돌을 쌓은 친구에게 콕 찌르기
 429 NUDGE_LIMIT                오늘 이미 콕 찌름
+404 NOTIFICATION_NOT_FOUND     없거나 남의 알림 읽음 처리
 429 AI_RATE_LIMIT              AI 추천 하루 호출 횟수 초과
 // 공통 (10/28 추가)
 400 INVALID_INPUT              요청 값 검증 실패, JSON·Content-Type 오류, 파라미터 누락·타입 오류
@@ -208,14 +212,19 @@
   "page": 0, "size": 20, "hasNext": false }
 
 // POST /wishes/{wishId}/cheers   친구(친구 공개 돌탑) 또는 익명 소원지기만, 작성 시 푸시
+// 진행 중(ACTIVE) 돌탑만. 본인 돌탑·친구 아님·비공개 → 403 CHEER_NOT_ALLOWED, 끝난 돌탑 → 400 WISH_NOT_ACTIVE
+// 앞뒤 공백 제거 후 1~100자 (빈 문자열 400 INVALID_INPUT, 초과 400 CHEER_TOO_LONG)
 { "message": "오늘도 하나 쌓자!" }   → 201 { "cheerId": 7 }
 
-// GET /wishes/{wishId}/cheers?page=0&size=20 📄   익명이면 writerNickname null
+// GET /wishes/{wishId}/cheers?page=0&size=20 📄   익명이면 writerNickname null, 최신순
+// 돌탑 주인 또는 친구 공개 돌탑의 친구만 (그 외 403 CHEER_NOT_ALLOWED)
 { "content": [ { "cheerId": 7, "writerNickname": "지기", "isAnonymous": false,
                  "message": "오늘도 하나 쌓자!", "createdAt": "..." } ],
   "page": 0, "size": 20, "hasNext": false }
 
-// POST /friends/{friendId}/nudge   같은 친구 하루 1회 → 204
+// POST /friends/{friendId}/nudge   같은 친구 하루 1회(KST) → 204
+// 친구 공개 진행 중 돌탑이 있고 오늘 아직 안 쌓은 친구만. 받는 사람 알림함에 NUDGE 알림 저장
+// 친구 아님 404 FRIEND_NOT_FOUND, 대상 아님 400 NUDGE_NOT_ALLOWED, 오늘 이미 찌름 429 NUDGE_LIMIT
 ```
 
 ### 🔔 Notification & Demo
@@ -226,7 +235,10 @@
                  "message": "30일 돌탑이 완성됐어요", "isRead": false, "createdAt": "..." } ],
   "page": 0, "size": 20, "hasNext": false }
 
-// PATCH /notifications/{id}/read   → 204
+// PATCH /notifications/{id}/read   → 204   (없거나 남의 알림 404 NOTIFICATION_NOT_FOUND, 이미 읽었어도 204)
+
+// 푸시 (10/28): 알림이 저장·커밋된 뒤 받는 사람의 Expo 푸시 토큰(PUT /users/me/push-token)으로 발송
+// { title: "한 가지만", body: 알림 message, data: { type, targetId } }. 토큰이 없으면 알림함에만 저장
 
 // POST /demo/time-travel   서버 시계 N일 이동 후 완성 스케줄러 즉시 실행 (시연 프로필 전용)
 { "days": 30 }   → { "serverNow": "2026-11-21T09:00:00+09:00" }
