@@ -57,11 +57,27 @@ npx expo start -c
 | `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
 | `EXPO_PUBLIC_DEMO=true` | 돌탑 화면에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
 
+## 실제 서버로 실행하기
+
+로컬 백엔드를 `local` 프로필로 켜고(`backend/README.md`), `.env.local`을 이렇게 바꾼 뒤 `npx expo start -c`로 다시 실행합니다.
+
+```
+EXPO_PUBLIC_USE_MOCK=false
+EXPO_PUBLIC_API_URL=http://localhost:8080/api/v1   # 폰에서는 localhost 대신 PC의 IP
+EXPO_PUBLIC_DEV_LOGIN=true                         # 로그인 화면에 "개발용 로그인" 버튼
+EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원, 바꾸면 새 회원
+```
+
+- 카카오·Google SDK 연동 전까지는 **개발용 로그인** 버튼으로 실제 서버에 로그인합니다.
+- 로그인 상태는 기기에 저장되어 앱을 다시 켜도 유지됩니다. (폰: SecureStore, 웹: localStorage)
+- Access Token이 만료되면 자동으로 재발급받아 요청을 다시 보내고, 재발급도 실패하면 로그인 화면으로 갑니다.
+- Expo 개발 서버가 8081 포트를 쓰므로, 백엔드는 8080(기본) 또는 8082처럼 다른 포트로 켜세요.
+
 ## 현재 화면
 
 | 화면 | 파일 | 기능 ID |
 | --- | --- | --- |
-| 로그인 | `src/app/login.tsx` | AUTH-01 (지금은 목 로그인) |
+| 로그인 | `src/app/login.tsx` | AUTH-01 (카카오·Google은 SDK 연동 전, 개발용 로그인으로 실제 서버 연결), AUTH-03 (토큰 저장·자동 재발급) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
 | 홈 | `src/app/index.tsx` | HOME-01 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 | `src/app/wish/` | WISH-01, SPOT-01, WISH-03 |

@@ -1,5 +1,5 @@
 // 백엔드 공통 응답 형식(docs/API명세서.md)에 맞춘 API 클라이언트.
-// 토큰 자동 재발급(AUTH-03)은 로그인 구현 때 추가합니다.
+// Access Token이 만료되면(401 AUTH_INVALID_TOKEN) Refresh Token으로 재발급받아 한 번 다시 보냅니다(AUTH-03).
 
 import { useAuthStore } from '@/features/auth/store';
 
@@ -35,9 +35,8 @@ type RequestOptions = {
   body?: unknown;
 };
 
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function send<T>(path: string, options: RequestOptions, accessToken: string | null): Promise<T> {
   const { method = 'GET', body } = options;
-  const accessToken = useAuthStore.getState().accessToken;
 
   let response: Response;
   try {
@@ -71,4 +70,44 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   return envelope.data;
+}
+
+// 동시에 여러 요청이 만료돼도 재발급은 한 번만 합니다.
+let refreshing: Promise<void> | null = null;
+
+async function refreshTokens(): Promise<void> {
+  const { refreshToken, updateTokens, signOut } = useAuthStore.getState();
+  if (!refreshToken) throw new ApiError('AUTH_INVALID_REFRESH_TOKEN', '다시 로그인해 주세요.', 401);
+
+  try {
+    const tokens = await send<{ accessToken: string; refreshToken: string }>(
+      '/auth/refresh',
+      { method: 'POST', body: { refreshToken } },
+      null,
+    );
+    updateTokens(tokens);
+  } catch (e) {
+    // 인터넷 문제가 아니라 Refresh Token 자체가 무효·만료면 로그아웃 → 로그인 화면으로
+    if (!(e instanceof ApiError) || e.code !== 'NETWORK_ERROR') signOut();
+    throw e;
+  }
+}
+
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  try {
+    return await send<T>(path, options, useAuthStore.getState().accessToken);
+  } catch (e) {
+    const canRefresh =
+      e instanceof ApiError &&
+      e.code === 'AUTH_INVALID_TOKEN' &&
+      !path.startsWith('/auth/') &&
+      useAuthStore.getState().refreshToken !== null;
+    if (!canRefresh) throw e;
+
+    refreshing ??= refreshTokens().finally(() => {
+      refreshing = null;
+    });
+    await refreshing;
+    return send<T>(path, options, useAuthStore.getState().accessToken);
+  }
 }

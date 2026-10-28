@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { loginWithGoogle, loginWithKakao } from '@/features/auth/api';
+import { DEV_LOGIN_ENABLED, loginForDev, loginWithGoogle, loginWithKakao } from '@/features/auth/api';
 import { useAuthStore } from '@/features/auth/store';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -12,7 +12,8 @@ export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
   const kakao = useSubmit(loginWithKakao);
   const google = useSubmit(loginWithGoogle);
-  const submitting = kakao.submitting || google.submitting;
+  const dev = useSubmit(loginForDev);
+  const submitting = kakao.submitting || google.submitting || dev.submitting;
 
   const handleKakao = async () => {
     // TODO(AUTH-01): 카카오 SDK로 받은 토큰 전달 (목 모드에서는 아무 값이나 됨)
@@ -26,12 +27,26 @@ export default function LoginScreen() {
     if (result.ok) signIn(result.data);
   };
 
+  const handleDev = async () => {
+    const result = await dev.run();
+    if (result.ok) signIn(result.data);
+  };
+
   return (
     <Screen
       scroll={false}
       footer={
         <>
-          <ErrorText error={kakao.error ?? google.error} />
+          <ErrorText error={kakao.error ?? google.error ?? dev.error} />
+          {DEV_LOGIN_ENABLED && (
+            <Button
+              label="개발용 로그인 (로컬 서버)"
+              variant="secondary"
+              onPress={handleDev}
+              loading={dev.submitting}
+              disabled={submitting}
+            />
+          )}
           <Button label="카카오로 시작하기" onPress={handleKakao} loading={kakao.submitting} disabled={submitting} />
           <Button
             label="Google로 시작하기"

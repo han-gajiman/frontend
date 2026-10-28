@@ -22,6 +22,15 @@ export function loginWithGoogle(idToken: string): Promise<LoginResponse> {
   return apiRequest<LoginResponse>('/auth/google', { method: 'POST', body: { idToken } });
 }
 
+// 로컬 개발용 로그인 버튼 표시 여부. 실제 서버(USE_MOCK=false) + EXPO_PUBLIC_DEV_LOGIN=true일 때만
+export const DEV_LOGIN_ENABLED = !USE_MOCK && process.env.EXPO_PUBLIC_DEV_LOGIN === 'true';
+
+// POST /dev/login — 백엔드 local 프로필 전용. 카카오·Google SDK 없이 실제 토큰을 받습니다.
+export function loginForDev(): Promise<LoginResponse> {
+  const devKey = process.env.EXPO_PUBLIC_DEV_LOGIN_KEY ?? 'me';
+  return apiRequest<LoginResponse>('/dev/login', { method: 'POST', body: { devKey } });
+}
+
 // POST /users/me/onboarding
 export function completeOnboarding(body: OnboardingRequest): Promise<void> {
   if (USE_MOCK) {
