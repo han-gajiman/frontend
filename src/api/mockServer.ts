@@ -3,6 +3,7 @@
 // 응답·에러 형식은 docs/API명세서.md를 따릅니다.
 
 import type { LoginResponse, OnboardingRequest, SocialProvider } from '@/features/auth/types';
+import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { Spot } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneType } from '@/features/stone/types';
 import type {
@@ -17,7 +18,7 @@ import type {
 } from '@/features/wish/types';
 import type { Me } from '@/features/user/types';
 
-import { ApiError } from './client';
+import { ApiError, type Page } from './client';
 import { MOCK_SCENARIO } from './mock';
 
 const TOWER_DAYS = 30;
@@ -81,6 +82,14 @@ const spots: Spot[] = [
   },
 ];
 
+// 친구와 친구의 돌탑 (다른 회원 데이터라 내 wishes와 따로 둡니다)
+type MockFriend = {
+  id: number;
+  nickname: string;
+  wish: { id: number; content: string; stoneCount: number; stonedToday: boolean; visibility: Visibility } | null;
+  lastNudgedOn: string | null;
+};
+
 const emptyDb = () => ({
   dayOffset: 0, // 시연용 시간 이동 (DEMO-01)
   onboarded: false,
@@ -90,6 +99,10 @@ const emptyDb = () => ({
   journeyStartedOn: null as string | null,
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
+  friends: [] as MockFriend[],
+  cheers: {} as Record<number, Cheer[]>, // wishId → 응원 (최신이 앞)
+  myInviteCodes: [] as string[],
+  acceptedInviteCodes: [] as string[],
   nextId: 100,
 });
 
@@ -148,6 +161,30 @@ function seed() {
   );
   for (let i = 0; i < 27; i++) addStone(1, addDays(pastStart, i), null);
   for (let i = 0; i < 12; i++) addStone(10, addDays(currentStart, i), i % 2 ? '영어 단어 20개 외움' : null);
+
+  // 친구 3명: 콕 찌를 수 있는 친구 / 오늘 이미 쌓은 친구 / 비공개 돌탑 친구
+  db.friends.push(
+    {
+      id: 201,
+      nickname: '지기',
+      wish: { id: 501, content: '토익 800점 넘기', stoneCount: 8, stonedToday: false, visibility: 'FRIENDS' },
+      lastNudgedOn: null,
+    },
+    {
+      id: 202,
+      nickname: '돌돌이',
+      wish: { id: 502, content: '매일 30분 달리기', stoneCount: 20, stonedToday: true, visibility: 'FRIENDS' },
+      lastNudgedOn: null,
+    },
+    { id: 203, nickname: '비밀이', wish: null, lastNudgedOn: null },
+  );
+  const now = new Date().toISOString();
+  db.cheers[501] = [
+    { cheerId: 901, writerNickname: '돌돌이', isAnonymous: false, message: '토익 화이팅!', createdAt: now },
+  ];
+  db.cheers[10] = [
+    { cheerId: 902, writerNickname: '지기', isAnonymous: false, message: '오늘도 하나 쌓자!', createdAt: now },
+  ];
 }
 seed();
 
@@ -302,6 +339,82 @@ export const mockServer = {
 
   getSpots(category?: string): Spot[] {
     return category ? spots.filter((s) => s.category === category) : spots;
+  },
+
+  // --- 친구 (FRIEND-01~04) ---
+
+  createInvite(): Invite {
+    const code = Math.random().toString(36).slice(2, 10).padEnd(8, 'x');
+    db.myInviteCodes.push(code);
+    return {
+      inviteCode: code,
+      inviteUrl: `https://hangajiman.app/invite/${code}`,
+      expiresAt: `${addDays(today(), 7)}T09:00:00+09:00`,
+    };
+  },
+
+  // 목 모드에서는 8자리 영문·숫자 코드면 "새 친구"가 초대한 것으로 칩니다.
+  acceptInvite(code: string): AcceptedFriend {
+    if (!/^[A-Za-z0-9]{8}$/.test(code)) {
+      throw new ApiError('FRIEND_INVITE_NOT_FOUND', '잘못되었거나 만료된 초대예요.', 404);
+    }
+    if (db.myInviteCodes.includes(code)) {
+      throw new ApiError('FRIEND_SELF_INVITE', '본인의 초대는 수락할 수 없어요.', 400);
+    }
+    if (db.acceptedInviteCodes.includes(code)) {
+      throw new ApiError('FRIEND_ALREADY', '이미 친구예요.', 409);
+    }
+    db.acceptedInviteCodes.push(code);
+    const friend: MockFriend = { id: db.nextId++, nickname: `새 친구 ${code.slice(0, 3)}`, wish: null, lastNudgedOn: null };
+    db.friends.unshift(friend);
+    return { friendId: friend.id, nickname: friend.nickname };
+  },
+
+  getFriends(): Page<Friend> {
+    const content = db.friends.map((f) => ({
+      friendId: f.id,
+      nickname: f.nickname,
+      wish:
+        f.wish && f.wish.visibility === 'FRIENDS'
+          ? { wishId: f.wish.id, content: f.wish.content, stoneCount: f.wish.stoneCount, stonedToday: f.wish.stonedToday }
+          : null,
+    }));
+    return { content, page: 0, size: 50, hasNext: false };
+  },
+
+  getCheers(wishId: number): Page<Cheer> {
+    const mine = db.wishes.some((w) => w.id === wishId);
+    const friendWish = db.friends.find((f) => f.wish?.id === wishId && f.wish.visibility === 'FRIENDS');
+    if (!mine && !friendWish) throw new ApiError('CHEER_NOT_ALLOWED', '응원할 수 없는 돌탑이에요.', 403);
+    return { content: db.cheers[wishId] ?? [], page: 0, size: 50, hasNext: false };
+  },
+
+  writeCheer(wishId: number, rawMessage: string): { cheerId: number } {
+    const message = rawMessage.trim();
+    if (!message) throw new ApiError('INVALID_INPUT', '요청 값이 올바르지 않아요.', 400);
+    if ([...message].length > 100) throw new ApiError('CHEER_TOO_LONG', '응원은 100자까지 쓸 수 있어요.', 400);
+    const friend = db.friends.find((f) => f.wish?.id === wishId && f.wish.visibility === 'FRIENDS');
+    if (!friend) throw new ApiError('CHEER_NOT_ALLOWED', '응원할 수 없는 돌탑이에요.', 403);
+
+    const cheer: Cheer = {
+      cheerId: db.nextId++,
+      writerNickname: db.nickname,
+      isAnonymous: false,
+      message,
+      createdAt: new Date().toISOString(),
+    };
+    db.cheers[wishId] = [cheer, ...(db.cheers[wishId] ?? [])];
+    return { cheerId: cheer.cheerId };
+  },
+
+  nudge(friendId: number): void {
+    const friend = db.friends.find((f) => f.id === friendId);
+    if (!friend) throw new ApiError('FRIEND_NOT_FOUND', '친구를 찾을 수 없어요.', 404);
+    if (!friend.wish || friend.wish.visibility !== 'FRIENDS' || friend.wish.stonedToday) {
+      throw new ApiError('NUDGE_NOT_ALLOWED', '지금은 콕 찌를 수 없는 친구예요.', 400);
+    }
+    if (friend.lastNudgedOn === today()) throw new ApiError('NUDGE_LIMIT', '오늘은 이미 콕 찔렀어요.', 429);
+    friend.lastNudgedOn = today();
   },
 
   timeTravel(days: number): { serverNow: string } {

@@ -39,7 +39,13 @@ export default function RootLayout() {
         <Stack.Screen name="collection" />
         <Stack.Screen name="spots" />
         <Stack.Screen name="me" />
+        <Stack.Screen name="friends/index" />
+        <Stack.Screen name="friends/invite" />
+        <Stack.Screen name="friends/[friendId]" />
       </Stack.Protected>
+
+      {/* 초대 링크는 로그인 전에도 열려야 해서 보호 밖에 둡니다 (화면 안에서 로그인 여부 확인) */}
+      <Stack.Screen name="invite/[code]" />
 
       <Stack.Protected guard={loggedIn && !onboarded}>
         <Stack.Screen name="onboarding" />

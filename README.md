@@ -86,8 +86,12 @@ EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원,
 | 모아보기 | `src/app/collection.tsx` | TOWER-03 |
 | 명소 지도 | `src/app/spots.tsx` | SPOT-02 |
 | 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
+| 친구 목록 | `src/app/friends/index.tsx` | FRIEND-02 |
+| 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |
+| 친구 돌탑 (응원, 콕 찌르기) | `src/app/friends/[friendId].tsx` | FRIEND-02, FRIEND-03, FRIEND-04 |
+| 초대 링크로 열기 (로그인 전이면 로그인 후 이어서) | `src/app/invite/[code].tsx` | FRIEND-01 |
 
-아직 없는 화면(P1): 방문 인증·엽서, 친구, 알림함, AI 실천 목표 추천
+아직 없는 화면(P1): 방문 인증·엽서, 알림함, AI 실천 목표 추천
 
 ## 폴더 구조
 
