@@ -80,8 +80,11 @@ EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원,
 실제 소셜 로그인 확인 방법:
 
 1. `.env.local`에 키를 넣습니다. (`.env.example` 참고: `EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY`, `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`)
-2. 개발 빌드를 만듭니다. `npx expo run:android` (Android Studio 필요) 또는 `npx eas-cli@latest build --profile development`
-3. 키를 바꾸면 네이티브 설정이 바뀌므로 개발 빌드를 다시 만들어야 합니다.
+2. 개발 빌드를 만듭니다. `npx eas-cli@latest build -p android --profile development` (EAS 프로젝트 `@han-gajiman/han-gajiman`, 빌드용 키는 EAS 환경변수에 등록됨)
+3. 빌드 페이지의 QR로 APK를 폰에 설치하고, `npx expo start`로 띄운 개발 서버에 접속합니다. JS 코드는 개발 서버에서 받으므로 코드만 바꿨다면 다시 빌드할 필요가 없습니다.
+4. 키나 네이티브 라이브러리를 바꾸면 네이티브 설정이 바뀌므로 개발 빌드를 다시 만들어야 합니다.
+
+Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource: local`). 키스토어 파일과 비밀번호가 담긴 `credentials.json`은 git에 올리지 않으니 담당자에게 따로 받으세요. 카카오 키 해시와 Google Android SHA-1이 이 키스토어 기준으로 등록되어 있어서, 다른 키로 서명하면 소셜 로그인이 실패합니다.
 
 콘솔 설정:
 

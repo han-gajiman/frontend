@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# EAS 로컬 서명 정보 (키스토어 비밀번호 포함, ~/han-gajiman-keys/ 참고)
+credentials.json
+*.jks
+*.keystore

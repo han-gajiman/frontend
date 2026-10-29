@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "한 가지만",
+    "slug": "han-gajiman",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -35,6 +35,12 @@
       "expo-status-bar",
       "expo-secure-store"
     ],
-    "scheme": "hangajiman"
+    "scheme": "hangajiman",
+    "owner": "han-gajiman",
+    "extra": {
+      "eas": {
+        "projectId": "0b5548fd-94e4-4e73-9eff-581a80c106c0"
+      }
+    }
   }
 }
