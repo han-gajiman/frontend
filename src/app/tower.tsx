@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { DEMO_ENABLED, timeTravel } from '@/features/demo/api';
 import { createStone } from '@/features/stone/api';
 import { StoneTower } from '@/features/stone/components/StoneTower';
-import { getCurrentWish } from '@/features/wish/api';
+import { changeVisibility, getCurrentWish } from '@/features/wish/api';
 import type { CurrentWish } from '@/features/wish/types';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -58,6 +58,7 @@ function Tower({ wish, reload }: { wish: CurrentWish; reload: () => void }) {
           </Pressable>
         </View>
         <Text className="text-xl font-bold text-gray-900">{wish.content}</Text>
+        <VisibilityToggle wish={wish} onChanged={reload} />
       </View>
 
       <StoneTower
@@ -88,6 +89,31 @@ function Tower({ wish, reload }: { wish: CurrentWish; reload: () => void }) {
 
         {DEMO_ENABLED && <DemoTimeTravel onDone={reload} />}
       </View>
+    </View>
+  );
+}
+
+// WISH-04 공개 범위 변경: 한 번 누르면 친구 공개 ↔ 나만 보기
+function VisibilityToggle({ wish, onChanged }: { wish: CurrentWish; onChanged: () => void }) {
+  const { run, submitting, error } = useSubmit(changeVisibility);
+  const isFriends = wish.visibility === 'FRIENDS';
+
+  const toggle = async () => {
+    const result = await run(wish.wishId, isFriends ? 'PRIVATE' : 'FRIENDS');
+    if (result.ok) onChanged();
+  };
+
+  return (
+    <View className="gap-1">
+      <View className="flex-row items-center gap-2">
+        <Text className="text-sm text-gray-500">{isFriends ? '친구에게 공개 중' : '나만 보는 중'}</Text>
+        <Pressable onPress={toggle} disabled={submitting} hitSlop={8}>
+          <Text className="text-sm font-semibold text-gray-900 underline">
+            {submitting ? '바꾸는 중…' : isFriends ? '나만 보기로 바꾸기' : '친구에게 공개하기'}
+          </Text>
+        </Pressable>
+      </View>
+      <ErrorText error={error} />
     </View>
   );
 }

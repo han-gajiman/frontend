@@ -80,10 +80,10 @@ EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원,
 | 로그인 | `src/app/login.tsx` | AUTH-01 (카카오·Google은 SDK 연동 전, 개발용 로그인으로 실제 서버 연결), AUTH-03 (토큰 저장·자동 재발급) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
 | 홈 | `src/app/index.tsx` | HOME-01 |
-| 소원 적기 → 명소 고르기 → 다짐 확인 | `src/app/wish/` | WISH-01, SPOT-01, WISH-03 |
-| 돌탑 | `src/app/tower.tsx` | STONE-01, STONE-02, DEMO-01 |
+| 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
+| 돌탑 (공개 범위 변경) | `src/app/tower.tsx` | STONE-01, STONE-02, WISH-04, DEMO-01 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
-| 모아보기 | `src/app/collection.tsx` | TOWER-03 |
+| 모아보기 (회차 선택) | `src/app/collection.tsx` | TOWER-03, TOWER-04 |
 | 명소 지도 | `src/app/spots.tsx` | SPOT-02 |
 | 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
 | 친구 목록 | `src/app/friends/index.tsx` | FRIEND-02 |

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { createWish } from '@/features/wish/api';
+import { VisibilityPicker } from '@/features/wish/components/VisibilityPicker';
 import { useWishDraftStore } from '@/features/wish/draftStore';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -24,7 +25,7 @@ export default function ConfirmWishScreen() {
       content: draft.content,
       actionGoal: draft.actionGoal,
       spotId: draft.spotId!,
-      visibility: 'PRIVATE', // 🟡 공개 범위 기본값 (WISH-04 P1에서 선택 UI 추가)
+      visibility: draft.visibility,
     });
     if (!result.ok) return;
 
@@ -52,6 +53,12 @@ export default function ConfirmWishScreen() {
           <Row label="매일 할 일" value={draft.actionGoal} />
           <Row label="명소" value={draft.spotName ?? ''} />
           <Row label="기간" value="오늘부터 30일" />
+        </View>
+
+        <View className="gap-2">
+          <Text className="font-semibold text-gray-900">공개 범위</Text>
+          <VisibilityPicker value={draft.visibility} onChange={draft.setVisibility} />
+          <Text className="text-sm text-gray-400">공개 범위는 나중에 돌탑 화면에서 바꿀 수 있어요.</Text>
         </View>
 
         <Text className="text-center text-gray-500">등록한 소원은 30일 동안 바꾸거나 취소할 수 없어요.</Text>

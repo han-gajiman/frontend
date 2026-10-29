@@ -340,6 +340,12 @@ export const mockServer = {
     wish.reflection = body.reflection;
   },
 
+  changeVisibility(wishId: number, visibility: Visibility): void {
+    const wish = db.wishes.find((w) => w.id === wishId);
+    if (!wish) throw new ApiError('WISH_NOT_FOUND', '돌탑을 찾을 수 없어요.', 404);
+    wish.visibility = visibility;
+  },
+
   getWishes(round?: number): WishSummary[] {
     runScheduler();
     const targetRound = round ?? roundOf(today());

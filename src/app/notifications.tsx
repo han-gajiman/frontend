@@ -8,12 +8,19 @@ import { AsyncContent, EmptyState } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
 
 // 알림을 누르면 이동할 화면. 엽서(POSTCARD)는 보관함이 생기면 연결합니다.
-const DESTINATION: Partial<Record<AppNotification['type'], Href>> = {
-  TOWER_COMPLETED: '/tower',
-  NUDGE: '/tower',
-  CHEER: '/cheers',
-  YEAR_REVIEW: '/collection',
-};
+function destinationOf(notification: AppNotification): Href | null {
+  switch (notification.type) {
+    case 'TOWER_COMPLETED':
+    case 'NUDGE':
+      return '/tower';
+    case 'CHEER':
+      return '/cheers';
+    case 'YEAR_REVIEW':
+      return `/collection?round=${notification.targetId}`; // targetId = 끝난 회차
+    default:
+      return null;
+  }
+}
 
 // NOTI-01 알림함: 최신순, 안 읽은 알림은 점으로 표시. 누르면 읽음 처리 후 관련 화면으로
 export default function NotificationsScreen() {
@@ -24,7 +31,7 @@ export default function NotificationsScreen() {
       // 읽음 처리에 실패해도 화면 이동은 합니다 (다음에 다시 읽음 처리됨)
       await markNotificationRead(notification.id).catch(() => undefined);
     }
-    const destination = DESTINATION[notification.type];
+    const destination = destinationOf(notification);
     if (destination) router.push(destination);
     else state.reload();
   };
