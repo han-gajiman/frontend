@@ -16,15 +16,13 @@ export default function LoginScreen() {
   const submitting = kakao.submitting || google.submitting || dev.submitting;
 
   const handleKakao = async () => {
-    // TODO(AUTH-01): 카카오 SDK로 받은 토큰 전달 (목 모드에서는 아무 값이나 됨)
-    const result = await kakao.run('kakao-sdk-token');
-    if (result.ok) signIn(result.data);
+    const result = await kakao.run();
+    if (result.ok && result.data) signIn(result.data); // data가 null이면 사용자가 로그인 창을 닫음
   };
 
   const handleGoogle = async () => {
-    // TODO(AUTH-01): Google 로그인으로 받은 ID 토큰 전달 (목 모드에서는 아무 값이나 됨)
-    const result = await google.run('google-id-token');
-    if (result.ok) signIn(result.data);
+    const result = await google.run();
+    if (result.ok && result.data) signIn(result.data);
   };
 
   const handleDev = async () => {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 
 import { logout } from '@/features/auth/api';
+import { signOutSocial } from '@/features/auth/social';
 import { useAuthStore } from '@/features/auth/store';
 import { deleteAccount, getMe, updateLocationAgreement } from '@/features/user/api';
 import type { Me } from '@/features/user/types';
@@ -38,12 +39,15 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
   const handleLogout = async () => {
     // 서버 폐기에 실패해도 앱에서는 로그아웃
     if (refreshToken) await logout(refreshToken).catch(() => undefined);
+    await signOutSocial();
     signOut();
   };
 
   const handleDelete = async () => {
     const result = await withdraw.run();
-    if (result.ok) signOut();
+    if (!result.ok) return;
+    await signOutSocial();
+    signOut();
   };
 
   return (

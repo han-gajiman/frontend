@@ -68,10 +68,26 @@ EXPO_PUBLIC_DEV_LOGIN=true                         # 로그인 화면에 "개발
 EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원, 바꾸면 새 회원
 ```
 
-- 카카오·Google SDK 연동 전까지는 **개발용 로그인** 버튼으로 실제 서버에 로그인합니다.
+- Expo Go·웹에서는 카카오·Google 로그인이 안 되므로 **개발용 로그인** 버튼으로 실제 서버에 로그인합니다.
 - 로그인 상태는 기기에 저장되어 앱을 다시 켜도 유지됩니다. (폰: SecureStore, 웹: localStorage)
 - Access Token이 만료되면 자동으로 재발급받아 요청을 다시 보내고, 재발급도 실패하면 로그인 화면으로 갑니다.
 - Expo 개발 서버가 8081 포트를 쓰므로, 백엔드는 8080(기본) 또는 8082처럼 다른 포트로 켜세요.
+
+## 카카오·Google 로그인 (개발 빌드)
+
+카카오·Google SDK는 네이티브 코드라 **Expo Go와 웹에서는 동작하지 않습니다.** 목 모드에서는 SDK 없이 버튼만 누르면 로그인되고, Expo Go·웹에서 실제 서버로 붙을 때는 개발용 로그인을 씁니다.
+
+실제 소셜 로그인 확인 방법:
+
+1. `.env.local`에 키를 넣습니다. (`.env.example` 참고: `EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY`, `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`)
+2. 개발 빌드를 만듭니다. `npx expo run:android` (Android Studio 필요) 또는 `npx eas-cli@latest build --profile development`
+3. 키를 바꾸면 네이티브 설정이 바뀌므로 개발 빌드를 다시 만들어야 합니다.
+
+콘솔 설정:
+
+- **카카오 개발자 콘솔**: 플랫폼에 Android 패키지명·키 해시, iOS 번들 ID 등록, 카카오 로그인 활성화
+- **Google Cloud 콘솔**: OAuth 클라이언트 ID를 웹·Android(패키지명 + SHA-1)·iOS(번들 ID)로 각각 만들기
+- **백엔드**: `GOOGLE_CLIENT_IDS`에 웹·iOS 클라이언트 ID, `KAKAO_ADMIN_KEY`에 카카오 어드민 키 (`backend/README.md`)
 
 ## 현재 화면
 
