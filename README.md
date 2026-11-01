@@ -12,7 +12,7 @@
 - NativeWind 4 (Tailwind 3 문법 스타일링)
 - Zustand (상태 관리)
 - Reanimated (애니메이션)
-- react-native-maps (명소 지도, 웹 미지원)
+- 카카오 지도 (명소 지도, 폰은 WebView·웹은 iframe으로 같은 지도 HTML을 띄움)
 
 ## 처음 받았을 때
 
@@ -45,7 +45,7 @@ npx expo start -c
 
 - **폰 (개발 빌드)**: EAS로 만든 개발 빌드 앱을 설치하고 터미널의 QR 코드를 찍습니다. PC와 폰이 같은 와이파이에 있어야 합니다. (아래 "카카오·Google 로그인" 참고)
 - **폰 (Expo Go)**: `npx expo start -c --go`로 실행하거나 실행 중에 `s`를 눌러 Expo Go 모드로 바꾼 뒤 QR을 찍습니다. 카카오·Google 로그인 버튼만 안내 문구가 뜹니다.
-- **웹**: 터미널에서 `w`. 지도는 웹에서 목록으로 대신 보입니다.
+- **웹**: 터미널에서 `w`.
 - **iOS 시뮬레이터**: 터미널에서 `i`. Xcode 26.4 이상이 필요합니다.
 
 ## 목 데이터로 실행하기
@@ -70,6 +70,13 @@ main에 푸시하면 GitHub Actions(`.github/workflows/deploy-web.yml`)가 목 �
 EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
 npx eas-cli@latest deploy --prod
 ```
+
+## 카카오 지도 (명소)
+
+`src/features/spot/components/`의 `SpotMap`이 카카오 지도 JavaScript API를 씁니다. 카카오는 앱용 지도 SDK가 없어서, 지도 HTML(`kakaoMapHtml.ts`) 하나를 폰에서는 WebView로, 웹에서는 iframe으로 띄웁니다.
+
+- `.env.local`에 `EXPO_PUBLIC_KAKAO_JS_KEY`(JavaScript 키)를 넣으면 지도가 뜹니다. 없거나 불러오기에 실패하면 명소 목록으로 대신 보여줍니다.
+- 카카오는 등록된 도메인에서만 지도를 허용합니다. 콘솔 → 플랫폼 → Web에 `http://localhost:8081`, `https://han-gajiman.expo.app`을 등록하세요. 폰 WebView는 `https://han-gajiman.expo.app`에서 연 것으로 띄웁니다.
 
 ## 실제 서버로 실행하기
 
