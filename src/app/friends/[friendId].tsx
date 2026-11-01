@@ -53,7 +53,12 @@ function FriendTower({ friend }: { friend: Friend }) {
       </View>
 
       <View className="h-72">
-        <StoneTower count={wish.stoneCount} stonedToday={wish.stonedToday} completed={false} backgroundImageUrl={null} />
+        <StoneTower
+          count={wish.stoneCount}
+          stonedToday={wish.stonedToday}
+          completed={false}
+          background={{ spotId: null, imageUrl: null, visited: true }}
+        />
       </View>
 
       <NudgeButton friendId={friend.friendId} stonedToday={wish.stonedToday} nickname={friend.nickname} />

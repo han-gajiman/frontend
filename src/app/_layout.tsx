@@ -46,7 +46,6 @@ export default function RootLayout() {
           <Stack.Screen name="wish/new" />
           <Stack.Screen name="wish/spot" />
           <Stack.Screen name="wish/confirm" />
-          <Stack.Screen name="tower" />
           <Stack.Screen name="reflection" />
           <Stack.Screen name="collection" />
           <Stack.Screen name="spots" />

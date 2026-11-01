@@ -1,4 +1,6 @@
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
+
+import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
 
 // 돌 1개의 생김새. Figma 시안이 나오면 이 파일만 이미지(SVG/PNG)로 교체하면 됩니다.
 // 크기·위치·회전은 index로 고정되어 있어서, 같은 돌탑은 항상 같은 모양으로 그려집니다.
@@ -24,9 +26,10 @@ type StoneShapeProps = {
   index: number;
   scale: number;
   isToday: boolean;
+  label?: string; // 돌에 새긴 글씨 (맨 아래 돌의 소원 문구)
 };
 
-export function StoneShape({ index, scale, isToday }: StoneShapeProps) {
+export function StoneShape({ index, scale, isToday, label }: StoneShapeProps) {
   const { width, height } = stoneSize(index);
   const offsetX = (seeded(index + 100) - 0.5) * 10;
   const rotate = (seeded(index + 200) - 0.5) * 10;
@@ -34,12 +37,23 @@ export function StoneShape({ index, scale, isToday }: StoneShapeProps) {
   return (
     <View
       style={{
-        width: width * scale,
+        // 글씨를 새긴 돌(맨 아래 소원 돌)은 글자 길이만큼 넓어집니다.
+        ...(label ? { minWidth: width * scale, maxWidth: 260 } : { width: width * scale }),
         height: height * scale,
         borderRadius: (height * scale) / 2,
         backgroundColor: isToday ? TODAY_COLOR : STONE_COLORS[index % STONE_COLORS.length],
         transform: [{ translateX: offsetX * scale }, { rotate: `${rotate}deg` }],
-      }}
-    />
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: (height * scale) / 2,
+      }}>
+      {label && (
+        <Text
+          numberOfLines={1}
+          style={{ fontFamily: TITLE_FONT, fontSize: Math.max(9, 11 * scale), color: 'rgba(68,64,60,0.75)' }}>
+          {label}
+        </Text>
+      )}
+    </View>
   );
 }

@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { StoneShape, stoneSize } from './StoneShape';
-import { GROUND_HEIGHT, TowerBackground } from './TowerBackground';
+import { GROUND_HEIGHT, TowerBackground, type TowerBackgroundProps } from './TowerBackground';
 
 const MAX_STONES = 30;
 const OVERLAP = 5; // 위아래 돌이 겹치는 정도
@@ -32,11 +32,13 @@ type StoneTowerProps = {
   count: number;
   stonedToday: boolean;
   completed: boolean;
-  backgroundImageUrl: string | null;
+  // 배경을 탑 영역 안에 그릴 때만 넘깁니다. 홈처럼 화면 전체에 배경을 깔 때는 생략 (투명)
+  background?: TowerBackgroundProps;
+  inscription?: string; // 맨 아래 돌에 새길 소원 문구
 };
 
 // STONE-02 돌탑: 아래부터 쌓이는 돌 + 배경 + 30일 완성 연출
-export function StoneTower({ count, stonedToday, completed, backgroundImageUrl }: StoneTowerProps) {
+export function StoneTower({ count, stonedToday, completed, background, inscription }: StoneTowerProps) {
   const [areaHeight, setAreaHeight] = useState(0);
   // 화면에 들어왔을 때 이미 있던 돌은 차례로 나타나고, 그 뒤에 쌓은 돌만 떨어지는 효과
   const [initialCount] = useState(count);
@@ -45,11 +47,11 @@ export function StoneTower({ count, stonedToday, completed, backgroundImageUrl }
 
   return (
     <View
-      className="flex-1 overflow-hidden rounded-3xl"
+      className={`flex-1 overflow-hidden ${background ? 'rounded-3xl' : ''}`}
       onLayout={(e) => setAreaHeight(e.nativeEvent.layout.height)}
       accessible
       accessibilityLabel={`돌탑, 돌 ${count}개${completed ? ', 완성' : ''}`}>
-      <TowerBackground imageUrl={backgroundImageUrl} />
+      {background && <TowerBackground {...background} />}
 
       {completed && <CompletedBadge />}
 
@@ -60,7 +62,12 @@ export function StoneTower({ count, stonedToday, completed, backgroundImageUrl }
               key={i}
               entering={i >= initialCount ? DROP : FadeIn.delay(i * 30).duration(200)}
               style={{ marginBottom: i === 0 ? 0 : -OVERLAP * scale, alignItems: 'center' }}>
-              <StoneShape index={i} scale={scale} isToday={stonedToday && i === count - 1} />
+              <StoneShape
+                index={i}
+                scale={scale}
+                isToday={stonedToday && i === count - 1}
+                label={i === 0 ? inscription : undefined}
+              />
             </Animated.View>
           ))}
         </TowerBody>
@@ -68,7 +75,7 @@ export function StoneTower({ count, stonedToday, completed, backgroundImageUrl }
 
       {count === 0 && (
         <View className="absolute inset-x-0 items-center" style={{ bottom: GROUND_HEIGHT + 24 }}>
-          <Text className="text-gray-400">첫 번째 돌을 올려 보세요</Text>
+          <Text className="text-gray-500">첫 번째 돌을 올려 보세요</Text>
         </View>
       )}
     </View>

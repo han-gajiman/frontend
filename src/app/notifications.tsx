@@ -12,7 +12,7 @@ function destinationOf(notification: AppNotification): Href | null {
   switch (notification.type) {
     case 'TOWER_COMPLETED':
     case 'NUDGE':
-      return '/tower';
+      return '/'; // 홈 = 돌탑
     case 'CHEER':
       return '/cheers';
     case 'YEAR_REVIEW':

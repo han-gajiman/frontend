@@ -1,0 +1,42 @@
+import { router } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
+import { StoneShape } from '@/features/stone/components/StoneShape';
+import { GROUND_HEIGHT, TowerBackground } from '@/features/stone/components/TowerBackground';
+
+import { HomeHeader } from './HomeHeader';
+
+const FIELD_GROUND = GROUND_HEIGHT * 3; // 빈 홈은 땅을 넓게 깔아 허허벌판 느낌
+
+// HOME-01 빈 홈: 허허벌판에 조약돌 하나. 누르면 새 소원 적기로
+export function EmptyHome() {
+  const insets = useSafeAreaInsets();
+  const start = () => router.push('/wish/new');
+
+  return (
+    <View className="flex-1">
+      <TowerBackground spotId={null} imageUrl={null} visited groundHeight={FIELD_GROUND} />
+      <SafeAreaView className="flex-1" edges={['top']}>
+        <HomeHeader />
+      </SafeAreaView>
+
+      {/* 조약돌은 땅 위에 놓이고, 문구는 그 위에 */}
+      <View className="absolute inset-x-0 items-center gap-6" style={{ bottom: FIELD_GROUND - 8 }}>
+        <Text style={{ fontFamily: TITLE_FONT }} className="text-center text-xl leading-8 text-gray-800">
+          여기에 첫 돌을{'\n'}놓아볼까요?
+        </Text>
+        <Pressable onPress={start} accessibilityRole="button" accessibilityLabel="첫 돌 놓기, 새 소원 시작하기" hitSlop={16}>
+          <StoneShape index={0} scale={0.6} isToday />
+        </Pressable>
+      </View>
+
+      <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 48 }}>
+        <Pressable onPress={start} className="rounded-full bg-gray-900 px-6 py-3">
+          <Text className="font-semibold text-white">새 소원 시작하기</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
