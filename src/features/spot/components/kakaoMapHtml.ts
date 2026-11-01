@@ -46,8 +46,14 @@ export function buildKakaoMapHtml(spots: Spot[]) {
   var ready = false;
   setTimeout(function () { if (!ready) send({ type: 'error' }); }, 10000);
   var pins = {};
+  var overlays = {};
+  // 선택한 명소는 강조하고, 가까운 명소와 이름표가 겹쳐도 맨 위로 올라오게 합니다.
   window.selectSpot = function (id) {
-    Object.keys(pins).forEach(function (key) { pins[key].classList.toggle('selected', Number(key) === id); });
+    Object.keys(pins).forEach(function (key) {
+      var selected = Number(key) === id;
+      pins[key].classList.toggle('selected', selected);
+      overlays[key].setZIndex(selected ? 2 : 1);
+    });
   };
   function start() {
     if (!window.kakao || !kakao.maps) return send({ type: 'error' });
@@ -67,11 +73,12 @@ export function buildKakaoMapHtml(spots: Spot[]) {
           send({ type: 'select', id: spot.id });
         });
         pins[spot.id] = pin;
-        new kakao.maps.CustomOverlay({
+        overlays[spot.id] = new kakao.maps.CustomOverlay({
           map: map,
           position: new kakao.maps.LatLng(spot.latitude, spot.longitude),
           content: pin,
           yAnchor: 1,
+          zIndex: 1,
         });
         bounds.extend(new kakao.maps.LatLng(spot.latitude, spot.longitude));
       });
