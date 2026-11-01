@@ -39,9 +39,12 @@ npx expo start -c
 
 ## 화면 보기
 
+**설치 없이 보기**: 웹 데모 https://han-gajiman.expo.app (목 모드, main에 푸시하면 자동으로 다시 배포)
+
 `npx expo start -c` 실행 후:
 
-- **폰 (추천)**: Expo Go 앱을 설치하고 터미널의 QR 코드를 찍습니다. PC와 폰이 같은 와이파이에 있어야 합니다.
+- **폰 (개발 빌드)**: EAS로 만든 개발 빌드 앱을 설치하고 터미널의 QR 코드를 찍습니다. PC와 폰이 같은 와이파이에 있어야 합니다. (아래 "카카오·Google 로그인" 참고)
+- **폰 (Expo Go)**: `npx expo start -c --go`로 실행하거나 실행 중에 `s`를 눌러 Expo Go 모드로 바꾼 뒤 QR을 찍습니다. 카카오·Google 로그인 버튼만 안내 문구가 뜹니다.
 - **웹**: 터미널에서 `w`. 지도는 웹에서 목록으로 대신 보입니다.
 - **iOS 시뮬레이터**: 터미널에서 `i`. Xcode 26.4 이상이 필요합니다.
 
@@ -56,6 +59,17 @@ npx expo start -c
 | `EXPO_PUBLIC_USE_MOCK=true` | 목 서버 사용 (`false`면 `EXPO_PUBLIC_API_URL`의 실제 서버) |
 | `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
 | `EXPO_PUBLIC_DEMO=true` | 돌탑 화면에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
+
+## 웹 데모 배포 (EAS Hosting)
+
+main에 푸시하면 GitHub Actions(`.github/workflows/deploy-web.yml`)가 목 모드로 웹을 내보내 https://han-gajiman.expo.app 에 배포합니다. 저장소 Secrets에 `EXPO_TOKEN`(expo.dev → Access tokens)이 있어야 하고, 없으면 배포를 건너뜁니다.
+
+직접 배포할 때:
+
+```
+EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
+npx eas-cli@latest deploy --prod
+```
 
 ## 실제 서버로 실행하기
 
