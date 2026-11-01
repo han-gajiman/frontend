@@ -31,8 +31,8 @@ export default function ConfirmWishScreen() {
 
     setDone(true);
     draft.reset();
-    router.dismissAll();
-    router.push('/tower');
+    // 등록 흐름 화면을 모두 닫고 홈(= 돌탑)으로 돌아갑니다.
+    router.dismissTo('/');
   };
 
   return (
@@ -58,7 +58,7 @@ export default function ConfirmWishScreen() {
         <View className="gap-2">
           <Text className="font-semibold text-gray-900">공개 범위</Text>
           <VisibilityPicker value={draft.visibility} onChange={draft.setVisibility} />
-          <Text className="text-sm text-gray-400">공개 범위는 나중에 돌탑 화면에서 바꿀 수 있어요.</Text>
+          <Text className="text-sm text-gray-400">공개 범위는 나중에 홈에서 바꿀 수 있어요.</Text>
         </View>
 
         <Text className="text-center text-gray-500">등록한 소원은 30일 동안 바꾸거나 취소할 수 없어요.</Text>

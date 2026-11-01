@@ -117,9 +117,8 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | --- | --- | --- |
 | 로그인 | `src/app/login.tsx` | AUTH-01 (카카오·Google은 SDK 연동 전, 개발용 로그인으로 실제 서버 연결), AUTH-03 (토큰 저장·자동 재발급) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
-| 홈 | `src/app/index.tsx` | HOME-01 |
+| 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 공개 범위, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, WISH-04, DEMO-01 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
-| 돌탑 (공개 범위 변경) | `src/app/tower.tsx` | STONE-01, STONE-02, WISH-04, DEMO-01 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
 | 모아보기 (회차 선택) | `src/app/collection.tsx` | TOWER-03, TOWER-04 |
 | 명소 지도 | `src/app/spots.tsx` | SPOT-02 |
@@ -139,7 +138,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 src/
 ├── app/          화면(라우트). 파일 하나 = 화면 하나, _layout.tsx에서 로그인 상태별 접근 제어
 ├── features/     도메인별 types.ts(API 타입) · api.ts(API 함수) · components/
-│   ├── auth/  user/  wish/  stone/  spot/  demo/
+│   ├── auth/  user/  home/  wish/  stone/  spot/  friend/  demo/
 ├── shared/       공통 컴포넌트(Screen, Button, TextField, ScreenState)와 훅(useApi, useSubmit)
 ├── api/          API 클라이언트(client.ts), 목 서버(mock.ts, mockServer.ts)
 └── global.css    NativeWind 진입점

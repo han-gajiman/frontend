@@ -13,7 +13,7 @@ type VisibilityPickerProps = {
   disabled?: boolean;
 };
 
-// WISH-04 공개 범위 선택 (소원 등록 다짐 확인, 돌탑 화면에서 변경)
+// WISH-04 공개 범위 선택 (소원 등록 다짐 확인. 등록 후 변경은 홈의 VisibilityToggle)
 export function VisibilityPicker({ value, onChange, disabled = false }: VisibilityPickerProps) {
   return (
     <View className="gap-2">
