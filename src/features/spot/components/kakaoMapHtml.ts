@@ -56,6 +56,7 @@ export function buildKakaoMapHtml(spots: Spot[]) {
         center: new kakao.maps.LatLng(${CENTER.lat}, ${CENTER.lng}),
         level: ${LEVEL},
       });
+      var bounds = new kakao.maps.LatLngBounds();
       spots.forEach(function (spot) {
         var pin = document.createElement('div');
         pin.className = 'pin';
@@ -72,7 +73,10 @@ export function buildKakaoMapHtml(spots: Spot[]) {
           content: pin,
           yAnchor: 1,
         });
+        bounds.extend(new kakao.maps.LatLng(spot.latitude, spot.longitude));
       });
+      // 처음 열 때 모든 명소가 한 화면에 들어오게 맞춥니다. (명소가 하나면 경북 전체 화면 유지)
+      if (spots.length > 1) map.setBounds(bounds, 60, 40, 40, 40);
       ready = true;
       send({ type: 'ready' });
     });
