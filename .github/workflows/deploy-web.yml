@@ -56,6 +56,8 @@ jobs:
           EXPO_PUBLIC_MOCK_SCENARIO: normal
           EXPO_PUBLIC_DEMO: 'true'
           EXPO_PUBLIC_DEV_LOGIN: 'false'
+          # 저장소 Settings → Secrets and variables → Actions → Variables에 등록 (공개 키)
+          EXPO_PUBLIC_KAKAO_JS_KEY: ${{ vars.EXPO_PUBLIC_KAKAO_JS_KEY }}
         run: npx expo export -p web
 
       - name: EAS Hosting 배포

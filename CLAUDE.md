@@ -9,7 +9,7 @@
 - 일정: 제출 11/20 23:59, 본선 11/21
 
 ## 기술 스택
-React Native 0.88 · Expo SDK 58 · TypeScript · Expo Router (파일 기반 라우팅, 내부적으로 React Navigation 사용) · Zustand · NativeWind · React Native Maps · Expo Location · Expo Notifications · EAS Build
+React Native 0.88 · Expo SDK 58 · TypeScript · Expo Router (파일 기반 라우팅, 내부적으로 React Navigation 사용) · Zustand · NativeWind · 카카오 지도(WebView) · Expo Location · Expo Notifications · EAS Build
 
 ## 기준 문서 (구현 전에 반드시 읽기)
 - 기능명세서: `docs/기능명세서.md` (원본: Notion "기능명세서"). 화면과 상태의 기준입니다.
