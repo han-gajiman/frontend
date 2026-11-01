@@ -1,26 +1,47 @@
-import { Text, View } from 'react-native';
+import { Image, type ImageSource } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DEV_LOGIN_ENABLED, loginForDev, loginWithGoogle, loginWithKakao } from '@/features/auth/api';
 import { useAuthStore } from '@/features/auth/store';
-import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
-import { Screen } from '@/shared/components/Screen';
 import { useSubmit } from '@/shared/hooks/useSubmit';
 
-// AUTH-01 소셜 로그인 (카카오 + Google). 로그인되면 _layout의 guard가 온보딩/홈으로 이동시킵니다.
+// AUTH-01 로그인 (Figma "로그인 화면"). 로그인되면 _layout의 guard가 온보딩/홈으로 이동시킵니다.
+// 카카오·Google은 아래 동그란 아이콘으로 로그인합니다.
+// 아이디·비밀번호 로그인과 찾기·회원가입은 백엔드(자체 로그인)가 준비되면 연결합니다. 지금은 안내 문구만 보여줍니다.
+const ID_LOGIN_NOTICE = '아이디 로그인은 준비 중이에요.\n카카오나 Google로 시작해 주세요.';
+
 export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
   const kakao = useSubmit(loginWithKakao);
   const google = useSubmit(loginWithGoogle);
   const dev = useSubmit(loginForDev);
   const submitting = kakao.submitting || google.submitting || dev.submitting;
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [notice, setNotice] = useState<string>();
 
   const handleKakao = async () => {
+    setNotice(undefined);
     const result = await kakao.run();
     if (result.ok && result.data) signIn(result.data); // data가 null이면 사용자가 로그인 창을 닫음
   };
 
   const handleGoogle = async () => {
+    setNotice(undefined);
     const result = await google.run();
     if (result.ok && result.data) signIn(result.data);
   };
@@ -30,35 +51,181 @@ export default function LoginScreen() {
     if (result.ok) signIn(result.data);
   };
 
+  // TODO(자체 로그인): 아이디·비밀번호 로그인, 아이디·비밀번호 찾기, 회원가입 API 연결
+  const showIdLoginNotice = () => setNotice(ID_LOGIN_NOTICE);
+
   return (
-    <Screen
-      scroll={false}
-      footer={
-        <>
-          <ErrorText error={kakao.error ?? google.error ?? dev.error} />
-          {DEV_LOGIN_ENABLED && (
-            <Button
-              label="개발용 로그인 (로컬 서버)"
-              variant="secondary"
-              onPress={handleDev}
-              loading={dev.submitting}
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar style="dark" />
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerClassName="flex-grow items-center justify-center px-[35px] py-8"
+          keyboardShouldPersistTaps="handled">
+          <Image
+            source={require('../../assets/login/logo.png')}
+            style={{ width: 84, height: 84 }}
+            contentFit="cover"
+            accessibilityIgnoresInvertColors
+          />
+          <Text className="mt-[7px] text-[36px] text-[#10004e]" style={{ fontWeight: '900' }}>
+            한가지만
+          </Text>
+          <Text className="mt-1 text-[15px] font-medium text-[#4c4568]">오늘도 한 칸, 소원에 가까이</Text>
+
+          <View className="mt-[59px] w-full max-w-[323px]">
+            <Text className="mb-2 ml-[9px] text-[12px] font-bold text-[#b7b9c2]">LOGIN 로그인</Text>
+            <LoginField
+              icon={require('../../assets/login/icon_user.png')}
+              iconSize={{ width: 17, height: 20 }}
+              textLeft={50}
+              value={loginId}
+              onChangeText={setLoginId}
+              placeholder="아이디를 입력해주세요"
+              autoComplete="username"
+            />
+            <View className="h-[9px]" />
+            <LoginField
+              icon={require('../../assets/login/icon_lock.png')}
+              iconSize={{ width: 19, height: 20 }}
+              textLeft={55}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="비밀번호"
+              autoComplete="password"
+              secureTextEntry
+            />
+
+            <Pressable
+              onPress={showIdLoginNotice}
+              disabled={submitting}
+              accessibilityRole="button"
+              className="mt-[14px]">
+              <LinearGradient
+                colors={['#637df6', '#8378f4']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ height: 58, borderRadius: 27, alignItems: 'center', justifyContent: 'center' }}>
+                <Text className="text-[20px] font-semibold text-white">로그인</Text>
+              </LinearGradient>
+            </Pressable>
+
+            <View className="mt-[26px] flex-row justify-center">
+              <LinkText label="아이디 찾기" onPress={showIdLoginNotice} />
+              <Text className="text-[14px] font-bold text-[#b7b9c2]"> | </Text>
+              <LinkText label="비밀번호 찾기" onPress={showIdLoginNotice} />
+              <Text className="text-[14px] font-bold text-[#b7b9c2]"> | </Text>
+              <LinkText label="회원가입" onPress={showIdLoginNotice} />
+            </View>
+          </View>
+
+          {/* 구분선은 입력칸보다 넓게 화면 양옆 16px까지 (Figma) */}
+          <View className="-mx-[19px] mt-[48px] flex-row items-center self-stretch">
+            <View className="h-[1.5px] flex-1 bg-[#dde4ec]" />
+            <Text className="px-[13px] text-[12px] font-bold text-[#dde4ec]">SNS 계정으로 로그인</Text>
+            <View className="h-[1.5px] flex-1 bg-[#dde4ec]" />
+          </View>
+
+          <View className="mt-[26px] flex-row gap-[9px]">
+            <SocialButton
+              label="Google로 시작하기"
+              circle={require('../../assets/login/circle_google.png')}
+              logo={require('../../assets/login/google.png')}
+              logoSize={{ width: 22, height: 22 }}
+              onPress={handleGoogle}
+              loading={google.submitting}
               disabled={submitting}
             />
-          )}
-          <Button label="카카오로 시작하기" onPress={handleKakao} loading={kakao.submitting} disabled={submitting} />
-          <Button
-            label="Google로 시작하기"
-            variant="secondary"
-            onPress={handleGoogle}
-            loading={google.submitting}
-            disabled={submitting}
-          />
-        </>
-      }>
-      <View className="flex-1 items-center justify-center gap-3 px-6">
-        <Text className="text-4xl font-bold text-gray-900">한 가지만</Text>
-        <Text className="text-center text-gray-500">소원 하나, 30일, 매일 돌 하나</Text>
-      </View>
-    </Screen>
+            <SocialButton
+              label="카카오로 시작하기"
+              circle={require('../../assets/login/circle_kakao.png')}
+              logo={require('../../assets/login/kakao_talk.png')}
+              logoSize={{ width: 38, height: 30 }}
+              onPress={handleKakao}
+              loading={kakao.submitting}
+              disabled={submitting}
+            />
+          </View>
+
+          <View className="mt-4 min-h-5 gap-3">
+            {notice && <Text className="text-center text-[13px] text-[#737a84]">{notice}</Text>}
+            <ErrorText error={kakao.error ?? google.error ?? dev.error} />
+            {DEV_LOGIN_ENABLED && (
+              <Pressable onPress={handleDev} disabled={submitting} hitSlop={8} accessibilityRole="button">
+                <Text className="text-center text-[13px] text-[#737a84] underline">
+                  {dev.submitting ? '로그인 중…' : '개발용 로그인 (로컬 서버)'}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+function LoginField({
+  icon,
+  iconSize,
+  textLeft,
+  ...input
+}: {
+  icon: ImageSource;
+  iconSize: { width: number; height: number };
+  textLeft: number; // Figma에서 칸 왼쪽 끝부터 글자까지 거리 (아이콘마다 다름)
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder: string;
+  autoComplete: 'username' | 'password';
+  secureTextEntry?: boolean;
+}) {
+  return (
+    <View className="h-[46px] justify-center rounded-[20px] border-[1.5px] border-[#dedede] bg-[#e4ddff]">
+      <Image source={icon} style={{ position: 'absolute', left: 19, ...iconSize }} />
+      <TextInput
+        {...input}
+        placeholderTextColor="#737a84"
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={{ paddingLeft: textLeft - 1.5, paddingRight: 16, height: '100%', fontSize: 15, color: '#2c2a3f' }}
+      />
+    </View>
+  );
+}
+
+function LinkText({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="link">
+      <Text className="text-[14px] font-bold text-[#b7b9c2]">{label}</Text>
+    </Pressable>
+  );
+}
+
+function SocialButton({
+  label,
+  circle,
+  logo,
+  logoSize,
+  onPress,
+  loading,
+  disabled,
+}: {
+  label: string;
+  circle: ImageSource;
+  logo: ImageSource;
+  logoSize: { width: number; height: number };
+  onPress: () => void;
+  loading: boolean;
+  disabled: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      className={`h-[43px] w-[43px] items-center justify-center ${disabled && !loading ? 'opacity-40' : ''}`}>
+      <Image source={circle} style={{ position: 'absolute', width: 43, height: 43 }} />
+      {loading ? <ActivityIndicator color="#737a84" /> : <Image source={logo} style={logoSize} />}
+    </Pressable>
   );
 }
