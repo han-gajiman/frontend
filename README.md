@@ -39,7 +39,7 @@ npx expo start -c
 
 ## 화면 보기
 
-**설치 없이 보기**: 웹 데모 https://han-gajiman.expo.app (목 모드, main에 푸시하면 자동으로 다시 배포)
+**설치 없이 보기**: 웹 데모 https://han-gajiman.expo.app (목 모드, main에 머지한 뒤 직접 배포)
 
 `npx expo start -c` 실행 후:
 
@@ -62,13 +62,11 @@ npx expo start -c
 
 ## 웹 데모 배포 (EAS Hosting)
 
-main에 푸시하면 GitHub Actions(`.github/workflows/deploy-web.yml`)가 목 모드로 웹을 내보내 https://han-gajiman.expo.app 에 배포합니다. 저장소 Secrets에 `EXPO_TOKEN`(expo.dev → Access tokens)이 있어야 하고, 없으면 배포를 건너뜁니다.
-
-직접 배포할 때:
+main에 머지한 뒤 아래 명령으로 목 모드 웹을 내보내 https://han-gajiman.expo.app 에 배포합니다. Expo 계정(`han-gajiman`)에 로그인되어 있어야 하고, 카카오 지도를 보이려면 `.env.local`에 `EXPO_PUBLIC_KAKAO_JS_KEY`가 있어야 합니다. 배포 후 반영까지 10분 정도 걸릴 수 있습니다.
 
 ```
 EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
-npx eas-cli@latest deploy --prod
+npx eas-cli@27.2.0 deploy --prod
 ```
 
 ## 카카오 지도 (명소)
