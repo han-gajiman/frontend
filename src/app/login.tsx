@@ -1,5 +1,4 @@
 import { Image, type ImageSource } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -10,11 +9,17 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  AuthField,
+  AuthLink,
+  AuthLinkDivider,
+  AuthSectionLabel,
+  GradientButton,
+} from '@/features/auth/components/AuthForm';
 import { DEV_LOGIN_ENABLED, loginForDev, loginWithEmail, loginWithGoogle, loginWithKakao } from '@/features/auth/api';
 import { useAuthStore } from '@/features/auth/store';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -22,8 +27,7 @@ import { useSubmit } from '@/shared/hooks/useSubmit';
 
 // AUTH-01 로그인 (Figma "로그인 화면"). 로그인되면 _layout의 guard가 온보딩/홈으로 이동시킵니다.
 // 위쪽은 자체 로그인(이메일·비밀번호, 회원가입은 /signup), 아래 동그란 아이콘은 카카오·Google 로그인입니다.
-// 아이디·비밀번호 찾기는 백엔드 API가 없어서 안내 문구만 보여줍니다.
-const FIND_ACCOUNT_NOTICE = '아이디·비밀번호 찾기는 준비 중이에요.';
+// 아이디·비밀번호 찾기는 /find-account, 입력칸·버튼은 features/auth/components/AuthForm (회원가입·찾기 화면과 공용)
 
 export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
@@ -63,9 +67,6 @@ export default function LoginScreen() {
     if (result.ok) signIn(result.data);
   };
 
-  // TODO(자체 로그인): 아이디·비밀번호 찾기 API가 생기면 연결
-  const showFindNotice = () => setNotice(FIND_ACCOUNT_NOTICE);
-
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
@@ -85,22 +86,17 @@ export default function LoginScreen() {
           <Text className="mt-1 text-[15px] font-medium text-[#4c4568]">오늘도 한 칸, 소원에 가까이</Text>
 
           <View className="mt-[59px] w-full max-w-[323px]">
-            <Text className="mb-2 ml-[9px] text-[12px] font-bold text-[#b7b9c2]">LOGIN 로그인</Text>
-            <LoginField
-              icon={require('../../assets/login/icon_user.png')}
-              iconSize={{ width: 17, height: 20 }}
-              textLeft={50}
+            <AuthSectionLabel>LOGIN 로그인</AuthSectionLabel>
+            <AuthField
+              icon="user"
               value={email}
               onChangeText={setEmail}
               placeholder="이메일을 입력해주세요"
               autoComplete="email"
               keyboardType="email-address"
             />
-            <View className="h-[9px]" />
-            <LoginField
-              icon={require('../../assets/login/icon_lock.png')}
-              iconSize={{ width: 19, height: 20 }}
-              textLeft={55}
+            <AuthField
+              icon="lock"
               value={password}
               onChangeText={setPassword}
               placeholder="비밀번호"
@@ -109,31 +105,20 @@ export default function LoginScreen() {
               onSubmitEditing={handleLocal}
             />
 
-            <Pressable
-              onPress={handleLocal}
-              disabled={submitting}
-              accessibilityRole="button"
+            <GradientButton
+              label="로그인"
               accessibilityLabel="이메일로 로그인"
-              className="mt-[14px]">
-              <LinearGradient
-                colors={['#637df6', '#8378f4']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ height: 58, borderRadius: 27, alignItems: 'center', justifyContent: 'center' }}>
-                {local.submitting ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-[20px] font-semibold text-white">로그인</Text>
-                )}
-              </LinearGradient>
-            </Pressable>
+              onPress={handleLocal}
+              loading={local.submitting}
+              disabled={submitting && !local.submitting}
+            />
 
             <View className="mt-[26px] flex-row justify-center">
-              <LinkText label="아이디 찾기" onPress={showFindNotice} />
-              <Text className="text-[14px] font-bold text-[#b7b9c2]"> | </Text>
-              <LinkText label="비밀번호 찾기" onPress={showFindNotice} />
-              <Text className="text-[14px] font-bold text-[#b7b9c2]"> | </Text>
-              <LinkText label="회원가입" onPress={() => router.push('/signup')} />
+              <AuthLink label="아이디 찾기" onPress={() => router.push('/find-account?tab=id')} />
+              <AuthLinkDivider />
+              <AuthLink label="비밀번호 찾기" onPress={() => router.push('/find-account?tab=password')} />
+              <AuthLinkDivider />
+              <AuthLink label="회원가입" onPress={() => router.push('/signup')} />
             </View>
           </View>
 
@@ -179,45 +164,6 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
-}
-
-function LoginField({
-  icon,
-  iconSize,
-  textLeft,
-  ...input
-}: {
-  icon: ImageSource;
-  iconSize: { width: number; height: number };
-  textLeft: number; // Figma에서 칸 왼쪽 끝부터 글자까지 거리 (아이콘마다 다름)
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder: string;
-  autoComplete: 'email' | 'password';
-  keyboardType?: 'email-address';
-  secureTextEntry?: boolean;
-  onSubmitEditing?: () => void;
-}) {
-  return (
-    <View className="h-[46px] justify-center rounded-[20px] border-[1.5px] border-[#dedede] bg-[#e4ddff]">
-      <Image source={icon} style={{ position: 'absolute', left: 19, ...iconSize }} />
-      <TextInput
-        {...input}
-        placeholderTextColor="#737a84"
-        autoCapitalize="none"
-        autoCorrect={false}
-        style={{ paddingLeft: textLeft - 1.5, paddingRight: 16, height: '100%', fontSize: 15, color: '#2c2a3f' }}
-      />
-    </View>
-  );
-}
-
-function LinkText({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="link">
-      <Text className="text-[14px] font-bold text-[#b7b9c2]">{label}</Text>
-    </Pressable>
   );
 }
 

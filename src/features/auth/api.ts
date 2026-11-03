@@ -3,7 +3,7 @@ import { mockCall, USE_MOCK } from '@/api/mock';
 import { mockServer } from '@/api/mockServer';
 
 import { getGoogleIdToken, getKakaoAccessToken } from './social';
-import type { LocalSignupRequest, LoginResponse, OnboardingRequest } from './types';
+import type { FindEmailResponse, LocalSignupRequest, LoginResponse, OnboardingRequest } from './types';
 
 // POST /auth/kakao — 카카오 SDK로 받은 액세스 토큰을 보냅니다. 로그인 창을 닫으면 null
 export async function loginWithKakao(): Promise<LoginResponse | null> {
@@ -39,6 +39,30 @@ export function signupWithEmail(body: LocalSignupRequest): Promise<LoginResponse
     return mockCall(() => mockServer.signupLocal(body));
   }
   return apiRequest<LoginResponse>('/auth/signup/local', { method: 'POST', body });
+}
+
+// POST /auth/find-email — 아이디(이메일) 찾기. 닉네임으로 가입한 이메일을 가려서 돌려줌 (없으면 빈 배열)
+export function findEmails(nickname: string): Promise<FindEmailResponse> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.findEmails(nickname));
+  }
+  return apiRequest<FindEmailResponse>('/auth/find-email', { method: 'POST', body: { nickname } });
+}
+
+// POST /auth/password/reset-code — 비밀번호 찾기 인증코드 메일. 가입 여부와 관계없이 성공(204)
+export function sendResetCode(email: string): Promise<void> {
+  if (USE_MOCK) {
+    return mockCall(() => undefined);
+  }
+  return apiRequest<void>('/auth/password/reset-code', { method: 'POST', body: { email } });
+}
+
+// POST /auth/password/reset — 인증코드 확인 후 새 비밀번호. 틀리면 AUTH_RESET_CODE_INVALID
+export function resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.resetPassword(email, code, newPassword));
+  }
+  return apiRequest<void>('/auth/password/reset', { method: 'POST', body: { email, code, newPassword } });
 }
 
 // 로컬 개발용 로그인 버튼 표시 여부. 실제 서버(USE_MOCK=false) + EXPO_PUBLIC_DEV_LOGIN=true일 때만

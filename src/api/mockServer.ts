@@ -2,7 +2,13 @@
 // 실제 서버처럼 "오늘", "30일 경과" 판단을 여기서 하고, 화면은 응답 값만 씁니다.
 // 응답·에러 형식은 docs/API명세서.md를 따릅니다.
 
-import type { LocalSignupRequest, LoginProvider, LoginResponse, OnboardingRequest } from '@/features/auth/types';
+import type {
+  FindEmailResponse,
+  LocalSignupRequest,
+  LoginProvider,
+  LoginResponse,
+  OnboardingRequest,
+} from '@/features/auth/types';
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { AppNotification, NotificationType } from '@/features/notification/types';
 import type { Spot } from '@/features/spot/types';
@@ -173,8 +179,12 @@ const emptyDb = () => ({
 
 let db = emptyDb();
 
-// 자체 로그인 계정 (이메일 → 비밀번호). 목 서버라 평문으로 둡니다.
-const localAccounts: Record<string, string> = { 'demo@hangajiman.app': 'password123' };
+// 자체 로그인 계정 (이메일 → 비밀번호·닉네임). 목 서버라 평문으로 둡니다.
+const localAccounts: Record<string, { password: string; nickname: string }> = {
+  'demo@hangajiman.app': { password: 'password123', nickname: '소원지기' },
+};
+// 비밀번호 찾기 인증코드: 목 모드에서는 메일 없이 항상 이 코드
+export const MOCK_RESET_CODE = '123456';
 
 const today = () => addDays(kstToday(), db.dayOffset);
 
@@ -295,22 +305,45 @@ function findWish(wishId: number) {
 
 const spotOf = (spotId: number) => spots.find((s) => s.id === spotId)!;
 
+// stone@example.com → st***@ex***.com (백엔드와 같은 규칙)
+const maskEmail = (email: string) => {
+  const [local, domain] = email.split('@');
+  const dot = domain.lastIndexOf('.');
+  const keep = (part: string) => part.slice(0, part.length > 2 ? 2 : 1);
+  return `${keep(local)}***@${keep(dot > 0 ? domain.slice(0, dot) : domain)}***${dot > 0 ? domain.slice(dot) : ''}`;
+};
+
 export const mockServer = {
   // 자체 로그인: 가입한 계정(메모리) + 시연용 계정 demo@hangajiman.app / password123
   signupLocal(body: LocalSignupRequest): LoginResponse {
     const email = body.email.trim().toLowerCase();
     if (localAccounts[email]) throw new ApiError('AUTH_EMAIL_DUPLICATED', '이미 가입된 이메일이에요.', 409);
-    localAccounts[email] = body.password;
+    localAccounts[email] = { password: body.password, nickname: body.nickname };
     db = emptyDb(); // 새 회원
     db.nickname = body.nickname;
     return mockServer.login('LOCAL');
   },
 
   loginLocal(email: string, password: string): LoginResponse {
-    if (localAccounts[email.trim().toLowerCase()] !== password) {
+    if (localAccounts[email.trim().toLowerCase()]?.password !== password) {
       throw new ApiError('AUTH_LOGIN_FAILED', '이메일 또는 비밀번호가 맞지 않아요.', 401);
     }
     return mockServer.login('LOCAL');
+  },
+
+  findEmails(nickname: string): FindEmailResponse {
+    const emails = Object.entries(localAccounts)
+      .filter(([, account]) => account.nickname === nickname.trim())
+      .map(([email]) => maskEmail(email));
+    return { emails };
+  },
+
+  resetPassword(email: string, code: string, newPassword: string): void {
+    const account = localAccounts[email.trim().toLowerCase()];
+    if (!account || code !== MOCK_RESET_CODE) {
+      throw new ApiError('AUTH_RESET_CODE_INVALID', '인증코드가 맞지 않거나 만료됐어요.', 400);
+    }
+    account.password = newPassword;
   },
 
   login(provider: LoginProvider): LoginResponse {
