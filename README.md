@@ -60,7 +60,9 @@ npx expo start -c
 | `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
 | `EXPO_PUBLIC_DEMO=true` | 홈에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
 
-목 모드 이메일 로그인: `demo@hangajiman.app` / `password123` (회원가입한 계정도 앱을 끄기 전까지 로그인 가능)
+목 모드 이메일 로그인: `demo@hangajiman.app` / `password123`, 닉네임 `소원지기` (회원가입한 계정도 앱을 끄기 전까지 로그인 가능). 비밀번호 찾기 인증코드는 항상 `123456`
+
+실제 서버로 비밀번호 찾기를 확인할 때 백엔드에 메일 설정(`SPRING_MAIL_HOST` 등)이 없으면, 인증코드는 백엔드 콘솔 로그에 찍힙니다.
 
 ## 웹 데모 배포 (EAS Hosting)
 
@@ -118,7 +120,8 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 화면 | 파일 | 기능 ID |
 | --- | --- | --- |
 | 로그인 (이메일·카카오·Google) | `src/app/login.tsx` | AUTH-01, AUTH-03 (토큰 저장·자동 재발급) |
-| 회원가입 (이메일·비밀번호·닉네임) | `src/app/signup.tsx` | AUTH-01 (자체 로그인) |
+| 회원가입 (이메일·비밀번호·닉네임, 로그인 화면 디자인) | `src/app/signup.tsx` | AUTH-01 (자체 로그인) |
+| 계정 찾기 (아이디: 닉네임 → 가린 이메일 / 비밀번호: 이메일 인증코드) | `src/app/find-account.tsx` | AUTH-01 (자체 로그인) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
 | 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 공개 범위, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, WISH-04, DEMO-01 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |

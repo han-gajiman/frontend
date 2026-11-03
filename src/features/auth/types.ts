@@ -14,6 +14,13 @@ export type LocalSignupRequest = {
 };
 
 export const PASSWORD_MIN_LENGTH = 8;
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// POST /auth/find-email 응답: 닉네임으로 가입한 이메일을 가린 것 (예: st***@ex***.com)
+export type FindEmailResponse = { emails: string[] };
+
+export const RESET_CODE_LENGTH = 6;
+export const RESET_CODE_RESEND_SECONDS = 60; // 서버도 60초 안 재요청은 무시
 
 export type LoginResponse = {
   accessToken: string;
