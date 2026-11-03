@@ -58,7 +58,9 @@ npx expo start -c
 | --- | --- |
 | `EXPO_PUBLIC_USE_MOCK=true` | 목 서버 사용 (`false`면 `EXPO_PUBLIC_API_URL`의 실제 서버) |
 | `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
-| `EXPO_PUBLIC_DEMO=true` | 돌탑 화면에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
+| `EXPO_PUBLIC_DEMO=true` | 홈에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
+
+목 모드 이메일 로그인: `demo@hangajiman.app` / `password123` (회원가입한 계정도 앱을 끄기 전까지 로그인 가능)
 
 ## 웹 데모 배포 (EAS Hosting)
 
@@ -115,7 +117,8 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 
 | 화면 | 파일 | 기능 ID |
 | --- | --- | --- |
-| 로그인 | `src/app/login.tsx` | AUTH-01 (카카오·Google은 SDK 연동 전, 개발용 로그인으로 실제 서버 연결), AUTH-03 (토큰 저장·자동 재발급) |
+| 로그인 (이메일·카카오·Google) | `src/app/login.tsx` | AUTH-01, AUTH-03 (토큰 저장·자동 재발급) |
+| 회원가입 (이메일·비밀번호·닉네임) | `src/app/signup.tsx` | AUTH-01 (자체 로그인) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
 | 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 공개 범위, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, WISH-04, DEMO-01 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |

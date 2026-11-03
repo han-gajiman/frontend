@@ -1,4 +1,4 @@
-import { Text, TextInput, View } from 'react-native';
+import { Text, TextInput, type TextInputProps, View } from 'react-native';
 
 type TextFieldProps = {
   label: string;
@@ -7,9 +7,10 @@ type TextFieldProps = {
   placeholder?: string;
   maxLength?: number;
   multiline?: boolean;
-};
+  error?: string; // 입력값 검사 문구 (칸 아래 빨간 글씨)
+} & Pick<TextInputProps, 'secureTextEntry' | 'keyboardType' | 'autoCapitalize' | 'autoComplete'>;
 
-export function TextField({ label, value, onChangeText, placeholder, maxLength, multiline = false }: TextFieldProps) {
+export function TextField({ label, value, onChangeText, placeholder, maxLength, multiline = false, error, ...input }: TextFieldProps) {
   return (
     <View className="gap-2">
       <View className="flex-row justify-between">
@@ -21,6 +22,7 @@ export function TextField({ label, value, onChangeText, placeholder, maxLength, 
         )}
       </View>
       <TextInput
+        {...input}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -30,6 +32,7 @@ export function TextField({ label, value, onChangeText, placeholder, maxLength, 
         className={`rounded-xl bg-gray-100 px-4 text-base text-gray-900 ${multiline ? 'min-h-24 py-3' : 'h-12'}`}
         style={multiline ? { textAlignVertical: 'top' } : undefined}
       />
+      {error && <Text className="text-sm text-red-500">{error}</Text>}
     </View>
   );
 }

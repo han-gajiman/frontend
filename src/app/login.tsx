@@ -1,5 +1,6 @@
 import { Image, type ImageSource } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
@@ -14,23 +15,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DEV_LOGIN_ENABLED, loginForDev, loginWithGoogle, loginWithKakao } from '@/features/auth/api';
+import { DEV_LOGIN_ENABLED, loginForDev, loginWithEmail, loginWithGoogle, loginWithKakao } from '@/features/auth/api';
 import { useAuthStore } from '@/features/auth/store';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { useSubmit } from '@/shared/hooks/useSubmit';
 
 // AUTH-01 로그인 (Figma "로그인 화면"). 로그인되면 _layout의 guard가 온보딩/홈으로 이동시킵니다.
-// 카카오·Google은 아래 동그란 아이콘으로 로그인합니다.
-// 아이디·비밀번호 로그인과 찾기·회원가입은 백엔드(자체 로그인)가 준비되면 연결합니다. 지금은 안내 문구만 보여줍니다.
-const ID_LOGIN_NOTICE = '아이디 로그인은 준비 중이에요.\n카카오나 Google로 시작해 주세요.';
+// 위쪽은 자체 로그인(이메일·비밀번호, 회원가입은 /signup), 아래 동그란 아이콘은 카카오·Google 로그인입니다.
+// 아이디·비밀번호 찾기는 백엔드 API가 없어서 안내 문구만 보여줍니다.
+const FIND_ACCOUNT_NOTICE = '아이디·비밀번호 찾기는 준비 중이에요.';
 
 export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
   const kakao = useSubmit(loginWithKakao);
   const google = useSubmit(loginWithGoogle);
   const dev = useSubmit(loginForDev);
-  const submitting = kakao.submitting || google.submitting || dev.submitting;
-  const [loginId, setLoginId] = useState('');
+  const local = useSubmit(loginWithEmail);
+  const submitting = kakao.submitting || google.submitting || dev.submitting || local.submitting;
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState<string>();
 
@@ -51,8 +53,18 @@ export default function LoginScreen() {
     if (result.ok) signIn(result.data);
   };
 
-  // TODO(자체 로그인): 아이디·비밀번호 로그인, 아이디·비밀번호 찾기, 회원가입 API 연결
-  const showIdLoginNotice = () => setNotice(ID_LOGIN_NOTICE);
+  const handleLocal = async () => {
+    if (!email.trim() || !password) {
+      setNotice('이메일과 비밀번호를 입력해 주세요.');
+      return;
+    }
+    setNotice(undefined);
+    const result = await local.run(email.trim(), password);
+    if (result.ok) signIn(result.data);
+  };
+
+  // TODO(자체 로그인): 아이디·비밀번호 찾기 API가 생기면 연결
+  const showFindNotice = () => setNotice(FIND_ACCOUNT_NOTICE);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -78,10 +90,11 @@ export default function LoginScreen() {
               icon={require('../../assets/login/icon_user.png')}
               iconSize={{ width: 17, height: 20 }}
               textLeft={50}
-              value={loginId}
-              onChangeText={setLoginId}
-              placeholder="아이디를 입력해주세요"
-              autoComplete="username"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="이메일을 입력해주세요"
+              autoComplete="email"
+              keyboardType="email-address"
             />
             <View className="h-[9px]" />
             <LoginField
@@ -93,28 +106,34 @@ export default function LoginScreen() {
               placeholder="비밀번호"
               autoComplete="password"
               secureTextEntry
+              onSubmitEditing={handleLocal}
             />
 
             <Pressable
-              onPress={showIdLoginNotice}
+              onPress={handleLocal}
               disabled={submitting}
               accessibilityRole="button"
+              accessibilityLabel="이메일로 로그인"
               className="mt-[14px]">
               <LinearGradient
                 colors={['#637df6', '#8378f4']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{ height: 58, borderRadius: 27, alignItems: 'center', justifyContent: 'center' }}>
-                <Text className="text-[20px] font-semibold text-white">로그인</Text>
+                {local.submitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-[20px] font-semibold text-white">로그인</Text>
+                )}
               </LinearGradient>
             </Pressable>
 
             <View className="mt-[26px] flex-row justify-center">
-              <LinkText label="아이디 찾기" onPress={showIdLoginNotice} />
+              <LinkText label="아이디 찾기" onPress={showFindNotice} />
               <Text className="text-[14px] font-bold text-[#b7b9c2]"> | </Text>
-              <LinkText label="비밀번호 찾기" onPress={showIdLoginNotice} />
+              <LinkText label="비밀번호 찾기" onPress={showFindNotice} />
               <Text className="text-[14px] font-bold text-[#b7b9c2]"> | </Text>
-              <LinkText label="회원가입" onPress={showIdLoginNotice} />
+              <LinkText label="회원가입" onPress={() => router.push('/signup')} />
             </View>
           </View>
 
@@ -148,7 +167,7 @@ export default function LoginScreen() {
 
           <View className="mt-4 min-h-5 gap-3">
             {notice && <Text className="text-center text-[13px] text-[#737a84]">{notice}</Text>}
-            <ErrorText error={kakao.error ?? google.error ?? dev.error} />
+            <ErrorText error={local.error ?? kakao.error ?? google.error ?? dev.error} />
             {DEV_LOGIN_ENABLED && (
               <Pressable onPress={handleDev} disabled={submitting} hitSlop={8} accessibilityRole="button">
                 <Text className="text-center text-[13px] text-[#737a84] underline">
@@ -175,8 +194,10 @@ function LoginField({
   value: string;
   onChangeText: (text: string) => void;
   placeholder: string;
-  autoComplete: 'username' | 'password';
+  autoComplete: 'email' | 'password';
+  keyboardType?: 'email-address';
   secureTextEntry?: boolean;
+  onSubmitEditing?: () => void;
 }) {
   return (
     <View className="h-[46px] justify-center rounded-[20px] border-[1.5px] border-[#dedede] bg-[#e4ddff]">

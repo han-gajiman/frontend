@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { completeOnboarding } from '@/features/auth/api';
+import { getMe } from '@/features/user/api';
 import { useAuthStore } from '@/features/auth/store';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -19,6 +20,13 @@ export default function OnboardingScreen() {
   const [location, setLocation] = useState(false);
   const [nickname, setNickname] = useState('');
   const { run, submitting, error } = useSubmit(completeOnboarding);
+
+  // 이메일로 가입했다면 가입할 때 적은 닉네임을 미리 채워 둡니다. (못 불러와도 직접 입력하면 됨)
+  useEffect(() => {
+    getMe()
+      .then((me) => setNickname((current) => current || me.nickname || ''))
+      .catch(() => undefined);
+  }, []);
 
   const allRequired = terms && privacy;
   const canSubmit = allRequired && nickname.trim().length > 0;
