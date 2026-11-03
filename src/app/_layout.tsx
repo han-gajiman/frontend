@@ -71,6 +71,7 @@ export default function RootLayout() {
 
         <Stack.Protected guard={!loggedIn && introPassed}>
           <Stack.Screen name="login" />
+          <Stack.Screen name="signup" />
         </Stack.Protected>
       </Stack>
     </WebPhoneFrame>

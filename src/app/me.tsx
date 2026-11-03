@@ -13,6 +13,8 @@ import { AsyncContent } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
 import { useSubmit } from '@/shared/hooks/useSubmit';
 
+const PROVIDER_LABEL = { KAKAO: '카카오 계정으로 로그인', GOOGLE: 'Google 계정으로 로그인', LOCAL: '이메일로 로그인' } as const;
+
 // AUTH-04 내 정보 + AUTH-05 위치정보 동의 변경 + AUTH-06 탈퇴 + 로그아웃
 // TODO(AUTH-04): 푸시 토큰 등록은 알림(NOTI-01) 구현 때 추가
 export default function MeScreen() {
@@ -55,7 +57,7 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
       <View className="gap-6 pt-2">
         <View className="gap-1">
           <Text className="text-2xl font-bold text-gray-900">{me.nickname}</Text>
-          <Text className="text-gray-500">{me.provider === 'KAKAO' ? '카카오' : 'Google'} 계정으로 로그인</Text>
+          <Text className="text-gray-500">{PROVIDER_LABEL[me.provider]}</Text>
         </View>
 
         {me.journey && (

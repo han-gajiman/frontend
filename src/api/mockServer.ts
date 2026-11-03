@@ -2,7 +2,7 @@
 // 실제 서버처럼 "오늘", "30일 경과" 판단을 여기서 하고, 화면은 응답 값만 씁니다.
 // 응답·에러 형식은 docs/API명세서.md를 따릅니다.
 
-import type { LoginResponse, OnboardingRequest, SocialProvider } from '@/features/auth/types';
+import type { LocalSignupRequest, LoginProvider, LoginResponse, OnboardingRequest } from '@/features/auth/types';
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { AppNotification, NotificationType } from '@/features/notification/types';
 import type { Spot } from '@/features/spot/types';
@@ -157,7 +157,7 @@ type MockFriend = {
 const emptyDb = () => ({
   dayOffset: 0, // 시연용 시간 이동 (DEMO-01)
   onboarded: false,
-  provider: 'KAKAO' as SocialProvider,
+  provider: 'KAKAO' as LoginProvider,
   nickname: '',
   locationAgreed: false,
   journeyStartedOn: null as string | null,
@@ -172,6 +172,9 @@ const emptyDb = () => ({
 });
 
 let db = emptyDb();
+
+// 자체 로그인 계정 (이메일 → 비밀번호). 목 서버라 평문으로 둡니다.
+const localAccounts: Record<string, string> = { 'demo@hangajiman.app': 'password123' };
 
 const today = () => addDays(kstToday(), db.dayOffset);
 
@@ -293,7 +296,24 @@ function findWish(wishId: number) {
 const spotOf = (spotId: number) => spots.find((s) => s.id === spotId)!;
 
 export const mockServer = {
-  login(provider: SocialProvider): LoginResponse {
+  // 자체 로그인: 가입한 계정(메모리) + 시연용 계정 demo@hangajiman.app / password123
+  signupLocal(body: LocalSignupRequest): LoginResponse {
+    const email = body.email.trim().toLowerCase();
+    if (localAccounts[email]) throw new ApiError('AUTH_EMAIL_DUPLICATED', '이미 가입된 이메일이에요.', 409);
+    localAccounts[email] = body.password;
+    db = emptyDb(); // 새 회원
+    db.nickname = body.nickname;
+    return mockServer.login('LOCAL');
+  },
+
+  loginLocal(email: string, password: string): LoginResponse {
+    if (localAccounts[email.trim().toLowerCase()] !== password) {
+      throw new ApiError('AUTH_LOGIN_FAILED', '이메일 또는 비밀번호가 맞지 않아요.', 401);
+    }
+    return mockServer.login('LOCAL');
+  },
+
+  login(provider: LoginProvider): LoginResponse {
     db.provider = provider;
     return {
       accessToken: 'mock-access-token',

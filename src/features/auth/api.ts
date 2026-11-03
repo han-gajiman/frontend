@@ -3,7 +3,7 @@ import { mockCall, USE_MOCK } from '@/api/mock';
 import { mockServer } from '@/api/mockServer';
 
 import { getGoogleIdToken, getKakaoAccessToken } from './social';
-import type { LoginResponse, OnboardingRequest } from './types';
+import type { LocalSignupRequest, LoginResponse, OnboardingRequest } from './types';
 
 // POST /auth/kakao — 카카오 SDK로 받은 액세스 토큰을 보냅니다. 로그인 창을 닫으면 null
 export async function loginWithKakao(): Promise<LoginResponse | null> {
@@ -23,6 +23,22 @@ export async function loginWithGoogle(): Promise<LoginResponse | null> {
   const idToken = await getGoogleIdToken();
   if (!idToken) return null;
   return apiRequest<LoginResponse>('/auth/google', { method: 'POST', body: { idToken } });
+}
+
+// POST /auth/login/local — 자체 로그인 (이메일·비밀번호). 실패하면 AUTH_LOGIN_FAILED
+export function loginWithEmail(email: string, password: string): Promise<LoginResponse> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.loginLocal(email, password));
+  }
+  return apiRequest<LoginResponse>('/auth/login/local', { method: 'POST', body: { email, password } });
+}
+
+// POST /auth/signup/local — 자체 회원가입. 가입하면 바로 로그인 토큰이 오고, 약관 동의는 온보딩에서
+export function signupWithEmail(body: LocalSignupRequest): Promise<LoginResponse> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.signupLocal(body));
+  }
+  return apiRequest<LoginResponse>('/auth/signup/local', { method: 'POST', body });
 }
 
 // 로컬 개발용 로그인 버튼 표시 여부. 실제 서버(USE_MOCK=false) + EXPO_PUBLIC_DEV_LOGIN=true일 때만
