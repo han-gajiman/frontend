@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   BounceInDown,
   cancelAnimation,
@@ -35,28 +35,37 @@ type StoneTowerProps = {
   // 배경을 탑 영역 안에 그릴 때만 넘깁니다. 홈처럼 화면 전체에 배경을 깔 때는 생략 (투명)
   background?: TowerBackgroundProps;
   inscription?: string; // 맨 아래 돌에 새길 소원 문구
+  onPress?: () => void; // 탑 몸체를 눌렀을 때 (홈: 내 돌탑 시트). 빈 하늘은 눌리지 않습니다.
 };
 
 // STONE-02 돌탑: 아래부터 쌓이는 돌 + 배경 + 30일 완성 연출
-export function StoneTower({ count, stonedToday, completed, background, inscription }: StoneTowerProps) {
+export function StoneTower({ count, stonedToday, completed, background, inscription, onPress }: StoneTowerProps) {
   const [areaHeight, setAreaHeight] = useState(0);
   // 화면에 들어왔을 때 이미 있던 돌은 차례로 나타나고, 그 뒤에 쌓은 돌만 떨어지는 효과
   const [initialCount] = useState(count);
 
   const scale = Math.min(1.3, (areaHeight - GROUND_HEIGHT - TOP_MARGIN) / FULL_HEIGHT);
+  const label = `돌탑, 돌 ${count}개${completed ? ', 완성' : ''}`;
 
   return (
     <View
       className={`flex-1 overflow-hidden ${background ? 'rounded-3xl' : ''}`}
       onLayout={(e) => setAreaHeight(e.nativeEvent.layout.height)}
-      accessible
-      accessibilityLabel={`돌탑, 돌 ${count}개${completed ? ', 완성' : ''}`}>
+      accessible={!onPress} // 눌리는 탑이면 아래 버튼이 설명을 맡습니다.
+      accessibilityLabel={label}>
       {background && <TowerBackground {...background} />}
 
       {completed && <CompletedBadge />}
 
       {areaHeight > 0 && (
         <TowerBody completed={completed}>
+          <Pressable
+            onPress={onPress}
+            disabled={!onPress}
+            accessibilityRole={onPress ? 'button' : undefined}
+            accessibilityLabel={onPress ? `${label}, 내 돌탑 열기` : undefined}
+            // 돌이 없어도 누를 자리를 남겨 둡니다.
+            style={{ flexDirection: 'column-reverse', alignItems: 'center', minWidth: 140, minHeight: 80 }}>
           {Array.from({ length: Math.min(count, MAX_STONES) }, (_, i) => (
             <Animated.View
               key={i}
@@ -70,11 +79,12 @@ export function StoneTower({ count, stonedToday, completed, background, inscript
               />
             </Animated.View>
           ))}
+          </Pressable>
         </TowerBody>
       )}
 
       {count === 0 && (
-        <View className="absolute inset-x-0 items-center" style={{ bottom: GROUND_HEIGHT + 24 }}>
+        <View className="absolute inset-x-0 items-center" pointerEvents="none" style={{ bottom: GROUND_HEIGHT + 24 }}>
           <Text className="text-gray-500">첫 번째 돌을 올려 보세요</Text>
         </View>
       )}
@@ -106,7 +116,6 @@ function TowerBody({ completed, children }: { completed: boolean; children: Reac
           left: 0,
           right: 0,
           bottom: GROUND_HEIGHT - 14,
-          flexDirection: 'column-reverse',
           alignItems: 'center',
           transformOrigin: 'bottom',
         },
