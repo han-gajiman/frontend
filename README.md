@@ -127,7 +127,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
 | 탭: 모아보기 (회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
-| 탭: 명소 지도 | `src/app/(tabs)/spots.tsx` | SPOT-02 |
+| 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx` | SPOT-02 |
 | 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
 | 탭: 친구 목록 | `src/app/(tabs)/friends.tsx` | FRIEND-02 |
 | 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |

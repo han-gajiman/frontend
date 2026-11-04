@@ -10,8 +10,9 @@ export function SpotMap({ spots, selectedId, onSelect }: SpotMapProps) {
   // WebView의 기본 타입 인자(undefined)는 props를 never로 만들어서 object를 명시합니다.
   const webViewRef = useRef<WebView<object>>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  // 선택이 바뀔 때마다 지도를 다시 그리지 않도록, HTML은 명소 목록이 바뀔 때만 새로 만듭니다.
-  const html = useMemo(() => buildKakaoMapHtml(spots), [spots]);
+  // 지도를 다시 불러오지 않도록, 화면에 돌아와 명소를 다시 받아도 내용이 같으면 같은 HTML을 씁니다.
+  const spotsKey = JSON.stringify(spots);
+  const html = useMemo(() => buildKakaoMapHtml(JSON.parse(spotsKey)), [spotsKey]);
 
   useEffect(() => {
     if (status !== 'ready') return;
