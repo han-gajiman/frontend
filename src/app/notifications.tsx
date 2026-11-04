@@ -32,8 +32,9 @@ export default function NotificationsScreen() {
       await markNotificationRead(notification.id).catch(() => undefined);
     }
     const destination = destinationOf(notification);
-    if (destination) router.push(destination);
-    else state.reload();
+    if (!destination) state.reload();
+    else if (destination === '/cheers') router.push(destination);
+    else router.dismissTo(destination); // 홈·모아보기는 탭이라, 알림함을 닫고 그 탭으로 돌아갑니다.
   };
 
   return (

@@ -5,5 +5,7 @@ export function towerTheme(evening: boolean) {
     secondary: evening ? 'text-white/80' : 'text-gray-600',
     muted: evening ? 'text-white/70' : 'text-gray-500',
     icon: evening ? '#ffffff' : '#4b5563',
+    tabActive: evening ? '#ffffff' : '#5b62e8',
+    tabInactive: evening ? 'rgba(255,255,255,0.7)' : '#374151',
   };
 }

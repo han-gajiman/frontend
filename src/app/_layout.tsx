@@ -42,15 +42,12 @@ export default function RootLayout() {
     <WebPhoneFrame>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={loggedIn && onboarded}>
-          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen name="wish/new" />
           <Stack.Screen name="wish/spot" />
           <Stack.Screen name="wish/confirm" />
           <Stack.Screen name="reflection" />
-          <Stack.Screen name="collection" />
-          <Stack.Screen name="spots" />
           <Stack.Screen name="me" />
-          <Stack.Screen name="friends/index" />
           <Stack.Screen name="friends/invite" />
           <Stack.Screen name="friends/[friendId]" />
           <Stack.Screen name="notifications" />

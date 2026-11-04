@@ -8,6 +8,9 @@
 - 핵심 용어: 소원 = 돌탑 1개(30일) / 돌 = 하루 1개 기록 / 12개 돌탑 = 1년 회차
 - 일정: 제출 11/20 23:59, 본선 11/21
 
+## 지원 플랫폼
+웹이 1순위, 안드로이드가 2순위입니다. iOS는 배포하지 않습니다. 화면은 웹에서 먼저 확인하고 안드로이드 개발 빌드로 확인합니다.
+
 ## 기술 스택
 React Native 0.88 · Expo SDK 58 · TypeScript · Expo Router (파일 기반 라우팅, 내부적으로 React Navigation 사용) · Zustand · NativeWind · 카카오 지도(WebView) · Expo Location · Expo Notifications · EAS Build
 
@@ -33,7 +36,7 @@ src/
 - 경로는 `@/`로 씁니다. (`@/` = `src/`)
 - 스타일은 NativeWind `className`으로 씁니다. (Tailwind v3 문법, 설정: `tailwind.config.js`)
 
-## API·화면 상태 패턴 (예시: `features/wish/`, `src/app/tower.tsx`)
+## API·화면 상태 패턴 (예시: `features/wish/`, `src/app/(tabs)/index.tsx`)
 - 도메인별로 `features/<도메인>/types.ts`(API 명세서 타입), `api.ts`(API 함수)를 둡니다. 여러 화면이 공유하는 입력값은 Zustand 스토어(예: `wish/draftStore.ts`)에 둡니다.
 - `api.ts` 함수는 `USE_MOCK`이면 `mockCall(() => mockServer.xxx())`를, 아니면 `apiRequest`를 반환합니다. 화면 코드는 목인지 실제인지 몰라도 됩니다.
 - 목 서버(`src/api/mockServer.ts`)는 메모리에서 실제 서버처럼 동작합니다(등록·돌 쌓기·시간 이동 반영, 명세서 에러 코드 반환). 새 API를 추가하면 여기에도 같이 추가하세요.
@@ -41,6 +44,7 @@ src/
 - 버튼 요청: `useSubmit(API 함수)`의 `run()`은 `{ ok, data }`를 돌려줍니다. 실패하면 `<ErrorText error={error} />`로 보여주세요.
 - 화면 틀은 `<Screen title showBack footer>`, 버튼은 `<Button>`, 입력은 `<TextField>`를 씁니다. (`src/shared/components/`)
 - 로그인·온보딩 여부에 따른 화면 접근은 `src/app/_layout.tsx`의 `Stack.Protected`가 처리합니다. 새 화면은 여기에 등록하세요.
+- 하단 탭(홈·명소·친구·모아보기)은 `src/app/(tabs)/`입니다. 탭 위에 뜬 화면에서 탭으로 돌아갈 때는 `router.replace` 대신 `router.dismissTo`를 쓰세요. (`replace`는 탭 묶음이 하나 더 쌓입니다)
 - 상태 확인: `.env.local`의 `EXPO_PUBLIC_MOCK_SCENARIO`를 `normal | empty | error | offline | slow`로 바꾸고 Metro를 재시작(`npx expo start -c`)하세요. 시연 경로를 처음부터 보려면 `empty`, 시간 이동 버튼은 `EXPO_PUBLIC_DEMO=true`.
 
 ## 반드시 지킬 규칙
@@ -48,13 +52,13 @@ src/
 2. **소원은 수정 불가**: 소원과 실천 목표를 등록한 뒤 수정하거나 취소하는 UI를 만들지 마세요. 등록 전에 "다짐 확인" 단계에서 한 번 더 확인합니다.
 3. **위치정보**: 위치 동의는 선택입니다. 동의가 없거나 권한을 거부해도 앱의 나머지 기능은 정상이어야 하고, 방문 인증을 누를 때만 동의를 요청합니다. 좌표는 인증 요청에만 쓰고 앱에 저장하지 마세요.
 4. **모든 화면에 상태를 만드세요**: 로딩, 에러, 빈 상태, 오프라인. 상태 없이 정상 케이스만 만들지 마세요.
-5. **돌탑 화면은 핵심 화면**: 돌 0~30개, 오늘 완료, 30일 완성 연출, 배경(허허벌판 / 방문한 명소 풍경)을 모두 표현해야 합니다.
+5. **돌탑 화면은 핵심 화면**: 돌 0~30개, 오늘 완료, 30일 완성 연출, 배경(빈 홈 허허벌판 / 명소 풍경, 방문 전 흐리게)을 모두 표현해야 합니다. 홈이 곧 돌탑 화면입니다.
 6. **API 키·비밀값을 앱에 넣지 마세요.** LLM 호출은 백엔드에서만 합니다.
 7. **카카오 로그인**은 Expo Go만으로 안 될 수 있어 개발 빌드(EAS Build)가 필요할 수 있습니다. 구현 초반에 실제 기기에서 먼저 확인하세요.
 
 ## 화면 목록 (기능 ID 기준)
 - 진입: 소셜 로그인, 약관·위치 동의, 닉네임 (AUTH)
-- 홈: 진행 중 돌탑 / 빈 홈 (HOME-01)
+- 탭: 홈(돌탑·오늘의 돌, 빈 홈) · 명소(지도) · 친구 · 모아보기 (HOME-01, STONE, SPOT-02, FRIEND, TOWER-03)
 - 소원 등록: 소원 + 실천 목표(AI 추천 3개), 명소 추천·선택, 다짐 확인 (WISH, SPOT-01)
 - 돌탑: 돌탑 화면, 오늘 완료 (STONE)
 - 명소: 지도, 방문 인증 (SPOT-02, 03)

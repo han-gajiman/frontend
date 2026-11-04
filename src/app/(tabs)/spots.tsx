@@ -17,7 +17,7 @@ export default function SpotsScreen() {
   const [selected, setSelected] = useState<Spot | null>(null);
 
   return (
-    <Screen title="경북 명소" showBack scroll={false}>
+    <Screen title="경북 명소" scroll={false}>
       <AsyncContent
         state={state}
         isEmpty={(spots) => spots.length === 0}

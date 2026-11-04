@@ -16,13 +16,14 @@ export default function CollectionScreen() {
   const me = useApi(getMe);
 
   return (
-    <Screen title="돌탑 모아보기" showBack scroll={false}>
+    <Screen title="돌탑 모아보기" scroll={false}>
       <AsyncContent state={me}>
         {(user) => {
           const currentRound = user.journey?.currentRound ?? 1;
           const requested = Number(round);
           const initialRound = requested >= 1 && requested <= currentRound ? requested : currentRound;
-          return <RoundCollection currentRound={currentRound} initialRound={initialRound} />;
+          // 탭은 계속 떠 있으므로, 알림으로 다른 회차를 열면 key로 새로 그려 그 회차를 보여줍니다.
+          return <RoundCollection key={initialRound} currentRound={currentRound} initialRound={initialRound} />;
         }}
       </AsyncContent>
     </Screen>
@@ -60,7 +61,7 @@ function RoundCollection({ currentRound, initialRound }: { currentRound: number;
             title={`${selected}회차에 완성한 돌탑이 없어요`}
             description="30일 돌탑을 완성하면 여기에 모여요."
             actionLabel="홈으로"
-            onAction={() => router.dismissAll()}
+            onAction={() => router.navigate('/')}
           />
         }>
         {(wishes) => (
