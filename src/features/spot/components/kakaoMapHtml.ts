@@ -13,8 +13,8 @@ export type KakaoMapMessage = { type: 'ready' } | { type: 'error' } | { type: 's
 // 경북 전체가 보이는 초기 화면
 const CENTER = { lat: 36.35, lng: 128.75 };
 const LEVEL = 11;
-// 명소를 고르면 확대되는 고도. 사용자가 직접 확대할 때도 여기까지만 됩니다. (숫자가 작을수록 가까움, 5 = 축척 약 250m)
-const FOCUS_LEVEL = 5;
+// 명소를 고르면 확대되는 고도. 사용자가 직접 확대할 때도 여기까지만 됩니다. (숫자가 작을수록 가까움, 6 = 축척 500m)
+const FOCUS_LEVEL = 6;
 
 // 지도 페이지 HTML. 폰(WebView)과 웹(iframe)이 같은 HTML을 씁니다.
 // 앱 → 지도: window.selectSpot(id) 호출 (id = 그 명소로 확대, null = 전체 지도로) / 지도 → 앱: ReactNativeWebView.postMessage 또는 parent.postMessage
