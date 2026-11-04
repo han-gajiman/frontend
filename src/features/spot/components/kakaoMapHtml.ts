@@ -13,7 +13,7 @@ export type KakaoMapMessage = { type: 'ready' } | { type: 'error' } | { type: 's
 // 경북 전체가 보이는 초기 화면
 const CENTER = { lat: 36.35, lng: 128.75 };
 const LEVEL = 11;
-// 명소를 고르면 확대되는 고도. 사용자가 직접 확대할 때도 여기까지만 됩니다. (숫자가 작을수록 가까움, 6 = 축척 500m)
+// 명소를 고르면 확대되는 고도 (숫자가 작을수록 가까움, 6 = 축척 500m). 직접 확대는 제한하지 않습니다.
 const FOCUS_LEVEL = 6;
 
 // 지도 페이지 HTML. 폰(WebView)과 웹(iframe)이 같은 HTML을 씁니다.
@@ -180,7 +180,6 @@ export function buildKakaoMapHtml(spots: Spot[]) {
       // 처음 열 때 모든 명소가 한 화면에 들어오게 맞춥니다. (명소가 하나면 경북 전체 화면 유지)
       if (spots.length > 1) map.setBounds(bounds, 60, 40, 40, 40);
       overview = { level: map.getLevel(), center: map.getCenter() };
-      map.setMinLevel(${FOCUS_LEVEL});
       // 아래 패널 크기에 따라 지도 크기가 바뀝니다.
       window.addEventListener('resize', function () { map.relayout(); });
       ready = true;
