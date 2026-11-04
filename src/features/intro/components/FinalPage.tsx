@@ -108,7 +108,7 @@ export function FinalPage({
             colors={['#607ef7', '#8678f4']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={{ height: 74, borderRadius: 37, alignItems: 'center', justifyContent: 'center' }}>
+            style={{ height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: 17, fontWeight: '700', color: 'white' }}>내 소원 시작하기</Text>
           </LinearGradient>
         </PressScale>

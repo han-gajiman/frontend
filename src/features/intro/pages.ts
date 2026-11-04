@@ -189,7 +189,7 @@ export const FINAL_PAGE: FinalPageData = {
     { top: 143, size: 31, spans: [{ text: '쌓아보세요', color: FINAL_TITLE }] },
   ],
   description: [
-    { top: 186, size: 14.5, text: '경북의 특별한 곳에서', color: FINAL_DESCRIPTION },
-    { top: 204, size: 13.3, text: '당신의 소원이 더 가까워질 거예요.', color: FINAL_DESCRIPTION },
+    { top: 198, size: 14.5, text: '경북의 특별한 곳에서', color: FINAL_DESCRIPTION },
+    { top: 216, size: 13.3, text: '당신의 소원이 더 가까워질 거예요.', color: FINAL_DESCRIPTION },
   ],
 };
