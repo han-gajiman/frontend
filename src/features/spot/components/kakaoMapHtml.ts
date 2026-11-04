@@ -15,7 +15,6 @@ const CENTER = { lat: 36.35, lng: 128.75 };
 const LEVEL = 11;
 // 명소를 고르면 확대되는 고도. 사용자가 직접 확대할 때도 여기까지만 됩니다. (숫자가 작을수록 가까움, 5 = 축척 약 250m)
 const FOCUS_LEVEL = 5;
-const MIDWAY_LEVEL = 8; // 확대 중간 단계
 
 // 지도 페이지 HTML. 폰(WebView)과 웹(iframe)이 같은 HTML을 씁니다.
 // 앱 → 지도: window.selectSpot(id) 호출 (id = 그 명소로 확대, null = 전체 지도로) / 지도 → 앱: ReactNativeWebView.postMessage 또는 parent.postMessage
@@ -31,7 +30,11 @@ export function buildKakaoMapHtml(spots: Spot[]) {
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <style>
   html, body, #map { margin: 0; width: 100%; height: 100%; }
-  .pin { transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  html, body { overflow: hidden; }
+  /* 타일이 서서히 나타나면 확대 중 고도가 바뀔 때마다 빈 배경이 비칩니다. */
+  #map img { transition: none !important; }
+  .pin { transform: translateY(10px) scale(var(--pin-scale, 1)); transform-origin: center calc(100% - 10px); display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  /* 점 가운데가 명소 좌표에 오도록 (오버레이 아래쪽이 좌표, 점 반지름만큼 내림) */
   .pin .dot { width: 14px; height: 14px; border-radius: 7px; background: #4a4d92; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .pin .label { margin-bottom: 4px; padding: 3px 8px; border-radius: 10px; background: #fff; color: #343354; font: 600 12px sans-serif; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
   .pin.selected .dot { width: 18px; height: 18px; border-radius: 9px; background: #f2b84b; }
@@ -64,22 +67,68 @@ export function buildKakaoMapHtml(spots: Spot[]) {
     var spot = spots.find(function (s) { return s.id === id; });
     return spot ? new kakao.maps.LatLng(spot.latitude, spot.longitude) : null;
   }
-  function zoom(level, ms) { map.setLevel(level, { animate: { duration: ms } }); }
+  // 부드러운 확대·축소. 카카오 지도의 setLevel 애니메이션은 2배마다 멈추거나(단계별) 한 번에 튀어서(큰 폭) 쓰지 않습니다.
+  // 프레임마다 소수 고도를 계산해, 그보다 한 단계 먼 고도의 지도를 띄우고 나머지만큼 CSS로 키웁니다. (고도가 1 줄면 정확히 2배)
+  var zoomFrame = null;
+  function stopZoom() {
+    if (zoomFrame !== null) cancelAnimationFrame(zoomFrame);
+    zoomFrame = null;
+    var el = document.getElementById('map');
+    el.style.transform = '';
+    el.style.removeProperty('--pin-scale');
+  }
+  function smoothZoom(to, ms, anchor, done) {
+    stopZoom();
+    var from = map.getLevel();
+    var el = document.getElementById('map');
+    var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (from === to || reduced) {
+      map.setLevel(to);
+      if (done) done();
+      return;
+    }
+    var startedAt = null;
+    function frame(now) {
+      if (startedAt === null) startedAt = now;
+      var p = Math.min((now - startedAt) / ms, 1);
+      var eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      var level = from + (to - from) * eased;
+      var shown = Math.ceil(level - 1e-6);
+      var scale = Math.pow(2, shown - level);
+      if (map.getLevel() !== shown) {
+        map.setLevel(shown);
+        map.setCenter(anchor); // getCenter()는 먼 고도에서 반올림된 값이라, 실제 좌표로 다시 맞춰야 끝에서 튀지 않습니다.
+      }
+      el.style.transform = 'scale(' + scale + ')';
+      el.style.setProperty('--pin-scale', String(1 / scale)); // 핀·이름표는 크기 유지
+      if (p < 1) {
+        zoomFrame = requestAnimationFrame(frame);
+      } else {
+        stopZoom();
+        if (done) done();
+      }
+    }
+    zoomFrame = requestAnimationFrame(frame);
+  }
   // 가까운 곳으로 부드럽게 이동한 뒤 확대합니다.
-  function flyIn(position, wait) {
-    later(function () { map.panTo(position); }, wait);
-    // 한 번에 크게 확대하면 지도가 잠깐 뭉개져서 두 단계로 나눕니다.
-    later(function () { zoom(${MIDWAY_LEVEL}, 300); }, wait + 350);
-    later(function () { zoom(${FOCUS_LEVEL}, 300); }, wait + 700);
-    later(function () { map.relayout(); map.setCenter(position); }, wait + 1050);
+  function flyIn(position) {
+    map.panTo(position);
+    later(function () {
+      // 핀을 정확히 가운데에 두어야 확대 내내 그 자리에 머뭅니다.
+      map.relayout();
+      map.setCenter(position);
+      smoothZoom(${FOCUS_LEVEL}, 800, position, function () { map.relayout(); map.setCenter(position); });
+    }, 300);
   }
   // 선택한 명소는 강조하고, 가까운 명소와 이름표가 겹쳐도 맨 위로 올라오게 합니다.
   window.selectSpot = function (id) {
     if (id === current || !map) return;
     var wasFocused = current !== null;
+    var focused = wasFocused ? positionOf(current) : map.getCenter(); // 축소할 때 기준점
     current = id;
     timers.forEach(clearTimeout);
     timers = [];
+    stopZoom();
     Object.keys(pins).forEach(function (key) {
       var selected = Number(key) === id;
       pins[key].classList.toggle('selected', selected);
@@ -88,15 +137,16 @@ export function buildKakaoMapHtml(spots: Spot[]) {
     var position = id === null ? null : positionOf(id);
     if (!position) {
       // 전체 지도로
-      zoom(overview.level, 400);
-      later(function () { map.panTo(overview.center); }, 400);
-      later(function () { map.relayout(); map.setCenter(overview.center); }, 800);
+      smoothZoom(overview.level, 600, focused, function () {
+        map.relayout();
+        map.panTo(overview.center);
+        later(function () { map.setCenter(overview.center); }, 300);
+      });
     } else if (wasFocused) {
       // 다른 명소로: 축소 → 이동 → 확대
-      zoom(overview.level, 400);
-      flyIn(position, 400);
+      smoothZoom(overview.level, 500, focused, function () { flyIn(position); });
     } else {
-      flyIn(position, 0);
+      flyIn(position);
     }
   };
   function start() {
