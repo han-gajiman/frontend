@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { type ComponentRef, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
@@ -5,13 +6,14 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { DEMO_ENABLED } from '@/features/demo/api';
 import { DemoTimeTravel } from '@/features/demo/components/DemoTimeTravel';
+import { CheerBadge } from '@/features/friend/components/CheerBadge';
 import { FriendTowersPeek } from '@/features/friend/components/FriendTowersPeek';
 import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
 import { createStone } from '@/features/stone/api';
 import { StoneTower } from '@/features/stone/components/StoneTower';
 import { TodayStone } from '@/features/stone/components/TodayStone';
 import { GROUND_HEIGHT, TowerBackground } from '@/features/stone/components/TowerBackground';
-import { VisibilityToggle } from '@/features/wish/components/VisibilityToggle';
+import { MyTowerSheet } from '@/features/wish/components/MyTowerSheet';
 import type { CurrentWish } from '@/features/wish/types';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -33,6 +35,9 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
   // 쌓기 성공 직후 새로 불러오기 전까지 오늘의 돌을 숨깁니다. (쌓은 시점의 돌 개수로 기억해서, 다음 날이 되면 다시 보임)
   const [stackedAt, setStackedAt] = useState<number | null>(null);
   const stone = useSubmit(createStone);
+  const [sheetOpen, setSheetOpen] = useState(false); // 내 돌탑 시트: 돌탑, 공개 아이콘, 응원 배지를 누르면 열림
+  const openSheet = () => setSheetOpen(true);
+  const isFriends = wish.visibility === 'FRIENDS';
 
   // 배경의 땅이 탑 바닥부터 화면 끝까지 이어지도록 높이를 계산합니다.
   const insets = useSafeAreaInsets();
@@ -80,16 +85,23 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
               {wish.spot.name}
               {!wish.spot.visited && ' · 방문 전'}
             </Text>
-            <View className="flex-row items-baseline gap-2">
-              <Text className={`text-2xl font-bold ${evening ? 'text-white' : 'text-gray-900'}`}>
-                돌 {wish.stoneCount}/{TOWER_DAYS}
-              </Text>
-              <Text className={`text-sm ${evening ? 'text-white/70' : 'text-gray-500'}`}>{wish.dayIndex}일째</Text>
-            </View>
-            <View className="flex-row items-center gap-3">
-              <VisibilityToggle wish={wish} onChanged={reload} light={evening} />
-              <Pressable onPress={() => router.push('/cheers')} hitSlop={8}>
-                <Text className={`text-sm underline ${evening ? 'text-white/80' : 'text-gray-600'}`}>받은 응원</Text>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-baseline gap-2">
+                <Text className={`text-2xl font-bold ${evening ? 'text-white' : 'text-gray-900'}`}>
+                  돌 {wish.stoneCount}/{TOWER_DAYS}
+                </Text>
+                <Text className={`text-sm ${evening ? 'text-white/70' : 'text-gray-500'}`}>{wish.dayIndex}일째</Text>
+              </View>
+              <Pressable
+                onPress={openSheet}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={`공개 범위: ${isFriends ? '친구 공개' : '나만 보기'}, 내 돌탑 열기`}>
+                <Ionicons
+                  name={isFriends ? 'people-outline' : 'lock-closed-outline'}
+                  size={20}
+                  color={evening ? '#ffffff' : '#4b5563'}
+                />
               </Pressable>
             </View>
           </View>
@@ -107,8 +119,14 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
               stonedToday={wish.stonedToday}
               completed={completed}
               inscription={wish.content}
+              onPress={openSheet}
             />
             <FriendTowersPeek bottom={GROUND_HEIGHT - 14} />
+            <CheerBadge
+              wishId={wish.wishId}
+              onPress={openSheet}
+              style={{ position: 'absolute', left: '50%', marginLeft: 76, bottom: GROUND_HEIGHT + 24 }}
+            />
           </View>
 
           <View className="gap-3 px-6 pb-4">
@@ -151,6 +169,8 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <MyTowerSheet wish={wish} visible={sheetOpen} onClose={() => setSheetOpen(false)} onChanged={reload} />
     </View>
   );
 }

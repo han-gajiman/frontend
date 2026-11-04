@@ -30,7 +30,15 @@ export default function ReflectionScreen() {
             router.push('/wish/new');
           }}
         />
-        <View className="px-6 pb-4">
+        <View className="gap-2 px-6 pb-4">
+          <Button
+            label="돌탑 모아보기"
+            variant="secondary"
+            onPress={() => {
+              router.dismissAll();
+              router.push('/collection');
+            }}
+          />
           <Button label="나중에 할게요" variant="secondary" onPress={() => router.dismissAll()} />
         </View>
       </Screen>
