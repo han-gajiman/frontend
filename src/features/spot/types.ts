@@ -11,4 +11,5 @@ export type Spot = {
   description: string;
   latitude: number;
   longitude: number;
+  visited: boolean; // 내가 방문 인증한 명소 (지도에 별표). 로그인 전이면 false
 };

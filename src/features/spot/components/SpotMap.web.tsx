@@ -11,7 +11,9 @@ type MapWindow = Window & { selectSpot?: (id: number | null) => void };
 export function SpotMap({ spots, selectedId, onSelect }: SpotMapProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const html = useMemo(() => buildKakaoMapHtml(spots), [spots]);
+  // 지도를 다시 불러오지 않도록, 화면에 돌아와 명소를 다시 받아도 내용이 같으면 같은 HTML을 씁니다.
+  const spotsKey = JSON.stringify(spots);
+  const html = useMemo(() => buildKakaoMapHtml(JSON.parse(spotsKey)), [spotsKey]);
 
   // 최신 spots·onSelect를 메시지 핸들러에서 쓰기 위해 ref로 둡니다. (리스너를 매번 다시 붙이지 않게)
   const latest = useRef({ spots, onSelect });

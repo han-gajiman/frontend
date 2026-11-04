@@ -59,7 +59,7 @@ type MockStone = {
   content: string | null;
 };
 
-const spots: Spot[] = [
+const spots: Omit<Spot, 'visited'>[] = [
   {
     id: 1,
     name: '팔공산 갓바위',
@@ -167,6 +167,7 @@ const emptyDb = () => ({
   nickname: '',
   locationAgreed: false,
   journeyStartedOn: null as string | null,
+  visitedSpotIds: [] as number[], // 방문 인증한 명소 (지도의 별)
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
   friends: [] as MockFriend[],
@@ -210,6 +211,7 @@ function seed() {
   const pastStart = addDays(today(), -45);
   const currentStart = addDays(today(), -12);
   db.journeyStartedOn = pastStart;
+  db.visitedSpotIds = [3]; // 지난 돌탑의 호미곶에 다녀옴
 
   db.wishes.push(
     {
@@ -479,7 +481,9 @@ export const mockServer = {
   },
 
   getSpots(category?: string): Spot[] {
-    return category ? spots.filter((s) => s.category === category) : spots;
+    return spots
+      .filter((s) => !category || s.category === category)
+      .map((s) => ({ ...s, visited: db.visitedSpotIds.includes(s.id) }));
   },
 
   // --- 친구 (FRIEND-01~04) ---

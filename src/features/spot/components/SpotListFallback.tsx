@@ -18,7 +18,7 @@ export function SpotListFallback({ spots, selectedId, onSelect, notice }: SpotMa
           key={spot.id}
           onPress={() => onSelect(spot)}
           className={`rounded-xl p-3 ${spot.id === selectedId ? 'bg-gray-900' : 'bg-white'}`}>
-          <Text className={spot.id === selectedId ? 'text-white' : 'text-gray-900'}>📍 {spot.name}</Text>
+          <Text className={spot.id === selectedId ? 'text-white' : 'text-gray-900'}>{spot.visited ? '⭐' : '📍'} {spot.name}</Text>
         </Pressable>
       ))}
     </View>
