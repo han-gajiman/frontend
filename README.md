@@ -46,7 +46,6 @@ npx expo start -c
 - **폰 (개발 빌드)**: EAS로 만든 개발 빌드 앱을 설치하고 터미널의 QR 코드를 찍습니다. PC와 폰이 같은 와이파이에 있어야 합니다. (아래 "카카오·Google 로그인" 참고)
 - **폰 (Expo Go)**: `npx expo start -c --go`로 실행하거나 실행 중에 `s`를 눌러 Expo Go 모드로 바꾼 뒤 QR을 찍습니다. 카카오·Google 로그인 버튼만 안내 문구가 뜹니다.
 - **웹**: 터미널에서 `w`.
-- **iOS 시뮬레이터**: 터미널에서 `i`. Xcode 26.4 이상이 필요합니다.
 
 ## 목 데이터로 실행하기
 
@@ -123,13 +122,14 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 회원가입 (이메일·비밀번호·닉네임, 로그인 화면 디자인) | `src/app/signup.tsx` | AUTH-01 (자체 로그인) |
 | 계정 찾기 (아이디: 닉네임 → 가린 이메일 / 비밀번호: 이메일 인증코드) | `src/app/find-account.tsx` | AUTH-01 (자체 로그인) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
-| 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 공개 범위, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, WISH-04, DEMO-01 |
+| 탭: 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/(tabs)/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, DEMO-01 |
+| 내 돌탑 시트 (소원 보기, 공개 범위, 받은 응원) | `features/wish/components/MyTowerSheet.tsx` | WISH-04, FRIEND-03 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
-| 모아보기 (회차 선택) | `src/app/collection.tsx` | TOWER-03, TOWER-04 |
-| 명소 지도 | `src/app/spots.tsx` | SPOT-02 |
+| 탭: 모아보기 (회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
+| 탭: 명소 지도 | `src/app/(tabs)/spots.tsx` | SPOT-02 |
 | 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
-| 친구 목록 | `src/app/friends/index.tsx` | FRIEND-02 |
+| 탭: 친구 목록 | `src/app/(tabs)/friends.tsx` | FRIEND-02 |
 | 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |
 | 친구 돌탑 (응원, 콕 찌르기) | `src/app/friends/[friendId].tsx` | FRIEND-02, FRIEND-03, FRIEND-04 |
 | 초대 링크로 열기 (로그인 전이면 로그인 후 이어서) | `src/app/invite/[code].tsx` | FRIEND-01 |
@@ -143,6 +143,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 ```text
 src/
 ├── app/          화면(라우트). 파일 하나 = 화면 하나, _layout.tsx에서 로그인 상태별 접근 제어
+│   └── (tabs)/   하단 탭 4개 (홈·명소·친구·모아보기). 나머지 화면은 탭 위에 뜨는 Stack
 ├── features/     도메인별 types.ts(API 타입) · api.ts(API 함수) · components/
 │   ├── auth/  user/  home/  wish/  stone/  spot/  friend/  demo/
 ├── shared/       공통 컴포넌트(Screen, Button, TextField, ScreenState)와 훅(useApi, useSubmit)

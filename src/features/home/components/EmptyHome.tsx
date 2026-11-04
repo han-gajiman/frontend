@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
+import { useBottomTabBarHeight } from 'expo-router/js-tabs';
 import { Pressable, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
 import { StoneShape } from '@/features/stone/components/StoneShape';
@@ -12,7 +13,7 @@ const FIELD_GROUND = GROUND_HEIGHT * 3; // 빈 홈은 땅을 넓게 깔아 허�
 
 // HOME-01 빈 홈: 허허벌판에 조약돌 하나. 누르면 새 소원 적기로
 export function EmptyHome() {
-  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
   const start = () => router.push('/wish/new');
 
   return (
@@ -32,7 +33,7 @@ export function EmptyHome() {
         </Pressable>
       </View>
 
-      <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 48 }}>
+      <View className="absolute inset-x-0 items-center" style={{ bottom: tabBarHeight + 24 }}>
         <Pressable onPress={start} className="rounded-full bg-gray-900 px-6 py-3">
           <Text className="font-semibold text-white">새 소원 시작하기</Text>
         </Pressable>

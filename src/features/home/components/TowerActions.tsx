@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useBottomTabBarHeight } from 'expo-router/js-tabs';
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
@@ -27,6 +28,7 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   // 쌓기 성공 직후 새로 불러오기 전까지 오늘의 돌을 숨깁니다. (쌓은 시점의 돌 개수로 기억해서, 다음 날이 되면 다시 보임)
   const [stackedAt, setStackedAt] = useState<number | null>(null);
   const stone = useSubmit(createStone);
+  const tabBarHeight = useBottomTabBarHeight(); // 떠 있는 탭 바에 가리지 않게
 
   const handleDrop = async () => {
     const result = await stone.run(wish.wishId, practice.trim());
@@ -38,7 +40,7 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   };
 
   return (
-    <View className="gap-3 px-6 pb-4">
+    <View className="gap-3 px-6" style={{ paddingBottom: tabBarHeight + 8 }}>
       {completed ? (
         <Button label="완성 회고하기" onPress={() => router.push('/reflection')} />
       ) : wish.stonedToday ? (

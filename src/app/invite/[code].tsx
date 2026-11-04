@@ -25,6 +25,7 @@ export default function InviteLinkScreen() {
   return <AcceptInvite code={code} />;
 }
 
+// 탭 위에 열린 화면이므로 replace 대신 dismissTo로 돌아갑니다. (replace는 탭 묶음이 하나 더 쌓임)
 function AcceptInvite({ code }: { code: string }) {
   const { run, submitting, error } = useSubmit(acceptInvite);
   const [friendName, setFriendName] = useState<string | null>(null);
@@ -39,12 +40,12 @@ function AcceptInvite({ code }: { code: string }) {
       scroll={false}
       footer={
         friendName ? (
-          <Button label="친구 목록 보기" onPress={() => router.replace('/friends')} />
+          <Button label="친구 목록 보기" onPress={() => router.dismissTo('/friends')} />
         ) : (
           <>
             <ErrorText error={error} />
             <Button label="초대 수락하기" onPress={handleAccept} loading={submitting} />
-            <Button label="나중에 할게요" variant="secondary" onPress={() => router.replace('/')} />
+            <Button label="나중에 할게요" variant="secondary" onPress={() => router.dismissTo('/')} />
           </>
         )
       }>

@@ -36,7 +36,7 @@ export default function ReflectionScreen() {
             variant="secondary"
             onPress={() => {
               router.dismissAll();
-              router.push('/collection');
+              router.navigate('/collection');
             }}
           />
           <Button label="나중에 할게요" variant="secondary" onPress={() => router.dismissAll()} />

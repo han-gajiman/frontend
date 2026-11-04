@@ -15,7 +15,6 @@ export default function FriendsScreen() {
   return (
     <Screen
       title="친구"
-      showBack
       scroll={false}
       footer={<Button label="친구 초대하기" onPress={() => router.push('/friends/invite')} />}>
       <AsyncContent

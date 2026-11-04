@@ -1,10 +1,11 @@
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { usePendingInviteStore } from '@/features/friend/pendingInviteStore';
 import { EmptyHome } from '@/features/home/components/EmptyHome';
 import { TowerHome } from '@/features/home/components/TowerHome';
+import { towerTheme } from '@/features/home/towerTheme';
 import { getCurrentWish } from '@/features/wish/api';
 import { AsyncContent } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
@@ -22,6 +23,15 @@ export default function HomeScreen() {
     clearPendingInvite();
     router.push(`/invite/${pendingInvite}`);
   }, [pendingInvite, clearPendingInvite]);
+
+  // 저녁 하늘이면 투명 탭 바의 글자·아이콘도 밝게 (서버 응답 기준)
+  const navigation = useNavigation();
+  const wish = state.data;
+  const evening = !!wish && wish.stonedToday && wish.status !== 'COMPLETED';
+  useEffect(() => {
+    const { tabActive, tabInactive } = towerTheme(evening);
+    navigation.setOptions({ tabBarActiveTintColor: tabActive, tabBarInactiveTintColor: tabInactive });
+  }, [navigation, evening]);
 
   return (
     <View className="flex-1 bg-white">

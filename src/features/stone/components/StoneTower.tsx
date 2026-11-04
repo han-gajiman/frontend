@@ -19,11 +19,11 @@ const MAX_STONES = 30;
 const OVERLAP = 5; // 위아래 돌이 겹치는 정도
 const TOP_MARGIN = 72; // 탑 위 여백 (완성 배지 자리)
 
-// 돌 30개를 다 쌓았을 때의 높이. 화면 크기에 맞춰 이 높이가 들어가도록 축소합니다.
-const FULL_HEIGHT = Array.from({ length: MAX_STONES }, (_, i) => stoneSize(i).height - OVERLAP).reduce(
-  (a, b) => a + b,
-  OVERLAP,
-);
+const MIN_FIT_STONES = 10; // 돌이 적을 때도 이만큼은 들어가는 크기로 (너무 커지지 않게)
+
+// 돌 n개를 쌓았을 때의 높이
+const towerHeight = (n: number) =>
+  Array.from({ length: n }, (_, i) => stoneSize(i).height - OVERLAP).reduce((a, b) => a + b, OVERLAP);
 
 // 새로 쌓은 돌: 위에서 떨어져 튕기며 얹힘 (웹은 spring 미지원이라 bounce 사용)
 const DROP = BounceInDown.duration(700);
@@ -44,7 +44,9 @@ export function StoneTower({ count, stonedToday, completed, background, inscript
   // 화면에 들어왔을 때 이미 있던 돌은 차례로 나타나고, 그 뒤에 쌓은 돌만 떨어지는 효과
   const [initialCount] = useState(count);
 
-  const scale = Math.min(1.3, (areaHeight - GROUND_HEIGHT - TOP_MARGIN) / FULL_HEIGHT);
+  // 다음 돌까지 화면에 들어가도록 지금 쌓인 개수에 맞춰 크기를 정합니다. 탑이 높아질수록 돌이 조금씩 작아져 30개째에 꽉 찹니다.
+  const fitStones = Math.min(MAX_STONES, Math.max(MIN_FIT_STONES, count + 1));
+  const scale = Math.min(1.3, Math.max(0, areaHeight - GROUND_HEIGHT - TOP_MARGIN) / towerHeight(fitStones));
   const label = `돌탑, 돌 ${count}개${completed ? ', 완성' : ''}`;
 
   return (
