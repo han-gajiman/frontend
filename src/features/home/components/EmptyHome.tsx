@@ -20,7 +20,7 @@ export function EmptyHome() {
     <View className="flex-1">
       <TowerBackground spotId={null} visited={false} groundHeight={FIELD_GROUND} bottomScrim softened />
       <SafeAreaView className="flex-1" edges={['top']}>
-        <HomeHeader light />
+        <HomeHeader />
       </SafeAreaView>
 
       {/* 조약돌은 땅 위에 놓이고, 문구는 그 위에 */}
