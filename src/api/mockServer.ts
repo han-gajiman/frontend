@@ -544,7 +544,7 @@ export const mockServer = {
       nickname: f.nickname,
       wish:
         f.wish && f.wish.visibility === 'FRIENDS'
-          ? { wishId: f.wish.id, content: f.wish.content, stoneCount: f.wish.stoneCount, stonedToday: f.wish.stonedToday, spotId: f.wish.spotId, spotVisited: f.wish.spotVisited }
+          ? { wishId: f.wish.id, content: f.wish.content, stoneCount: f.wish.stoneCount, stonedToday: f.wish.stonedToday, spotId: f.wish.spotId, spotName: spotOf(f.wish.spotId).name, spotVisited: f.wish.spotVisited }
           : null,
     }));
     return { content, page: 0, size: 50, hasNext: false };

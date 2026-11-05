@@ -50,6 +50,9 @@ function FriendTower({ friend }: { friend: Friend }) {
           {friend.nickname} · 돌 {wish.stoneCount}/30
         </Text>
         <Text className="text-xl font-bold text-gray-900">{wish.content}</Text>
+        <Text className="text-sm text-gray-500">
+          {wish.spotName} · {wish.spotVisited ? '방문함' : '방문 전'}
+        </Text>
       </View>
 
       <View className="h-72">
@@ -57,7 +60,7 @@ function FriendTower({ friend }: { friend: Friend }) {
           count={wish.stoneCount}
           stonedToday={wish.stonedToday}
           completed={false}
-          background={{ spotId: wish.spotId, visited: wish.spotVisited, dimWhenUnvisited: true, softened: true }}
+          background={{ spotId: wish.spotId, visited: wish.spotVisited, softened: true }}
         />
       </View>
 
