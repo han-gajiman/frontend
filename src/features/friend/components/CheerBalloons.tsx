@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
@@ -20,13 +19,15 @@ import { getCheers } from '../api';
 import type { Cheer } from '../types';
 
 const MAX_BALLOONS = 5; // 최근 응원 몇 개만 (전체 목록은 내 돌탑 시트)
-const MAX_CHARS = 28; // 풍선에 보여줄 글자 수. 응원은 최대 100자라 나머지는 ...으로 줄이고, 누르면 전체를 보여줍니다.
+const MAX_CHARS = 28; // 풍선에 보여줄 글자 수. 응원은 최대 100자라 나머지는 ...으로 줄이고, 풍선을 누르면 전체를 보여줍니다.
 const FIRST_DELAY = 900; // 홈이 보인 뒤 첫 풍선까지
 const NEXT_DELAY = 500; // 터진 뒤 다음 풍선까지
 const RESUME_DELAY = 900; // 전체 메시지를 닫은 뒤 터질 때까지
 const POP_MS = 320;
 const SIDE_MARGIN = 10;
+const BALLOON_COLOR = 'rgba(255,255,255,0.6)'; // 배경이 살짝 비치는 흰색
 const MIN_WIDTH = 96;
+const BALLOON_ROOM = 120; // 풍선 높이만큼 위쪽 여백을 남겨, 다 떠올라도 영역 밖으로 나가지 않게
 const BURST_ANGLES = [0, 60, 120, 180, 240, 300];
 
 const writerOf = (cheer: Cheer) => cheer.writerNickname ?? '익명의 소원지기';
@@ -37,8 +38,8 @@ function shorten(message: string) {
   return chars.length > MAX_CHARS ? `${chars.slice(0, MAX_CHARS).join('').trimEnd()}...` : message;
 }
 
-// 읽을 만큼의 시간: 기본 2.4초 + 글자당 60ms
-const readingTime = (text: string) => 2400 + text.length * 60;
+// 땅에서 천천히 떠올라 터지기까지: 기본 5초 + 글자당 80ms
+const floatTime = (text: string) => 5000 + text.length * 80;
 
 // FRIEND-03 받은 응원이 돌탑 옆에서 풍선으로 하나씩 떠올랐다가 터집니다. 홈에 들어올 때마다 한 번씩.
 // 풍선만 누를 수 있고(전체 메시지 보기) 나머지 영역의 터치는 그대로 통과합니다. 불러오는 중·에러·응원 없음이면 그리지 않습니다.
@@ -88,7 +89,7 @@ export function CheerBalloons({
           left={turn.index % 2 === 0} // 왼쪽·오른쪽 번갈아
           width={sideWidth}
           bottom={bottom}
-          rise={Math.max(40, (area.height - bottom) * 0.42)}
+          rise={Math.max(40, area.height - bottom - BALLOON_ROOM)}
           paused={opened?.cheerId === cheer.cheerId}
           onPress={() => setOpened(cheer)}
           onDone={() => setTurn((t) => ({ ...t, index: t.index + 1 }))}
@@ -124,12 +125,11 @@ function Balloon({
   const scale = useSharedValue(reduced ? 1 : 0.8);
   const burst = useSharedValue(0);
   const text = shorten(cheer.message);
-  const showMs = readingTime(text);
-  const shortened = text !== cheer.message;
+  const showMs = floatTime(text);
 
-  // 떠오르기는 처음 한 번만. 처음엔 빠르게 솟고, 읽는 동안 천천히 떠오릅니다.
+  // 떠오르기는 처음 한 번만. 땅에서 시작해 터질 때까지 천천히 올라갑니다.
   useEffect(() => {
-    if (!reduced) y.set(withTiming(1, { duration: showMs, easing: Easing.out(Easing.cubic) }));
+    if (!reduced) y.set(withTiming(1, { duration: showMs, easing: Easing.out(Easing.quad) }));
     opacity.set(withTiming(1, { duration: 300 }));
     scale.set(withTiming(1, { duration: 400, easing: Easing.out(Easing.back(1.6)) }));
   }, [reduced, showMs, y, opacity, scale]);
@@ -176,19 +176,14 @@ function Balloon({
           accessibilityRole="button"
           accessibilityLabel={`${writerOf(cheer)}의 응원, 전체 보기`}
           style={{ width: '100%' }}>
-          <LinearGradient
-            // 반투명 흰색에서 연보라로 번지는 유리 느낌 (웹은 뒤를 살짝 흐림)
-            colors={['rgba(255,255,255,0.72)', 'rgba(228,221,255,0.58)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          <View
             style={[
               {
                 gap: 2,
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 16,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.65)',
+                backgroundColor: BALLOON_COLOR,
               },
               Platform.OS === 'web' && ({ backdropFilter: 'blur(6px)' } as object),
             ]}>
@@ -196,11 +191,10 @@ function Balloon({
               {writerOf(cheer)}
             </Text>
             <Text className="text-[13px] leading-[18px] text-gray-900">{text}</Text>
-            {shortened && <Text className="text-[10px] font-semibold text-[#5b62e8]">눌러서 전체 보기</Text>}
-          </LinearGradient>
+          </View>
         </Pressable>
         {/* 풍선 꼬리 */}
-        <View style={{ width: 2, height: 16, backgroundColor: 'rgba(255,255,255,0.6)' }} />
+        <View style={{ width: 2, height: 16, backgroundColor: BALLOON_COLOR }} />
       </Animated.View>
       {!reduced && BURST_ANGLES.map((angle) => <BurstDot key={angle} angle={angle} burst={burst} />)}
     </Animated.View>
