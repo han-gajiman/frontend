@@ -23,7 +23,7 @@ export function HomeHeader({
   const hasUnread = notifications.data?.content.some((n) => !n.isRead) ?? false;
 
   return (
-    <View className="flex-row items-start justify-between px-6 pt-2">
+    <View className="flex-row items-start justify-between px-6 pt-6">
       <View className="flex-1 pr-3">{children}</View>
       <View className="flex-row items-center gap-4">
         <HeaderIcon
