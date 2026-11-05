@@ -193,8 +193,6 @@ function Balloon({
             <Text className="text-[13px] leading-[18px] text-gray-900">{text}</Text>
           </View>
         </Pressable>
-        {/* 풍선 꼬리 */}
-        <View style={{ width: 2, height: 16, backgroundColor: BALLOON_COLOR }} />
       </Animated.View>
       {!reduced && BURST_ANGLES.map((angle) => <BurstDot key={angle} angle={angle} burst={burst} />)}
     </Animated.View>
