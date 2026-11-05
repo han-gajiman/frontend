@@ -33,7 +33,13 @@
         }
       ],
       "expo-status-bar",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "명소 방문 인증에 위치를 확인해요. 위치는 기기 안에서만 쓰고 서버로 보내지 않아요."
+        }
+      ]
     ],
     "scheme": "hangajiman",
     "owner": "han-gajiman",

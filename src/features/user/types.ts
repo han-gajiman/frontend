@@ -8,7 +8,6 @@ export type Me = {
   nickname: string;
   profileImageUrl: string | null;
   provider: LoginProvider;
-  agreements: { location: boolean };
   hasActiveWish: boolean;
   // 첫 돌탑 전이면 null
   journey: { startedOn: string; currentRound: number; reviewAt: string } | null;
