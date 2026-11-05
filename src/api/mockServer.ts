@@ -283,6 +283,9 @@ function seed() {
   ];
   db.cheers[10] = [
     { cheerId: 902, writerNickname: '지기', isAnonymous: false, message: '오늘도 하나 쌓자!', createdAt: now },
+    { cheerId: 903, writerNickname: '돌돌이', isAnonymous: false, message: '벌써 13일째네! 꾸준한 모습 멋있어요.', createdAt: now },
+    { cheerId: 904, writerNickname: null, isAnonymous: true, message: '소원 꼭 이루어지길 바랄게요. 저도 작년에 같은 소원을 빌었는데 매일 조금씩 하다 보니 정말 이루어졌어요. 포기하지 말고 끝까지 같이 쌓아요!', createdAt: now },
+    { cheerId: 905, writerNickname: '지기', isAnonymous: false, message: '면접 잘 보고 와!', createdAt: now },
   ];
   notify('NUDGE', 10, '돌돌이님이 콕 찔렀어요! 오늘의 돌을 쌓아 보세요.');
   notify('CHEER', 902, '지기님이 응원을 보냈어요.');

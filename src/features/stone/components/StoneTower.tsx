@@ -38,17 +38,19 @@ type StoneTowerProps = {
   inscription?: string; // 맨 아래 돌에 새길 소원 문구
   onPress?: () => void; // 탑 몸체를 눌렀을 때 (홈: 내 돌탑 시트). 빈 하늘은 눌리지 않습니다.
   crowned?: boolean; // 30일을 모두 채운 돌탑: 꼭대기에 별 (모아보기)
+  groundHeight?: number; // 영역 아래쪽 땅 높이 (홈은 풍선 자리를 위해 낮춤)
+  maxScale?: number; // 돌 크기 상한 (홈은 양옆 빈 공간을 남김)
 };
 
 // STONE-02 돌탑: 아래부터 쌓이는 돌 + 배경 + 30일 완성 연출
-export function StoneTower({ count, stonedToday, completed, background, inscription, onPress, crowned = false }: StoneTowerProps) {
+export function StoneTower({ count, stonedToday, completed, background, inscription, onPress, crowned = false, groundHeight = GROUND_HEIGHT, maxScale = 1.3 }: StoneTowerProps) {
   const [areaHeight, setAreaHeight] = useState(0);
   // 화면에 들어왔을 때 이미 있던 돌은 차례로 나타나고, 그 뒤에 쌓은 돌만 떨어지는 효과
   const [initialCount] = useState(count);
 
   // 다음 돌까지 화면에 들어가도록 지금 쌓인 개수에 맞춰 크기를 정합니다. 탑이 높아질수록 돌이 조금씩 작아져 30개째에 꽉 찹니다.
   const fitStones = Math.min(MAX_STONES, Math.max(MIN_FIT_STONES, count + 1));
-  const scale = Math.min(1.3, Math.max(0, areaHeight - GROUND_HEIGHT - TOP_MARGIN) / towerHeight(fitStones));
+  const scale = Math.min(maxScale, Math.max(0, areaHeight - groundHeight - TOP_MARGIN) / towerHeight(fitStones));
   const label = `돌탑, 돌 ${count}개${completed ? ', 완성' : ''}`;
 
   return (
@@ -62,7 +64,7 @@ export function StoneTower({ count, stonedToday, completed, background, inscript
       {completed && <CompletedBadge />}
 
       {areaHeight > 0 && (
-        <TowerBody completed={completed}>
+        <TowerBody completed={completed} bottom={groundHeight - 14}>
           <Pressable
             onPress={onPress}
             disabled={!onPress}
@@ -89,7 +91,7 @@ export function StoneTower({ count, stonedToday, completed, background, inscript
       )}
 
       {count === 0 && (
-        <View className="absolute inset-x-0 items-center" pointerEvents="none" style={{ bottom: GROUND_HEIGHT + 24 }}>
+        <View className="absolute inset-x-0 items-center" pointerEvents="none" style={{ bottom: groundHeight + 24 }}>
           <Text className="text-gray-500">첫 번째 돌을 올려 보세요</Text>
         </View>
       )}
@@ -115,7 +117,7 @@ function TowerStar({ delay }: { delay: number }) {
 }
 
 // 탑 전체. 완성되면 천천히 숨쉬듯 커졌다 작아집니다.
-function TowerBody({ completed, children }: { completed: boolean; children: ReactNode }) {
+function TowerBody({ completed, bottom, children }: { completed: boolean; bottom: number; children: ReactNode }) {
   const pulse = useSharedValue(1);
 
   useEffect(() => {
@@ -137,7 +139,7 @@ function TowerBody({ completed, children }: { completed: boolean; children: Reac
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: GROUND_HEIGHT - 14,
+          bottom,
           alignItems: 'center',
           transformOrigin: 'bottom',
         },
