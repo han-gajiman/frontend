@@ -18,14 +18,14 @@ export function EmptyHome() {
 
   return (
     <View className="flex-1">
-      <TowerBackground spotId={null} imageUrl={null} visited groundHeight={FIELD_GROUND} />
+      <TowerBackground spotId={null} visited={false} groundHeight={FIELD_GROUND} bottomScrim />
       <SafeAreaView className="flex-1" edges={['top']}>
-        <HomeHeader />
+        <HomeHeader light />
       </SafeAreaView>
 
       {/* 조약돌은 땅 위에 놓이고, 문구는 그 위에 */}
       <View className="absolute inset-x-0 items-center gap-6" style={{ bottom: FIELD_GROUND - 8 }}>
-        <Text style={{ fontFamily: TITLE_FONT }} className="text-center text-xl leading-8 text-gray-800">
+        <Text style={{ fontFamily: TITLE_FONT }} className="text-center text-xl leading-8 text-white">
           여기에 첫 돌을{'\n'}놓아볼까요?
         </Text>
         <Pressable onPress={start} accessibilityRole="button" accessibilityLabel="첫 돌 놓기, 새 소원 시작하기" hitSlop={16}>

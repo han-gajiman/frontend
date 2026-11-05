@@ -22,6 +22,8 @@ export type Friend = {
     content: string;
     stoneCount: number;
     stonedToday: boolean;
+    spotId: number;
+    spotVisited: boolean; // 친구가 이 돌탑의 명소를 방문했는지 (미방문이면 일러스트를 흐리게)
   } | null;
 };
 

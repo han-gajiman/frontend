@@ -72,6 +72,10 @@ EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true
 npx eas-cli@27.2.0 deploy --prod
 ```
 
+## 명소 일러스트
+
+그림은 `assets/spots/`에 넣고 `src/features/spot/spotIllustrations.ts`에 명소 id와 연결합니다. 없는 명소는 기본 화면(`default.png`)으로 나옵니다. 파일 이름에 `@3x` 같은 표시를 붙이면 웹 내보내기에서 깨집니다.
+
 ## 카카오 지도 (명소)
 
 `src/features/spot/components/`의 `SpotMap`이 카카오 지도 JavaScript API를 씁니다. 카카오는 앱용 지도 SDK가 없어서, 지도 HTML(`kakaoMapHtml.ts`) 하나를 폰에서는 WebView로, 웹에서는 iframe으로 띄웁니다.
@@ -127,7 +131,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
 | 탭: 모아보기 (완성한 돌탑을 최근 것부터 한 장씩 넘겨 보기, 30개를 채우면 별, 회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
-| 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx` | SPOT-02 |
+| 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표, 방문 인증 화면) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx`, `VisitScreen.tsx` | SPOT-02 |
 | 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
 | 탭: 친구 목록 | `src/app/(tabs)/friends.tsx` | FRIEND-02 |
 | 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |

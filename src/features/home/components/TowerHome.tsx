@@ -35,17 +35,18 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
     <View className="flex-1" onLayout={onScreenLayout}>
       <TowerBackground
         spotId={wish.spot.id}
-        imageUrl={wish.spot.backgroundImageUrl}
         visited={wish.spot.visited}
         evening={evening}
         groundHeight={groundHeight}
+        bottomScrim
       />
 
       {/* 아래쪽은 떠 있는 탭 바가 안전 영역까지 차지하므로 위쪽만 */}
       <SafeAreaView className="flex-1" edges={['top']}>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <HomeHeader light={evening} />
-          <TowerProgress wish={wish} evening={evening} onOpenSheet={openSheet} />
+          {/* 배경 위쪽은 언제나 어두운 하늘이라 글자는 밝게 */}
+          <HomeHeader light />
+          <TowerProgress wish={wish} onOpenSheet={openSheet} />
 
           <View
             ref={towerRef}

@@ -24,14 +24,13 @@ export default function HomeScreen() {
     router.push(`/invite/${pendingInvite}`);
   }, [pendingInvite, clearPendingInvite]);
 
-  // 저녁 하늘이면 투명 탭 바의 글자·아이콘도 밝게 (서버 응답 기준)
+  // 투명 탭 바: 그림 위에서는 밝게, 흰 배경의 로딩·에러 화면에서는 어둡게
   const navigation = useNavigation();
-  const wish = state.data;
-  const evening = !!wish && wish.stonedToday && wish.status !== 'COMPLETED';
+  const onArtwork = state.data !== undefined && !state.error;
   useEffect(() => {
-    const { tabActive, tabInactive } = towerTheme(evening);
+    const { tabActive, tabInactive } = towerTheme(onArtwork);
     navigation.setOptions({ tabBarActiveTintColor: tabActive, tabBarInactiveTintColor: tabInactive });
-  }, [navigation, evening]);
+  }, [navigation, onArtwork]);
 
   return (
     <View className="flex-1 bg-white">

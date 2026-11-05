@@ -20,7 +20,7 @@ export type CurrentWish = {
     name: string;
     category: SpotCategory;
     visited: boolean;
-    backgroundImageUrl: string | null; // null이면 허허벌판 기본 배경
+    backgroundImageUrl: string | null; // 지금은 앱 안의 일러스트(assets/spots)를 쓰고 이 값은 쓰지 않습니다.
   };
   stoneCount: number;
   stonedToday: boolean; // 오늘 쌓았는지는 서버 기준 (클라이언트 시계로 계산 금지)
