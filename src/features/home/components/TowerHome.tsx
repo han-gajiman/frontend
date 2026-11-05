@@ -45,9 +45,9 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
       {/* 아래쪽은 떠 있는 탭 바가 안전 영역까지 차지하므로 위쪽만 */}
       <SafeAreaView className="flex-1" edges={['top']}>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          {/* 배경 위쪽은 언제나 어두운 하늘이라 글자는 밝게 */}
-          <HomeHeader light />
-          <TowerProgress wish={wish} onOpenSheet={openSheet} />
+          <HomeHeader visibility={{ isFriends: wish.visibility === 'FRIENDS', onPress: openSheet }}>
+            <TowerProgress wish={wish} />
+          </HomeHeader>
 
           <View
             ref={towerRef}
