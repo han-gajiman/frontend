@@ -57,7 +57,7 @@ npx expo start -c
 | --- | --- |
 | `EXPO_PUBLIC_USE_MOCK=true` | 목 서버 사용 (`false`면 `EXPO_PUBLIC_API_URL`의 실제 서버) |
 | `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
-| `EXPO_PUBLIC_DEMO=true` | 홈에 시연용 시간 이동 버튼(+1일, +30일) 표시 |
+| `EXPO_PUBLIC_DEMO=true` | 시연 모드: 홈에 시간 이동 버튼(+1일, +30일) 표시, 방문 인증은 위치를 확인하지 않고 통과 (DEMO-01, DEMO-02). 실제 출시 빌드에서는 끄세요 |
 
 목 모드 이메일 로그인: `demo@hangajiman.app` / `password123`, 닉네임 `소원지기` (회원가입한 계정도 앱을 끄기 전까지 로그인 가능). 비밀번호 찾기 인증코드는 항상 `123456`
 
