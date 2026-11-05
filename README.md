@@ -122,7 +122,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 회원가입 (이메일·비밀번호·닉네임, 로그인 화면 디자인) | `src/app/signup.tsx` | AUTH-01 (자체 로그인) |
 | 계정 찾기 (아이디: 닉네임 → 가린 이메일 / 비밀번호: 이메일 인증코드) | `src/app/find-account.tsx` | AUTH-01 (자체 로그인) |
 | 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
-| 탭: 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/(tabs)/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, DEMO-01 |
+| 탭: 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 받은 응원 풍선, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/(tabs)/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, DEMO-01 |
 | 내 돌탑 시트 (소원 보기, 공개 범위, 받은 응원) | `features/wish/components/MyTowerSheet.tsx` | WISH-04, FRIEND-03 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |

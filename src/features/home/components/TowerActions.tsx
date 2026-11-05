@@ -40,7 +40,7 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   };
 
   return (
-    <View className="gap-3 px-6" style={{ paddingBottom: tabBarHeight + 8 }}>
+    <View className="gap-3 px-6 pt-3" style={{ paddingBottom: tabBarHeight + 8 }}>
       {completed ? (
         <Button label="완성 회고하기" onPress={() => router.push('/reflection')} />
       ) : wish.stonedToday ? (
