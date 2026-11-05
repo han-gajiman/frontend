@@ -52,7 +52,7 @@ export function VisitScreen({ spot, onClose }: { spot: Spot; onClose: () => void
             <View className="items-center gap-2">
               <Text className="text-center text-xl font-bold text-white">{spot.name}</Text>
               {!spot.visited && (
-                <Text className="text-center text-base text-white">방문 시 한정 일러스트가 해제됩니다.</Text>
+                <Text className="text-center text-base text-white">방문 시 명소의 풍경을 담은{'\n'}한정 일러스트가 해제됩니다.</Text>
               )}
             </View>
             {!spot.visited && <Button label="방문인증하기" onPress={() => undefined} disabled />}

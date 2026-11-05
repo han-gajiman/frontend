@@ -12,7 +12,6 @@ export const GROUND_HEIGHT = 64;
 export type TowerBackgroundProps = {
   spotId: number | null; // null = 명소 없음 (빈 홈)
   visited: boolean;
-  dimWhenUnvisited?: boolean; // 미방문일 때 기본 화면 대신 일러스트를 흐리게 (친구 돌탑)
   evening?: boolean; // 오늘 돌을 쌓았으면 저녁 하늘 (서버의 stonedToday 기준)
   groundHeight?: number;
   bottomScrim?: boolean; // 아래쪽을 어둡게 깔아 그 위 글자·탭이 잘 보이게 (홈)
@@ -20,7 +19,6 @@ export type TowerBackgroundProps = {
 };
 
 const EVENING: [string, string] = ['#1d1f4d', '#8a5a78']; // 저녁 하늘 덮개
-const DIM_OPACITY = 0.45;
 const SOFTENED_OPACITY = 0.3; // 평소 덮개
 const EVENING_OPACITY = 0.55; // 오늘 돌을 쌓은 저녁
 
@@ -29,7 +27,6 @@ const EVENING_OPACITY = 0.55; // 오늘 돌을 쌓은 저녁
 export function TowerBackground({
   spotId,
   visited,
-  dimWhenUnvisited = false,
   evening = false,
   groundHeight = GROUND_HEIGHT,
   bottomScrim = false,
@@ -37,7 +34,6 @@ export function TowerBackground({
 }: TowerBackgroundProps) {
   const illustration = spotIllustration(spotId);
   const showIllustration = illustration !== null && visited;
-  const showDimmed = illustration !== null && !visited && dimWhenUnvisited;
 
   const dusk = useSharedValue(evening ? 1 : 0);
   useEffect(() => {
@@ -54,15 +50,7 @@ export function TowerBackground({
         contentFit="cover"
         contentPosition="bottom"
       />
-      {showDimmed && (
-        <Image
-          source={illustration}
-          style={[StyleSheet.absoluteFill, { opacity: DIM_OPACITY }]}
-          contentFit="cover"
-          contentPosition="bottom"
-        />
-      )}
-      {!showIllustration && !showDimmed && (
+      {!showIllustration && (
         <LinearGradient
           colors={['rgba(255,255,255,0.45)', 'rgba(255,255,255,0.12)']}
           style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: groundHeight }}

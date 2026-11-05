@@ -55,7 +55,7 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
           <TextInput
             value={practice}
             onChangeText={setPractice}
-            placeholder={`오늘 한 일 (선택) · ${wish.actionGoal}`}
+            placeholder="오늘 한 일을 적어보아요."
             placeholderTextColor="#78716c"
             maxLength={100}
             accessibilityLabel="오늘의 실천 기록 (선택)"
