@@ -18,10 +18,12 @@ import type {
   CreateWishResponse,
   CurrentWish,
   ReflectionRequest,
+  RoundSummary,
   Visibility,
   WishResult,
   WishStatus,
   WishSummary,
+  YearReviewResponse,
 } from '@/features/wish/types';
 import type { Me } from '@/features/user/types';
 
@@ -168,6 +170,7 @@ const emptyDb = () => ({
   provider: 'KAKAO' as LoginProvider,
   nickname: '',
   journeyStartedOn: null as string | null,
+  yearReviews: {} as Record<number, string>, // 소원 묶음(회차) → 1년 회고
   visitedSpotIds: [] as number[], // 방문 인증한 명소 (지도의 별)
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
@@ -206,14 +209,15 @@ function addStone(wishId: number, stoneDate: string, content: string | null) {
 function seed() {
   if (MOCK_SCENARIO === 'empty') return;
 
-  // 기존 회원: 완성한 돌탑 6개(30개를 다 채운 돌탑 1개 포함) + 13일째 진행 중인 돌탑 1개
+  // 기존 회원: 첫 번째 소원(1년 전) 돌탑 12개 + 1년 회고, 두 번째 소원 돌탑 6개 + 13일째 진행 중인 돌탑 1개
   db.onboarded = true;
   db.nickname = '소원지기';
   const currentStart = addDays(today(), -12);
-  db.journeyStartedOn = addDays(today(), -204);
+  db.journeyStartedOn = addDays(today(), -569); // 1년(365일) 전 묶음이 끝나고 204일째
+  db.yearReviews[1] = '하루를 미루지 않는 사람이 되었어요. 작게라도 매일 쌓으면 된다는 걸 알았고, 올해도 그렇게 해 보려고 해요.';
   db.visitedSpotIds = [8]; // 진행 중인 돌탑의 영덕 해맞이공원에 다녀옴
 
-  // 오래된 것부터. 다음 돌탑 시작까지 30일 + 이틀 간격
+  // 오래된 것부터. 첫 번째 소원은 30일 간격, 두 번째 소원은 30일 + 이틀 간격
   const pastTowers: {
     id: number;
     daysAgo: number;
@@ -224,6 +228,18 @@ function seed() {
     result: 'ACHIEVED' | 'NOT_ACHIEVED';
     reflection: string;
   }[] = [
+    { id: 21, daysAgo: 569, content: '영어 회화 시작하기', actionGoal: '하루 한 문장 말하기', spotId: 2, stones: 12, result: 'NOT_ACHIEVED', reflection: '입 떼는 게 제일 어려웠다' },
+    { id: 22, daysAgo: 539, content: '스트레칭 습관 만들기', actionGoal: '아침에 5분 스트레칭', spotId: 5, stones: 30, result: 'ACHIEVED', reflection: '허리가 정말 덜 아프다' },
+    { id: 23, daysAgo: 509, content: '가계부 쓰기', actionGoal: '자기 전에 지출 적기', spotId: 7, stones: 21, result: 'ACHIEVED', reflection: '새는 돈이 보이기 시작했다' },
+    { id: 24, daysAgo: 479, content: '핸드폰 덜 보기', actionGoal: '침대에 들고 가지 않기', spotId: 9, stones: 7, result: 'NOT_ACHIEVED', reflection: '다음엔 충전기를 거실로' },
+    { id: 25, daysAgo: 449, content: '요리 열 가지 배우기', actionGoal: '주말마다 새 요리 하기', spotId: 1, stones: 26, result: 'ACHIEVED', reflection: '된장찌개는 이제 자신 있다' },
+    { id: 26, daysAgo: 419, content: '자격증 공부하기', actionGoal: '매일 기출 10문제', spotId: 3, stones: 30, result: 'ACHIEVED', reflection: '합격 문자를 받은 날을 잊지 못한다' },
+    { id: 27, daysAgo: 389, content: '부모님께 자주 전화하기', actionGoal: '퇴근길에 전화하기', spotId: 4, stones: 19, result: 'ACHIEVED', reflection: '엄마 목소리가 밝아졌다' },
+    { id: 28, daysAgo: 359, content: '일찍 잠들기', actionGoal: '11시에 불 끄기', spotId: 6, stones: 11, result: 'NOT_ACHIEVED', reflection: '야근 앞에서 자꾸 무너졌다' },
+    { id: 29, daysAgo: 329, content: '사진 한 장씩 찍기', actionGoal: '하루 한 장 남기기', spotId: 8, stones: 28, result: 'ACHIEVED', reflection: '평범한 날도 예뻤다' },
+    { id: 30, daysAgo: 299, content: '기타 코드 익히기', actionGoal: '매일 10분 연습', spotId: 10, stones: 15, result: 'NOT_ACHIEVED', reflection: '손끝이 먼저 포기했다' },
+    { id: 31, daysAgo: 269, content: '계단으로 다니기', actionGoal: '엘리베이터 대신 계단', spotId: 2, stones: 30, result: 'ACHIEVED', reflection: '이제 5층은 숨이 안 찬다' },
+    { id: 32, daysAgo: 239, content: '감사 일기 쓰기', actionGoal: '감사한 일 하나 적기', spotId: 5, stones: 23, result: 'ACHIEVED', reflection: '작은 일에 웃게 되었다' },
     { id: 2, daysAgo: 204, content: '일기 꾸준히 쓰기', actionGoal: '자기 전 세 줄 쓰기', spotId: 10, stones: 15, result: 'ACHIEVED', reflection: '세 줄이면 충분했다' },
     { id: 3, daysAgo: 172, content: '하루 30분 걷기', actionGoal: '점심 먹고 한 바퀴 걷기', spotId: 4, stones: 9, result: 'NOT_ACHIEVED', reflection: '다음엔 더 쉽게 시작하기' },
     { id: 4, daysAgo: 140, content: '물 2리터 마시기', actionGoal: '자리에 물병 두기', spotId: 8, stones: 24, result: 'ACHIEVED', reflection: '물병 효과가 컸다' },
@@ -288,9 +304,13 @@ function seed() {
     { cheerId: 904, writerNickname: null, isAnonymous: true, message: '소원 꼭 이루어지길 바랄게요. 저도 작년에 같은 소원을 빌었는데 매일 조금씩 하다 보니 정말 이루어졌어요. 포기하지 말고 끝까지 같이 쌓아요!', createdAt: now },
     { cheerId: 905, writerNickname: '지기', isAnonymous: false, message: '면접 잘 보고 와!', createdAt: now },
   ];
+  notify('YEAR_REVIEW', 1, YEAR_REVIEW_MESSAGE);
+  db.notifications[0].isRead = true;
   notify('NUDGE', 10, '돌돌이님이 콕 찔렀어요! 오늘의 돌을 쌓아 보세요.');
   notify('CHEER', 902, '지기님이 응원을 보냈어요.');
 }
+
+const YEAR_REVIEW_MESSAGE = '1년이 지났어요. 그동안 쌓은 돌탑을 돌아봐요';
 
 // 알림함에 추가 (실제 서버는 이때 푸시도 보냄)
 function notify(type: NotificationType, targetId: number, message: string) {
@@ -313,10 +333,22 @@ function runScheduler() {
       notify('TOWER_COMPLETED', wish.id, '30일 돌탑이 완성됐어요');
     }
   }
+  // TOWER-04: 묶음이 끝나면 돌탑이 있을 때 한 번 알림
+  const finished = roundOf(today()) - 1;
+  if (
+    finished > 0 &&
+    finishedTowers(finished).length > 0 &&
+    !db.notifications.some((n) => n.type === 'YEAR_REVIEW' && n.targetId === finished)
+  ) {
+    notify('YEAR_REVIEW', finished, YEAR_REVIEW_MESSAGE);
+  }
 }
 
 const roundOf = (date: string) =>
   db.journeyStartedOn ? Math.floor(diffDays(db.journeyStartedOn, date) / 365) + 1 : 1;
+
+const finishedTowers = (round: number) =>
+  db.wishes.filter((w) => w.status !== 'ACTIVE' && roundOf(w.endDate) === round);
 
 const stoneCount = (wishId: number) => db.stones.filter((s) => s.wishId === wishId).length;
 
@@ -397,13 +429,6 @@ export const mockServer = {
       profileImageUrl: null,
       provider: db.provider,
       hasActiveWish: openWish() !== undefined,
-      journey: db.journeyStartedOn
-        ? {
-            startedOn: db.journeyStartedOn,
-            currentRound: roundOf(today()),
-            reviewAt: addDays(db.journeyStartedOn, 365 * roundOf(today())),
-          }
-        : null,
     };
   },
 
@@ -483,19 +508,48 @@ export const mockServer = {
 
   getWishes(round?: number): WishSummary[] {
     runScheduler();
-    const targetRound = round ?? roundOf(today());
-    return db.wishes
-      .filter((w) => w.status !== 'ACTIVE' && roundOf(w.endDate) === targetRound)
+    return finishedTowers(round ?? roundOf(today()))
       .map((w) => ({
         wishId: w.id,
         content: w.content,
         startDate: w.startDate,
+        endDate: w.endDate,
         stoneCount: stoneCount(w.id),
         spotId: w.spotId,
         spotName: spotOf(w.spotId).name,
         visited: db.visitedSpotIds.includes(w.spotId),
         result: w.result,
+        reflection: w.reflection,
       }));
+  },
+
+  getRounds(): RoundSummary[] {
+    runScheduler();
+    const current = roundOf(today());
+    const rounds = new Set([current, ...db.wishes.filter((w) => w.status !== 'ACTIVE').map((w) => roundOf(w.endDate))]);
+    return [...rounds]
+      .sort((a, b) => a - b)
+      .map((round) => {
+        const towerCount = finishedTowers(round).length;
+        const review = db.yearReviews[round] ?? null;
+        return {
+          round,
+          towerCount,
+          reviewAt: db.journeyStartedOn ? addDays(db.journeyStartedOn, 365 * round) : null,
+          canWriteReview: review === null && round < current && towerCount > 0,
+          review,
+        };
+      });
+  },
+
+  writeYearReview(round: number, content: string): YearReviewResponse {
+    runScheduler();
+    if (round >= roundOf(today()) || finishedTowers(round).length === 0) {
+      throw new ApiError('YEAR_REVIEW_NOT_AVAILABLE', '1년이 지나고 돌탑이 있을 때 쓸 수 있어요.', 400);
+    }
+    if (db.yearReviews[round]) throw new ApiError('YEAR_REVIEW_ALREADY', '이미 1년 회고를 남겼어요.', 409);
+    db.yearReviews[round] = content;
+    return { round, content };
   },
 
   getSpots(category?: string): Spot[] {

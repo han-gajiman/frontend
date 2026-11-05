@@ -54,15 +54,6 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
           <Text className="text-gray-500">{PROVIDER_LABEL[me.provider]}</Text>
         </View>
 
-        {me.journey && (
-          <View className="gap-1 rounded-2xl bg-gray-100 p-4">
-            <Text className="text-gray-500">{me.journey.currentRound}회차 진행 중</Text>
-            <Text className="text-gray-900">
-              {me.journey.startedOn}부터 · {me.journey.reviewAt} 1년 회고
-            </Text>
-          </View>
-        )}
-
       </View>
 
       <View className="gap-3">

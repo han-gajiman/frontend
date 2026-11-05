@@ -53,9 +53,26 @@ export type WishSummary = {
   wishId: number;
   content: string;
   startDate: string;
+  endDate: string;
   stoneCount: number;
   spotId: number;
   spotName: string;
   visited: boolean;
   result: WishResult | null;
+  reflection: string | null; // 30일 회고
+};
+
+// GET /wishes/rounds — 소원 묶음(회차). 화면에서는 "첫 번째 소원"
+export type RoundSummary = {
+  round: number;
+  towerCount: number;
+  reviewAt: string | null; // 1년 회고를 쓸 수 있는 날 (첫 돌탑 전이면 null)
+  canWriteReview: boolean;
+  review: string | null; // 1년 회고
+};
+
+// POST /wishes/rounds/{round}/review
+export type YearReviewResponse = {
+  round: number;
+  content: string;
 };

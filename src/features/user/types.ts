@@ -9,6 +9,4 @@ export type Me = {
   profileImageUrl: string | null;
   provider: LoginProvider;
   hasActiveWish: boolean;
-  // 첫 돌탑 전이면 null
-  journey: { startedOn: string; currentRound: number; reviewAt: string } | null;
 };
