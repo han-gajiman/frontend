@@ -54,6 +54,7 @@ export type WishSummary = {
   content: string;
   startDate: string;
   stoneCount: number;
+  spotId: number;
   spotName: string;
   visited: boolean;
   result: WishResult | null;

@@ -205,41 +205,60 @@ function addStone(wishId: number, stoneDate: string, content: string | null) {
 function seed() {
   if (MOCK_SCENARIO === 'empty') return;
 
-  // 기존 회원: 완성한 돌탑 1개 + 13일째 진행 중인 돌탑 1개
+  // 기존 회원: 완성한 돌탑 6개(30개를 다 채운 돌탑 1개 포함) + 13일째 진행 중인 돌탑 1개
   db.onboarded = true;
   db.nickname = '소원지기';
-  const pastStart = addDays(today(), -45);
   const currentStart = addDays(today(), -12);
-  db.journeyStartedOn = pastStart;
-  db.visitedSpotIds = [3]; // 지난 돌탑의 호미곶에 다녀옴
+  db.journeyStartedOn = addDays(today(), -204);
+  db.visitedSpotIds = [1, 3]; // 지난 돌탑의 갓바위·호미곶에 다녀옴
 
-  db.wishes.push(
-    {
-      id: 1,
-      content: '토익 800점 넘기',
-      actionGoal: '매일 LC 1세트 풀기',
-      spotId: 3,
+  // 오래된 것부터. 다음 돌탑 시작까지 30일 + 이틀 간격
+  const pastTowers: {
+    id: number;
+    daysAgo: number;
+    content: string;
+    actionGoal: string;
+    spotId: number;
+    stones: number;
+    result: 'ACHIEVED' | 'NOT_ACHIEVED';
+    reflection: string;
+  }[] = [
+    { id: 2, daysAgo: 204, content: '일기 꾸준히 쓰기', actionGoal: '자기 전 세 줄 쓰기', spotId: 10, stones: 15, result: 'ACHIEVED', reflection: '세 줄이면 충분했다' },
+    { id: 3, daysAgo: 172, content: '하루 30분 걷기', actionGoal: '점심 먹고 한 바퀴 걷기', spotId: 4, stones: 9, result: 'NOT_ACHIEVED', reflection: '다음엔 더 쉽게 시작하기' },
+    { id: 4, daysAgo: 140, content: '물 2리터 마시기', actionGoal: '자리에 물병 두기', spotId: 8, stones: 24, result: 'ACHIEVED', reflection: '물병 효과가 컸다' },
+    { id: 5, daysAgo: 108, content: '책 한 권 끝까지 읽기', actionGoal: '매일 열 쪽 읽기', spotId: 6, stones: 18, result: 'NOT_ACHIEVED', reflection: '절반은 읽었다' },
+    { id: 1, daysAgo: 76, content: '토익 800점 넘기', actionGoal: '매일 LC 1세트 풀기', spotId: 3, stones: 27, result: 'ACHIEVED', reflection: '마지막 모의고사 820점!' },
+    { id: 6, daysAgo: 44, content: '아침 6시에 일어나기', actionGoal: '알람 듣고 바로 일어나기', spotId: 1, stones: 30, result: 'ACHIEVED', reflection: '30일을 다 채웠다' },
+  ];
+  for (const tower of pastTowers) {
+    const startDate = addDays(today(), -tower.daysAgo);
+    db.wishes.push({
+      id: tower.id,
+      content: tower.content,
+      actionGoal: tower.actionGoal,
+      spotId: tower.spotId,
       visibility: 'PRIVATE',
       status: 'CLOSED',
-      startDate: pastStart,
-      endDate: addDays(pastStart, TOWER_DAYS - 1),
-      result: 'ACHIEVED',
-      reflection: '마지막 모의고사 820점!',
-    },
-    {
-      id: 10,
-      content: '백엔드 개발자로 취업하기',
-      actionGoal: '매일 영어 단어 20개 외우기',
-      spotId: 2,
-      visibility: 'FRIENDS',
-      status: 'ACTIVE',
-      startDate: currentStart,
-      endDate: addDays(currentStart, TOWER_DAYS - 1),
-      result: null,
-      reflection: null,
-    },
-  );
-  for (let i = 0; i < 27; i++) addStone(1, addDays(pastStart, i), null);
+      startDate,
+      endDate: addDays(startDate, TOWER_DAYS - 1),
+      result: tower.result,
+      reflection: tower.reflection,
+    });
+    for (let i = 0; i < tower.stones; i++) addStone(tower.id, addDays(startDate, i), null);
+  }
+
+  db.wishes.push({
+    id: 10,
+    content: '백엔드 개발자로 취업하기',
+    actionGoal: '매일 영어 단어 20개 외우기',
+    spotId: 2,
+    visibility: 'FRIENDS',
+    status: 'ACTIVE',
+    startDate: currentStart,
+    endDate: addDays(currentStart, TOWER_DAYS - 1),
+    result: null,
+    reflection: null,
+  });
   for (let i = 0; i < 12; i++) addStone(10, addDays(currentStart, i), i % 2 ? '영어 단어 20개 외움' : null);
 
   // 친구 3명: 콕 찌를 수 있는 친구 / 오늘 이미 쌓은 친구 / 비공개 돌탑 친구
@@ -474,8 +493,9 @@ export const mockServer = {
         content: w.content,
         startDate: w.startDate,
         stoneCount: stoneCount(w.id),
+        spotId: w.spotId,
         spotName: spotOf(w.spotId).name,
-        visited: false,
+        visited: db.visitedSpotIds.includes(w.spotId),
         result: w.result,
       }));
   },
