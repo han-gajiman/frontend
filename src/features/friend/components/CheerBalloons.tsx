@@ -4,7 +4,6 @@ import { Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native
 import Animated, {
   Easing,
   FadeIn,
-  type SharedValue,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -21,14 +20,13 @@ import type { Cheer } from '../types';
 const MAX_BALLOONS = 5; // 최근 응원 몇 개만 (전체 목록은 내 돌탑 시트)
 const MAX_CHARS = 28; // 풍선에 보여줄 글자 수. 응원은 최대 100자라 나머지는 ...으로 줄이고, 풍선을 누르면 전체를 보여줍니다.
 const FIRST_DELAY = 900; // 홈이 보인 뒤 첫 풍선까지
-const NEXT_DELAY = 500; // 터진 뒤 다음 풍선까지
-const RESUME_DELAY = 900; // 전체 메시지를 닫은 뒤 터질 때까지
-const POP_MS = 320;
+const NEXT_DELAY = 500; // 사라진 뒤 다음 풍선까지
+const RESUME_DELAY = 900; // 전체 메시지를 닫은 뒤 사라지기 시작할 때까지
+const FADE_MS = 800; // 스르륵 사라지는 시간
 const SIDE_MARGIN = 10;
 const BALLOON_COLOR = 'rgba(255,255,255,0.6)'; // 배경이 살짝 비치는 흰색
 const MIN_WIDTH = 96;
 const BALLOON_ROOM = 120; // 풍선 높이만큼 위쪽 여백을 남겨, 다 떠올라도 영역 밖으로 나가지 않게
-const BURST_ANGLES = [0, 60, 120, 180, 240, 300];
 
 const writerOf = (cheer: Cheer) => cheer.writerNickname ?? '익명의 소원지기';
 
@@ -38,10 +36,10 @@ function shorten(message: string) {
   return chars.length > MAX_CHARS ? `${chars.slice(0, MAX_CHARS).join('').trimEnd()}...` : message;
 }
 
-// 땅에서 천천히 떠올라 터지기까지: 기본 5초 + 글자당 80ms
+// 땅에서 천천히 떠올라 사라지기 시작할 때까지: 기본 5초 + 글자당 80ms
 const floatTime = (text: string) => 5000 + text.length * 80;
 
-// FRIEND-03 받은 응원이 돌탑 옆에서 풍선으로 하나씩 떠올랐다가 터집니다. 홈에 들어올 때마다 한 번씩.
+// FRIEND-03 받은 응원이 돌탑 옆에서 풍선으로 하나씩 떠올랐다가 스르륵 사라집니다. 홈에 들어올 때마다 한 번씩.
 // 풍선만 누를 수 있고(전체 메시지 보기) 나머지 영역의 터치는 그대로 통과합니다. 불러오는 중·에러·응원 없음이면 그리지 않습니다.
 export function CheerBalloons({
   wishId,
@@ -115,7 +113,7 @@ function Balloon({
   width: number;
   bottom: number;
   rise: number;
-  paused: boolean; // 전체 메시지를 보는 동안에는 터지지 않습니다.
+  paused: boolean; // 전체 메시지를 보는 동안에는 사라지지 않습니다.
   onPress: () => void;
   onDone: () => void;
 }) {
@@ -123,18 +121,17 @@ function Balloon({
   const y = useSharedValue(0);
   const opacity = useSharedValue(0);
   const scale = useSharedValue(reduced ? 1 : 0.8);
-  const burst = useSharedValue(0);
   const text = shorten(cheer.message);
   const showMs = floatTime(text);
 
-  // 떠오르기는 처음 한 번만. 땅에서 시작해 터질 때까지 천천히 올라갑니다.
+  // 떠오르기는 처음 한 번만. 땅에서 시작해 다 사라질 때까지 천천히 올라갑니다.
   useEffect(() => {
-    if (!reduced) y.set(withTiming(1, { duration: showMs, easing: Easing.out(Easing.quad) }));
+    if (!reduced) y.set(withTiming(1, { duration: showMs + FADE_MS, easing: Easing.out(Easing.quad) }));
     opacity.set(withTiming(1, { duration: 300 }));
     scale.set(withTiming(1, { duration: 400, easing: Easing.out(Easing.back(1.6)) }));
   }, [reduced, showMs, y, opacity, scale]);
 
-  // 터지기까지 남은 시간. 전체 메시지를 닫으면 조금 뒤에 터집니다.
+  // 사라지기까지 남은 시간. 전체 메시지를 닫으면 조금 뒤에 사라집니다.
   const wasPaused = useRef(false);
   useEffect(() => {
     if (paused) {
@@ -142,16 +139,12 @@ function Balloon({
       return;
     }
     const wait = wasPaused.current ? RESUME_DELAY : showMs;
-    const pop = setTimeout(() => {
-      if (!reduced) {
-        scale.set(withTiming(1.2, { duration: POP_MS / 2 }));
-        burst.set(withTiming(1, { duration: POP_MS, easing: Easing.out(Easing.cubic) }));
-      }
-      opacity.set(withTiming(0, { duration: POP_MS / 2 }));
+    const fade = setTimeout(() => {
+      opacity.set(withTiming(0, { duration: FADE_MS, easing: Easing.inOut(Easing.quad) }));
     }, wait);
-    const done = setTimeout(onDone, wait + POP_MS + NEXT_DELAY);
+    const done = setTimeout(onDone, wait + FADE_MS + NEXT_DELAY);
     return () => {
-      clearTimeout(pop);
+      clearTimeout(fade);
       clearTimeout(done);
     };
     // onDone은 렌더마다 새로 만들어지지만 하는 일은 같습니다. 다시 걸면 타이머가 처음부터 시작됩니다.
@@ -159,7 +152,6 @@ function Balloon({
   }, [paused]);
 
   const riseStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -y.get() * rise }] }));
-  // 터지는 점이 같이 사라지지 않도록, 흐려지고 커지는 건 풍선만
   const bubbleStyle = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ scale: scale.get() }] }));
 
   return (
@@ -194,7 +186,6 @@ function Balloon({
           </View>
         </Pressable>
       </Animated.View>
-      {!reduced && BURST_ANGLES.map((angle) => <BurstDot key={angle} angle={angle} burst={burst} />)}
     </Animated.View>
   );
 }
@@ -233,34 +224,5 @@ function CheerDialog({ cheer, onClose }: { cheer: Cheer; onClose: () => void }) 
         </Animated.View>
       </Animated.View>
     </Modal>
-  );
-}
-
-// 터질 때 사방으로 튀는 작은 점
-function BurstDot({ angle, burst }: { angle: number; burst: SharedValue<number> }) {
-  const rad = (angle * Math.PI) / 180;
-  const style = useAnimatedStyle(() => {
-    const b = burst.get();
-    return {
-      opacity: b > 0 ? 1 - b : 0,
-      transform: [{ translateX: Math.cos(rad) * b * 56 }, { translateY: Math.sin(rad) * b * 56 }],
-    };
-  });
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          top: '40%',
-          left: '50%',
-          width: 7,
-          height: 7,
-          borderRadius: 4,
-          backgroundColor: '#f2b84b',
-        },
-        style,
-      ]}
-    />
   );
 }
