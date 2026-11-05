@@ -39,6 +39,7 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
         evening={evening}
         groundHeight={groundHeight}
         bottomScrim
+        softened
       />
 
       {/* 아래쪽은 떠 있는 탭 바가 안전 영역까지 차지하므로 위쪽만 */}

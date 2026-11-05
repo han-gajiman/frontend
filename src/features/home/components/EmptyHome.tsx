@@ -18,7 +18,7 @@ export function EmptyHome() {
 
   return (
     <View className="flex-1">
-      <TowerBackground spotId={null} visited={false} groundHeight={FIELD_GROUND} bottomScrim />
+      <TowerBackground spotId={null} visited={false} groundHeight={FIELD_GROUND} bottomScrim softened />
       <SafeAreaView className="flex-1" edges={['top']}>
         <HomeHeader light />
       </SafeAreaView>
