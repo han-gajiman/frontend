@@ -1,18 +1,16 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
-  FadeIn,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
-  ZoomIn,
 } from 'react-native-reanimated';
 
+import { Dialog } from '@/shared/components/Dialog';
 import { useApi } from '@/shared/hooks/useApi';
-import { WEB_APP_MAX_WIDTH } from '@/shared/hooks/useAppSize';
 
 import { getCheers } from '../api';
 import type { Cheer } from '../types';
@@ -193,36 +191,14 @@ function Balloon({
 // 풍선을 눌렀을 때 전체 메시지 (최대 100자)
 function CheerDialog({ cheer, onClose }: { cheer: Cheer; onClose: () => void }) {
   return (
-    <Modal transparent visible animationType="none" onRequestClose={onClose} statusBarTranslucent>
-      <Animated.View
-        entering={FadeIn.duration(180)}
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(16,0,78,0.45)' }}>
-        <Pressable
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="닫기"
-          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
-        />
-        <Animated.View
-          entering={ZoomIn.duration(220)}
-          style={{
-            width: '100%',
-            maxWidth: WEB_APP_MAX_WIDTH - 48,
-            maxHeight: '70%',
-            gap: 16,
-            padding: 24,
-            borderRadius: 24,
-            backgroundColor: 'white',
-          }}>
-          <Text className="text-sm text-gray-500">{writerOf(cheer)}</Text>
-          <ScrollView>
-            <Text className="text-xl leading-8 text-gray-900">{cheer.message}</Text>
-          </ScrollView>
-          <Pressable onPress={onClose} accessibilityRole="button" className="items-center rounded-2xl bg-gray-100 py-3">
-            <Text className="font-semibold text-gray-900">닫기</Text>
-          </Pressable>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+    <Dialog onClose={onClose}>
+      <Text className="text-sm text-gray-500">{writerOf(cheer)}</Text>
+      <ScrollView>
+        <Text className="text-xl leading-8 text-gray-900">{cheer.message}</Text>
+      </ScrollView>
+      <Pressable onPress={onClose} accessibilityRole="button" className="items-center rounded-2xl bg-gray-100 py-3">
+        <Text className="font-semibold text-gray-900">닫기</Text>
+      </Pressable>
+    </Dialog>
   );
 }

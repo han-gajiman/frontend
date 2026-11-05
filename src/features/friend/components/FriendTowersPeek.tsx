@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
-import { StoneShape } from '@/features/stone/components/StoneShape';
+import { MiniTower } from '@/features/stone/components/MiniTower';
 import { useApi } from '@/shared/hooks/useApi';
 import { useAppSize } from '@/shared/hooks/useAppSize';
 
@@ -10,7 +10,6 @@ import { getFriends } from '../api';
 const MAX_FRIENDS = 3;
 const SCALE = 0.2; // 멀리 있는 것처럼 작게
 const MIN_SCREEN_HEIGHT = 700; // 이보다 작은 화면에서는 내 돌탑 자리를 위해 숨김
-const OVERLAP = 1;
 // 내 돌탑(가운데)을 피해 양옆 멀리에 둡니다
 const POSITIONS = [{ left: 12 }, { right: 12 }, { left: 64 }];
 
@@ -36,13 +35,7 @@ export function FriendTowersPeek({ bottom }: { bottom: number }) {
           <Text className="mb-1 text-[10px] font-semibold text-white" style={{ textShadowColor: 'rgba(0,0,0,0.45)', textShadowRadius: 3 }}>
             {friend.nickname}
           </Text>
-          <View style={{ flexDirection: 'column-reverse', alignItems: 'center' }}>
-            {Array.from({ length: Math.min(friend.wish!.stoneCount, 30) }, (_, s) => (
-              <View key={s} style={{ marginBottom: s === 0 ? 0 : -OVERLAP }}>
-                <StoneShape index={s} scale={SCALE} isToday={false} />
-              </View>
-            ))}
-          </View>
+          <MiniTower count={friend.wish!.stoneCount} scale={SCALE} />
         </Pressable>
       ))}
     </>

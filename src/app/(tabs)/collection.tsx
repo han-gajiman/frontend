@@ -1,82 +1,118 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { BackHandler } from 'react-native';
 
-import { getMe } from '@/features/user/api';
-import { getWishes } from '@/features/wish/api';
+import { getRounds, getWishes } from '@/features/wish/api';
+import { RoundField } from '@/features/wish/components/RoundField';
 import { TowerPager } from '@/features/wish/components/TowerPager';
-import type { WishSummary } from '@/features/wish/types';
+import { YearReviewDialog } from '@/features/wish/components/YearReviewDialog';
+import { roundTitle } from '@/features/wish/towerLabels';
+import type { RoundSummary } from '@/features/wish/types';
 import { Screen } from '@/shared/components/Screen';
-import { AsyncContent, EmptyState } from '@/shared/components/ScreenState';
+import { AsyncContent } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
 
-// TOWER-03 돌탑 모아보기: 회차(첫 돌탑 시작일부터 1년 = 1회차)별 완성 돌탑, 최대 12개
-// ?round=N으로 열면 그 회차부터 보여줍니다 (1년 회고 알림에서 이동).
-// 가장 최근에 끝난 돌탑부터 한 장씩 넘겨 봅니다.
+// TOWER-03 돌탑 모아보기: 소원 묶음(첫 시작일부터 1년, 코드에서는 round)별 필드 → 큰 카드 → 30일 회고
+// ?round=N으로 열면 그 묶음을 보여줍니다 (1년 회고 알림에서 이동).
 export default function CollectionScreen() {
-  const { round } = useLocalSearchParams<{ round?: string }>();
-  const me = useApi(getMe);
+  const { round: roundParam } = useLocalSearchParams<{ round?: string }>();
+  const rounds = useApi(getRounds);
+  const [selected, setSelected] = useState<number | null>(null); // null = 현재 묶음
+
+  // 탭은 계속 떠 있으므로, 같은 알림을 다시 열 수 있게 받은 번호는 지웁니다.
+  useFocusEffect(
+    useCallback(() => {
+      if (roundParam) {
+        setSelected(Number(roundParam));
+        router.setParams({ round: undefined });
+      }
+    }, [roundParam]),
+  );
 
   return (
-    <Screen title="돌탑 모아보기" scroll={false}>
-      <AsyncContent state={me}>
-        {(user) => {
-          const currentRound = user.journey?.currentRound ?? 1;
-          const requested = Number(round);
-          const initialRound = requested >= 1 && requested <= currentRound ? requested : currentRound;
-          // 탭은 계속 떠 있으므로, 알림으로 다른 회차를 열면 key로 새로 그려 그 회차를 보여줍니다.
-          return <RoundCollection key={initialRound} currentRound={currentRound} initialRound={initialRound} />;
-        }}
-      </AsyncContent>
-    </Screen>
+    <AsyncContent state={rounds}>
+      {(list) => {
+        const index = list.findIndex((r) => r.round === selected);
+        const currentIndex = index >= 0 ? index : list.length - 1;
+        const previous = list[currentIndex - 1];
+        const next = list[currentIndex + 1];
+        return (
+          <RoundView
+            key={list[currentIndex].round} // 묶음을 옮기면 필드부터 새로 그립니다.
+            round={list[currentIndex]}
+            onPrevious={previous && (() => setSelected(previous.round))}
+            onNext={next && (() => setSelected(next.round))}
+            onReviewWritten={rounds.reload}
+          />
+        );
+      }}
+    </AsyncContent>
   );
 }
 
-const newestFirst = (wishes: WishSummary[]) => [...wishes].sort((a, b) => b.startDate.localeCompare(a.startDate));
+function RoundView({
+  round,
+  onPrevious,
+  onNext,
+  onReviewWritten,
+}: {
+  round: RoundSummary;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  onReviewWritten: () => void;
+}) {
+  const fetchTowers = useCallback(() => getWishes(round.round), [round.round]);
+  const towers = useApi(fetchTowers);
+  const [openWishId, setOpenWishId] = useState<number | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const cardOpen = openWishId !== null;
 
-function RoundCollection({ currentRound, initialRound }: { currentRound: number; initialRound: number }) {
-  const [selected, setSelected] = useState(initialRound);
-  const fetchRound = useCallback(() => getWishes(selected), [selected]);
-  const state = useApi(fetchRound);
-  const rounds = Array.from({ length: currentRound }, (_, i) => i + 1);
+  // 카드에서 안드로이드 뒤로 가기 → 필드. 탭을 다시 눌러도 필드부터 보여줍니다.
+  useFocusEffect(
+    useCallback(() => {
+      setOpenWishId(null);
+    }, []),
+  );
+  useFocusEffect(
+    useCallback(() => {
+      if (!cardOpen) return;
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        setOpenWishId(null);
+        return true;
+      });
+      return () => subscription.remove();
+    }, [cardOpen]),
+  );
+
+  const initialIndex = towers.data?.findIndex((wish) => wish.wishId === openWishId) ?? -1;
+  if (towers.data && initialIndex >= 0) {
+    return (
+      <Screen title={roundTitle(round.round)} showBack onBack={() => setOpenWishId(null)} scroll={false}>
+        <TowerPager wishes={towers.data} initialIndex={initialIndex} />
+      </Screen>
+    );
+  }
 
   return (
-    <View className="flex-1 gap-3">
-      {currentRound > 1 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6">
-          {rounds.map((r) => (
-            <Pressable
-              key={r}
-              onPress={() => setSelected(r)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: r === selected }}
-              className={`rounded-full px-4 py-2 ${r === selected ? 'bg-gray-900' : 'bg-gray-100'}`}>
-              <Text className={r === selected ? 'font-semibold text-white' : 'text-gray-700'}>{r}회차</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+    <>
+      <RoundField
+        round={round}
+        state={towers}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        onOpenTower={(wish) => setOpenWishId(wish.wishId)}
+        onOpenReview={() => setReviewOpen(true)}
+      />
+      {reviewOpen && (
+        <YearReviewDialog
+          round={round}
+          onClose={() => setReviewOpen(false)}
+          onWritten={() => {
+            setReviewOpen(false);
+            onReviewWritten();
+          }}
+        />
       )}
-
-      <AsyncContent
-        state={state}
-        isEmpty={(wishes) => wishes.length === 0}
-        empty={
-          <EmptyState
-            title={`${selected}회차에 완성한 돌탑이 없어요`}
-            description="30일 돌탑을 완성하면 여기에 모여요."
-            actionLabel="홈으로"
-            onAction={() => router.navigate('/')}
-          />
-        }>
-        {(wishes) => (
-          <View className="flex-1 gap-3">
-            <Text className="px-6 text-gray-500">
-              {selected}회차에 완성한 돌탑 {wishes.length} / 12
-            </Text>
-            <TowerPager wishes={newestFirst(wishes)} />
-          </View>
-        )}
-      </AsyncContent>
-    </View>
+    </>
   );
 }

@@ -7,8 +7,10 @@ import type {
   CreateWishResponse,
   CurrentWish,
   ReflectionRequest,
+  RoundSummary,
   Visibility,
   WishSummary,
+  YearReviewResponse,
 } from './types';
 
 // GET /wishes/current — 진행 중 돌탑이 없으면 null
@@ -49,4 +51,20 @@ export function getWishes(round?: number): Promise<WishSummary[]> {
     return mockCall(() => mockServer.getWishes(round));
   }
   return apiRequest<WishSummary[]>(round ? `/wishes?round=${round}` : '/wishes');
+}
+
+// GET /wishes/rounds — 돌탑이 있는 묶음 + 현재 묶음, 오래된 순
+export function getRounds(): Promise<RoundSummary[]> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.getRounds());
+  }
+  return apiRequest<RoundSummary[]>('/wishes/rounds');
+}
+
+// POST /wishes/rounds/{round}/review — 끝난 묶음에 한 번만, 수정 불가
+export function writeYearReview(round: number, content: string): Promise<YearReviewResponse> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.writeYearReview(round, content));
+  }
+  return apiRequest<YearReviewResponse>(`/wishes/rounds/${round}/review`, { method: 'POST', body: { content } });
 }
