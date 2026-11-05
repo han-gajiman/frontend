@@ -130,7 +130,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 내 돌탑 시트 (소원 보기, 공개 범위, 받은 응원) | `features/wish/components/MyTowerSheet.tsx` | WISH-04, FRIEND-03 |
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
-| 탭: 모아보기 (완성한 돌탑을 최근 것부터 한 장씩 넘겨 보기, 30개를 채우면 별, 회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
+| 탭: 모아보기 (완성한 돌탑을 최근 것부터 한 장씩 넘겨 보기, 30개를 채우면 금색 별, 이루었으면 흰색 별, 회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
 | 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표, 방문 인증: 기기 안에서 반경 확인) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx`, `VisitScreen.tsx` | SPOT-02, SPOT-03 |
 | 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-06 |
 | 탭: 친구 목록 | `src/app/(tabs)/friends.tsx` | FRIEND-02 |

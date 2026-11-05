@@ -37,13 +37,13 @@ type StoneTowerProps = {
   background?: TowerBackgroundProps;
   inscription?: string; // 맨 아래 돌에 새길 소원 문구
   onPress?: () => void; // 탑 몸체를 눌렀을 때 (홈: 내 돌탑 시트). 빈 하늘은 눌리지 않습니다.
-  crowned?: boolean; // 30일을 모두 채운 돌탑: 꼭대기에 별 (모아보기)
+  crown?: 'gold' | 'white'; // 꼭대기 별 (모아보기): 30개를 다 채우면 금색, 다 못 쌓았어도 이루었으면 흰색
   groundHeight?: number; // 영역 아래쪽 땅 높이 (홈은 풍선 자리를 위해 낮춤)
   maxScale?: number; // 돌 크기 상한 (홈은 양옆 빈 공간을 남김)
 };
 
 // STONE-02 돌탑: 아래부터 쌓이는 돌 + 배경 + 30일 완성 연출
-export function StoneTower({ count, stonedToday, completed, background, inscription, onPress, crowned = false, groundHeight = GROUND_HEIGHT, maxScale = 1.3 }: StoneTowerProps) {
+export function StoneTower({ count, stonedToday, completed, background, inscription, onPress, crown, groundHeight = GROUND_HEIGHT, maxScale = 1.3 }: StoneTowerProps) {
   const [areaHeight, setAreaHeight] = useState(0);
   // 화면에 들어왔을 때 이미 있던 돌은 차례로 나타나고, 그 뒤에 쌓은 돌만 떨어지는 효과
   const [initialCount] = useState(count);
@@ -85,7 +85,7 @@ export function StoneTower({ count, stonedToday, completed, background, inscript
               />
             </Animated.View>
           ))}
-          {crowned && <TowerStar delay={count * 30} />}
+          {crown && <TowerStar color={crown} delay={count * 30} />}
           </Pressable>
         </TowerBody>
       )}
@@ -100,18 +100,20 @@ export function StoneTower({ count, stonedToday, completed, background, inscript
 }
 
 // 꼭대기 별. 인트로의 별 그림을 씁니다.
-function TowerStar({ delay }: { delay: number }) {
+function TowerStar({ color, delay }: { color: 'gold' | 'white'; delay: number }) {
+  const tintColor = color === 'white' ? '#ffffff' : undefined;
   return (
     <Animated.View
       entering={FadeIn.delay(delay).duration(300)}
       pointerEvents="none"
-      accessibilityLabel="30일을 모두 채운 돌탑"
+      accessibilityLabel={color === 'gold' ? '30일을 모두 채운 돌탑' : '소원을 이룬 돌탑'}
       style={{ width: 52, height: 50, marginBottom: 2, alignItems: 'center', justifyContent: 'center' }}>
       <Image
         source={require('../../../../assets/intro/screen_02_star_glow.png')}
         style={{ position: 'absolute', width: 95, height: 95 }}
+        tintColor={tintColor}
       />
-      <Image source={require('../../../../assets/intro/screen_02_star.png')} style={{ width: 52, height: 50 }} />
+      <Image source={require('../../../../assets/intro/screen_02_star.png')} style={{ width: 52, height: 50 }} tintColor={tintColor} />
     </Animated.View>
   );
 }
