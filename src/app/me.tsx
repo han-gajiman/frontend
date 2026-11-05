@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Pressable, Switch, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { logout } from '@/features/auth/api';
 import { signOutSocial } from '@/features/auth/social';
 import { useAuthStore } from '@/features/auth/store';
-import { deleteAccount, getMe, updateLocationAgreement } from '@/features/user/api';
+import { deleteAccount, getMe } from '@/features/user/api';
 import type { Me } from '@/features/user/types';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -15,7 +15,7 @@ import { useSubmit } from '@/shared/hooks/useSubmit';
 
 const PROVIDER_LABEL = { KAKAO: '카카오 계정으로 로그인', GOOGLE: 'Google 계정으로 로그인', LOCAL: '이메일로 로그인' } as const;
 
-// AUTH-04 내 정보 + AUTH-05 위치정보 동의 변경 + AUTH-06 탈퇴 + 로그아웃
+// AUTH-04 내 정보 + AUTH-06 탈퇴 + 로그아웃
 // TODO(AUTH-04): 푸시 토큰 등록은 알림(NOTI-01) 구현 때 추가
 export default function MeScreen() {
   const state = useApi(getMe);
@@ -29,14 +29,8 @@ export default function MeScreen() {
 
 function MeContent({ me, reload }: { me: Me; reload: () => void }) {
   const { refreshToken, signOut } = useAuthStore();
-  const location = useSubmit(updateLocationAgreement);
   const withdraw = useSubmit(deleteAccount);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-
-  const toggleLocation = async (agreed: boolean) => {
-    const result = await location.run(agreed);
-    if (result.ok) reload();
-  };
 
   const handleLogout = async () => {
     // 서버 폐기에 실패해도 앱에서는 로그아웃
@@ -69,20 +63,6 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
           </View>
         )}
 
-        <View className="gap-2">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 gap-1 pr-4">
-              <Text className="font-semibold text-gray-900">위치정보 이용 동의</Text>
-              <Text className="text-sm text-gray-500">명소 방문 인증에만 써요</Text>
-            </View>
-            <Switch
-              value={me.agreements.location}
-              onValueChange={toggleLocation}
-              disabled={location.submitting}
-            />
-          </View>
-          <ErrorText error={location.error} />
-        </View>
       </View>
 
       <View className="gap-3">

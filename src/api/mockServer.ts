@@ -11,7 +11,7 @@ import type {
 } from '@/features/auth/types';
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { AppNotification, NotificationType } from '@/features/notification/types';
-import type { Spot } from '@/features/spot/types';
+import type { Spot, VisitResponse } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneType } from '@/features/stone/types';
 import type {
   CreateWishRequest,
@@ -59,7 +59,9 @@ type MockStone = {
   content: string | null;
 };
 
-const spots: Omit<Spot, 'visited'>[] = [
+const SPOT_RADIUS_M = 500;
+
+const spots: Omit<Spot, 'visited' | 'radiusM'>[] = [
   {
     id: 1,
     name: '팔공산 갓바위',
@@ -165,7 +167,6 @@ const emptyDb = () => ({
   onboarded: false,
   provider: 'KAKAO' as LoginProvider,
   nickname: '',
-  locationAgreed: false,
   journeyStartedOn: null as string | null,
   visitedSpotIds: [] as number[], // 방문 인증한 명소 (지도의 별)
   wishes: [] as MockWish[],
@@ -386,7 +387,6 @@ export const mockServer = {
     }
     db.onboarded = true;
     db.nickname = body.nickname;
-    db.locationAgreed = body.agreements.location;
   },
 
   getMe(): Me {
@@ -396,7 +396,6 @@ export const mockServer = {
       nickname: db.nickname,
       profileImageUrl: null,
       provider: db.provider,
-      agreements: { location: db.locationAgreed },
       hasActiveWish: openWish() !== undefined,
       journey: db.journeyStartedOn
         ? {
@@ -406,10 +405,6 @@ export const mockServer = {
           }
         : null,
     };
-  },
-
-  updateLocationAgreement(agreed: boolean): void {
-    db.locationAgreed = agreed;
   },
 
   // 탈퇴: 본인 데이터 전부 삭제 → 다시 로그인하면 새 회원
@@ -506,7 +501,13 @@ export const mockServer = {
   getSpots(category?: string): Spot[] {
     return spots
       .filter((s) => !category || s.category === category)
-      .map((s) => ({ ...s, visited: db.visitedSpotIds.includes(s.id) }));
+      .map((s) => ({ ...s, radiusM: SPOT_RADIUS_M, visited: db.visitedSpotIds.includes(s.id) }));
+  },
+
+  createVisit(spotId: number): VisitResponse {
+    const firstVisit = !db.visitedSpotIds.includes(spotId);
+    if (firstVisit) db.visitedSpotIds.push(spotId);
+    return { visitId: spotId, firstVisit };
   },
 
   // --- 친구 (FRIEND-01~04) ---

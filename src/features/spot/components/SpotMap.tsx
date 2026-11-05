@@ -13,6 +13,12 @@ export function SpotMap({ spots, selectedId, onSelect }: SpotMapProps) {
   // 지도를 다시 불러오지 않도록, 화면에 돌아와 명소를 다시 받아도 내용이 같으면 같은 HTML을 씁니다.
   const spotsKey = JSON.stringify(spots);
   const html = useMemo(() => buildKakaoMapHtml(JSON.parse(spotsKey)), [spotsKey]);
+  // 방문 인증으로 내용이 바뀌면 지도가 새로 뜨므로, 준비되면 선택을 다시 적용합니다.
+  const [loadedHtml, setLoadedHtml] = useState(html);
+  if (html !== loadedHtml) {
+    setLoadedHtml(html);
+    setStatus('loading');
+  }
 
   useEffect(() => {
     if (status !== 'ready') return;

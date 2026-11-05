@@ -31,6 +31,6 @@ export type LoginResponse = {
 
 export type OnboardingRequest = {
   nickname: string;
-  agreements: { terms: boolean; privacy: boolean; location: boolean };
+  agreements: { terms: boolean; privacy: boolean };
   agreementVersion: string;
 };

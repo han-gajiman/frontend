@@ -12,12 +12,11 @@ import { useSubmit } from '@/shared/hooks/useSubmit';
 
 const AGREEMENT_VERSION = '1.0';
 
-// AUTH-02 온보딩: 약관(필수)·개인정보(필수)·위치정보(선택) 동의 + 닉네임
+// AUTH-02 온보딩: 약관(필수)·개인정보(필수) 동의 + 닉네임. 위치는 방문 인증을 누를 때 기기 권한으로 묻습니다.
 export default function OnboardingScreen() {
   const markOnboarded = useAuthStore((s) => s.completeOnboarding);
   const [terms, setTerms] = useState(false);
   const [privacy, setPrivacy] = useState(false);
-  const [location, setLocation] = useState(false);
   const [nickname, setNickname] = useState('');
   const { run, submitting, error } = useSubmit(completeOnboarding);
 
@@ -34,7 +33,7 @@ export default function OnboardingScreen() {
   const handleSubmit = async () => {
     const result = await run({
       nickname: nickname.trim(),
-      agreements: { terms, privacy, location },
+      agreements: { terms, privacy },
       agreementVersion: AGREEMENT_VERSION,
     });
     if (result.ok) markOnboarded();
@@ -55,8 +54,6 @@ export default function OnboardingScreen() {
           {/* TODO(AUTH-02): 약관 전문 보기 링크 */}
           <Check label="[필수] 이용약관 동의" checked={terms} onPress={() => setTerms(!terms)} />
           <Check label="[필수] 개인정보 수집·이용 동의" checked={privacy} onPress={() => setPrivacy(!privacy)} />
-          <Check label="[선택] 위치정보 이용 동의" checked={location} onPress={() => setLocation(!location)} />
-          <Text className="text-sm text-gray-400">위치정보는 명소 방문 인증에만 써요. 나중에 바꿀 수 있어요.</Text>
         </View>
 
         <TextField label="닉네임" value={nickname} onChangeText={setNickname} placeholder="닉네임" maxLength={30} />

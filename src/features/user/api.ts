@@ -12,14 +12,6 @@ export function getMe(): Promise<Me> {
   return apiRequest<Me>('/users/me');
 }
 
-// PUT /users/me/agreements/location (AUTH-05)
-export function updateLocationAgreement(agreed: boolean): Promise<void> {
-  if (USE_MOCK) {
-    return mockCall(() => mockServer.updateLocationAgreement(agreed));
-  }
-  return apiRequest<void>('/users/me/agreements/location', { method: 'PUT', body: { agreed } });
-}
-
 // DELETE /users/me (AUTH-06) — 즉시 삭제. 소셜 연결 끊기·데이터 삭제는 서버가 처리
 export function deleteAccount(): Promise<void> {
   if (USE_MOCK) {

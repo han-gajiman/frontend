@@ -131,8 +131,8 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
 | 탭: 모아보기 (완성한 돌탑을 최근 것부터 한 장씩 넘겨 보기, 30개를 채우면 별, 회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
-| 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표, 방문 인증 화면) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx`, `VisitScreen.tsx` | SPOT-02 |
-| 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-05, AUTH-06 |
+| 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표, 방문 인증: 기기 안에서 반경 확인) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx`, `VisitScreen.tsx` | SPOT-02, SPOT-03 |
+| 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-06 |
 | 탭: 친구 목록 | `src/app/(tabs)/friends.tsx` | FRIEND-02 |
 | 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |
 | 친구 돌탑 (응원, 콕 찌르기) | `src/app/friends/[friendId].tsx` | FRIEND-02, FRIEND-03, FRIEND-04 |
@@ -140,7 +140,7 @@ Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource
 | 알림함 (안 읽은 알림 점, 누르면 관련 화면으로) | `src/app/notifications.tsx` | NOTI-01 |
 | 받은 응원 (내 진행 중 돌탑) | `src/app/cheers.tsx` | FRIEND-03 |
 
-아직 없는 화면(P1): 방문 인증·엽서, AI 실천 목표 추천. 푸시 알림 받기(기기 푸시 토큰 등록)는 개발 빌드에서 추가 예정
+아직 없는 화면(P1): 엽서, AI 실천 목표 추천. 푸시 알림 받기(기기 푸시 토큰 등록)는 개발 빌드에서 추가 예정
 
 ## 폴더 구조
 

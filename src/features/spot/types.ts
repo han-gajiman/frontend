@@ -11,5 +11,12 @@ export type Spot = {
   description: string;
   latitude: number;
   longitude: number;
+  radiusM: number; // 방문 인증 반경. 앱이 기기 안에서 거리를 계산할 때 씁니다.
   visited: boolean; // 내가 방문 인증한 명소 (지도에 별표). 로그인 전이면 false
+};
+
+// POST /spots/{spotId}/visits. firstVisit=false면 이미 인증한 명소
+export type VisitResponse = {
+  visitId: number;
+  firstVisit: boolean;
 };
