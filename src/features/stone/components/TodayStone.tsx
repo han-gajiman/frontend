@@ -88,7 +88,7 @@ export function TodayStone({ index, disabled, isOverTower, onDragStart, onDrop }
         <StoneShape index={index} scale={1} isToday />
       </Animated.View>
       <View className="flex-row items-center gap-2">
-        <Text className="text-xs text-gray-600">끌어서 탑 위에 올려 주세요</Text>
+        <Text className="text-xs text-white">끌어서 탑 위에 올려 주세요</Text>
         <Pressable
           onPress={tapStack}
           disabled={disabled}

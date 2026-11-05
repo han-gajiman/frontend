@@ -18,7 +18,7 @@ export function DemoTimeTravel({ onDone }: { onDone: () => void }) {
     <View className="gap-1">
       <ErrorText error={error} />
       <View className="flex-row items-center justify-center gap-2">
-        <Text className="text-xs text-gray-500">시연용 시간 이동</Text>
+        <Text className="text-xs text-white/80">시연용 시간 이동</Text>
         {[1, 30].map((days) => (
           <Pressable
             key={days}

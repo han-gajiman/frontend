@@ -10,21 +10,19 @@ const TOWER_DAYS = 30;
 // 홈 상단 진행 정보: 명소 이름, 돌 N/30, N일째, 공개 상태 아이콘(누르면 내 돌탑 시트)
 export function TowerProgress({
   wish,
-  evening,
   onOpenSheet,
 }: {
   wish: CurrentWish;
-  evening: boolean;
   onOpenSheet: () => void;
 }) {
-  const theme = towerTheme(evening);
+  const theme = towerTheme(true); // 배경 위쪽은 언제나 어두운 하늘
   const isFriends = wish.visibility === 'FRIENDS';
 
   return (
     <View className="gap-1 px-6 pt-2">
       <Text className={`text-sm ${theme.secondary}`}>
         {wish.spot.name}
-        {!wish.spot.visited && ' · 방문 전'}
+        {wish.spot.visited ? ' · 방문함' : ' · 방문 전'}
       </Text>
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-baseline gap-2">

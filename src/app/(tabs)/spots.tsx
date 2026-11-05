@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { getSpots } from '@/features/spot/api';
 import { SpotExplorer } from '@/features/spot/components/SpotExplorer';
+import { VisitScreen } from '@/features/spot/components/VisitScreen';
 import type { Spot } from '@/features/spot/types';
 import { Button } from '@/shared/components/Button';
 import { Screen } from '@/shared/components/Screen';
@@ -14,6 +15,7 @@ const fetchSpots = () => getSpots();
 export default function SpotsScreen() {
   const state = useApi(fetchSpots);
   const [selected, setSelected] = useState<Spot | null>(null);
+  const [visiting, setVisiting] = useState<Spot | null>(null); // 방문 인증 화면을 연 명소
 
   return (
     <Screen title="경북 명소" showBack={!!selected} onBack={() => setSelected(null)} scroll={false}>
@@ -26,11 +28,13 @@ export default function SpotsScreen() {
             spots={spots}
             selected={selected}
             onSelect={setSelected}
-            // TODO(SPOT-03, P1): 방문 인증 → 앱에서 반경 500m 체크 → 인증 결과만 서버로 → 배경 해금 + 엽서
-            renderAction={() => <Button label="방문 인증 (준비 중)" onPress={() => undefined} disabled />}
+            renderAction={(spot) => (
+              <Button label={spot.visited ? '방문 완료 · 일러스트 보기' : '방문 인증'} onPress={() => setVisiting(spot)} />
+            )}
           />
         )}
       </AsyncContent>
+      {visiting && <VisitScreen spot={visiting} onClose={() => setVisiting(null)} />}
     </Screen>
   );
 }

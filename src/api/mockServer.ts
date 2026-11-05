@@ -156,7 +156,7 @@ const spots: Omit<Spot, 'visited'>[] = [
 type MockFriend = {
   id: number;
   nickname: string;
-  wish: { id: number; content: string; stoneCount: number; stonedToday: boolean; visibility: Visibility } | null;
+  wish: { id: number; content: string; stoneCount: number; stonedToday: boolean; visibility: Visibility; spotId: number; spotVisited: boolean } | null;
   lastNudgedOn: string | null;
 };
 
@@ -210,7 +210,7 @@ function seed() {
   db.nickname = '소원지기';
   const currentStart = addDays(today(), -12);
   db.journeyStartedOn = addDays(today(), -204);
-  db.visitedSpotIds = [1, 3]; // 지난 돌탑의 갓바위·호미곶에 다녀옴
+  db.visitedSpotIds = [8]; // 진행 중인 돌탑의 영덕 해맞이공원에 다녀옴
 
   // 오래된 것부터. 다음 돌탑 시작까지 30일 + 이틀 간격
   const pastTowers: {
@@ -251,7 +251,7 @@ function seed() {
     id: 10,
     content: '백엔드 개발자로 취업하기',
     actionGoal: '매일 영어 단어 20개 외우기',
-    spotId: 2,
+    spotId: 8,
     visibility: 'FRIENDS',
     status: 'ACTIVE',
     startDate: currentStart,
@@ -266,13 +266,13 @@ function seed() {
     {
       id: 201,
       nickname: '지기',
-      wish: { id: 501, content: '토익 800점 넘기', stoneCount: 8, stonedToday: false, visibility: 'FRIENDS' },
+      wish: { id: 501, content: '토익 800점 넘기', stoneCount: 8, stonedToday: false, visibility: 'FRIENDS', spotId: 8, spotVisited: false },
       lastNudgedOn: null,
     },
     {
       id: 202,
       nickname: '돌돌이',
-      wish: { id: 502, content: '매일 30분 달리기', stoneCount: 20, stonedToday: true, visibility: 'FRIENDS' },
+      wish: { id: 502, content: '매일 30분 달리기', stoneCount: 20, stonedToday: true, visibility: 'FRIENDS', spotId: 3, spotVisited: true },
       lastNudgedOn: null,
     },
     { id: 203, nickname: '비밀이', wish: null, lastNudgedOn: null },
@@ -430,7 +430,7 @@ export const mockServer = {
       actionGoal: wish.actionGoal,
       status: wish.status,
       visibility: wish.visibility,
-      spot: { id: spot.id, name: spot.name, category: spot.category, visited: false, backgroundImageUrl: null },
+      spot: { id: spot.id, name: spot.name, category: spot.category, visited: db.visitedSpotIds.includes(spot.id), backgroundImageUrl: null },
       stoneCount: stoneCount(wish.id),
       stonedToday: db.stones.some((s) => s.wishId === wish.id && s.stoneDate === today()),
       dayIndex,
@@ -544,7 +544,7 @@ export const mockServer = {
       nickname: f.nickname,
       wish:
         f.wish && f.wish.visibility === 'FRIENDS'
-          ? { wishId: f.wish.id, content: f.wish.content, stoneCount: f.wish.stoneCount, stonedToday: f.wish.stonedToday }
+          ? { wishId: f.wish.id, content: f.wish.content, stoneCount: f.wish.stoneCount, stonedToday: f.wish.stonedToday, spotId: f.wish.spotId, spotVisited: f.wish.spotVisited }
           : null,
     }));
     return { content, page: 0, size: 50, hasNext: false };

@@ -57,7 +57,7 @@ function FriendTower({ friend }: { friend: Friend }) {
           count={wish.stoneCount}
           stonedToday={wish.stonedToday}
           completed={false}
-          background={{ spotId: null, imageUrl: null, visited: true }}
+          background={{ spotId: wish.spotId, visited: wish.spotVisited, dimWhenUnvisited: true }}
         />
       </View>
 

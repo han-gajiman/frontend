@@ -32,8 +32,10 @@ export function FriendTowersPeek({ bottom }: { bottom: number }) {
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`${friend.nickname}의 돌탑, 돌 ${friend.wish!.stoneCount}개`}
-          style={{ position: 'absolute', bottom, opacity: 0.7, alignItems: 'center', ...POSITIONS[i] }}>
-          <Text className="mb-1 text-[10px] text-gray-600">{friend.nickname}</Text>
+          style={{ position: 'absolute', bottom, opacity: 0.85, alignItems: 'center', ...POSITIONS[i] }}>
+          <Text className="mb-1 text-[10px] font-semibold text-white" style={{ textShadowColor: 'rgba(0,0,0,0.45)', textShadowRadius: 3 }}>
+            {friend.nickname}
+          </Text>
           <View style={{ flexDirection: 'column-reverse', alignItems: 'center' }}>
             {Array.from({ length: Math.min(friend.wish!.stoneCount, 30) }, (_, s) => (
               <View key={s} style={{ marginBottom: s === 0 ? 0 : -OVERLAP }}>

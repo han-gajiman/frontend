@@ -122,7 +122,7 @@ function TowerCard({ wish }: { wish: WishSummary }) {
           completed={false}
           crowned={wish.stoneCount >= FULL_STONES}
           inscription={wish.content}
-          background={{ spotId: wish.spotId, imageUrl: null, visited: wish.visited }}
+          background={{ spotId: wish.spotId, visited: wish.visited }}
         />
       </View>
       <View className="items-center gap-1">
