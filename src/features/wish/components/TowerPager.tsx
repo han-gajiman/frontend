@@ -8,7 +8,7 @@ import { StoneTower } from '@/features/stone/components/StoneTower';
 
 import type { WishSummary } from '../types';
 
-const FULL_STONES = 30; // 30일을 모두 채운 돌탑은 꼭대기에 별
+const FULL_STONES = 30;
 const SWIPE_DISTANCE = 50; // 이만큼 밀면 다음 돌탑으로
 const MOVE = { duration: 280, easing: Easing.out(Easing.cubic) };
 const RESULT_LABEL = { ACHIEVED: '이루었어요', NOT_ACHIEVED: '아직이에요' } as const;
@@ -112,6 +112,12 @@ export function TowerPager({ wishes }: { wishes: WishSummary[] }) {
   );
 }
 
+// 30개를 다 채우면 금색 별, 다 못 쌓았어도 소원을 이루었으면 흰색 별
+function crownOf(wish: WishSummary) {
+  if (wish.stoneCount >= FULL_STONES) return 'gold';
+  return wish.result === 'ACHIEVED' ? 'white' : undefined;
+}
+
 function TowerCard({ wish }: { wish: WishSummary }) {
   return (
     <View className="flex-1 gap-3">
@@ -120,7 +126,7 @@ function TowerCard({ wish }: { wish: WishSummary }) {
           count={wish.stoneCount}
           stonedToday={false}
           completed={false}
-          crowned={wish.stoneCount >= FULL_STONES}
+          crown={crownOf(wish)}
           inscription={wish.content}
           background={{ spotId: wish.spotId, visited: wish.visited }}
         />
