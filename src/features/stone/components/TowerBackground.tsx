@@ -16,10 +16,13 @@ export type TowerBackgroundProps = {
   evening?: boolean; // 오늘 돌을 쌓았으면 저녁 하늘 (서버의 stonedToday 기준)
   groundHeight?: number;
   bottomScrim?: boolean; // 아래쪽을 어둡게 깔아 그 위 글자·탭이 잘 보이게 (홈)
+  softened?: boolean; // 평소에도 저녁 덮개를 옅게 깝니다 (홈, 친구 돌탑)
 };
 
 const EVENING: [string, string] = ['#1d1f4d', '#8a5a78']; // 저녁 하늘 덮개
 const DIM_OPACITY = 0.45;
+const SOFTENED_OPACITY = 0.3; // 평소 덮개
+const EVENING_OPACITY = 0.55; // 오늘 돌을 쌓은 저녁
 
 // 돌탑 배경 (STONE-02): 방문한 명소는 일러스트, 아니면 기본 화면. 오늘 쌓으면 저녁 하늘이 서서히 덮입니다.
 // 기본 화면에는 땅이 없어서, 돌탑이 설 자리에 반투명한 땅을 깝니다.
@@ -30,6 +33,7 @@ export function TowerBackground({
   evening = false,
   groundHeight = GROUND_HEIGHT,
   bottomScrim = false,
+  softened = false,
 }: TowerBackgroundProps) {
   const illustration = spotIllustration(spotId);
   const showIllustration = illustration !== null && visited;
@@ -39,7 +43,8 @@ export function TowerBackground({
   useEffect(() => {
     dusk.set(withTiming(evening ? 1 : 0, { duration: 1200 }));
   }, [evening, dusk]);
-  const duskStyle = useAnimatedStyle(() => ({ opacity: dusk.get() * 0.55 }));
+  const base = softened ? SOFTENED_OPACITY : 0;
+  const duskStyle = useAnimatedStyle(() => ({ opacity: base + dusk.get() * (EVENING_OPACITY - base) }));
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
