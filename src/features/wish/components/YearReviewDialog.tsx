@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
+import { VisitedSpotsViewer } from '@/features/spot/components/VisitedSpotsViewer';
 import { Button } from '@/shared/components/Button';
 import { Dialog } from '@/shared/components/Dialog';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -25,6 +26,7 @@ export function YearReviewDialog({
   onWritten: () => void;
 }) {
   const [content, setContent] = useState('');
+  const [viewingSpots, setViewingSpots] = useState(false);
   const write = useCallback(() => writeYearReview(round.round, content.trim()), [round.round, content]);
   const { run, submitting, error } = useSubmit(write);
 
@@ -32,6 +34,9 @@ export function YearReviewDialog({
     const result = await run();
     if (result.ok) onWritten();
   };
+
+  // 일러스트를 닫으면 회고로 돌아옵니다.
+  if (viewingSpots) return <VisitedSpotsViewer visits={round.visits} onClose={() => setViewingSpots(false)} />;
 
   return (
     <Dialog onClose={onClose}>
@@ -44,6 +49,7 @@ export function YearReviewDialog({
           <ScrollView style={{ flexShrink: 1 }}>
             <Text className="text-lg leading-7 text-gray-900">{round.review}</Text>
           </ScrollView>
+          {round.visits.length > 0 && <Button label="방문한 명소 보기" onPress={() => setViewingSpots(true)} />}
           <Button label="닫기" variant="secondary" onPress={onClose} />
         </>
       ) : (

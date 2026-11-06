@@ -13,6 +13,10 @@ const seeded = (n: number) => {
 
 const STONE_COLORS = ['#a8a29e', '#9ca3af', '#a3a3a3', '#b5ada6'];
 const TODAY_COLOR = '#57534e';
+const WISH_STONE_COLOR = '#f6f1e7';
+const WISH_TEXT_COLOR = '#3b342e';
+const WISH_STONE_MAX_WIDTH = 250;
+const WISH_STONE_MIN_HEIGHT = 36;
 
 // 돌 index(0 = 맨 아래)별 기본 크기. 위로 갈수록 작아집니다.
 export function stoneSize(index: number) {
@@ -34,26 +38,42 @@ export function StoneShape({ index, scale, isToday, label }: StoneShapeProps) {
   const offsetX = (seeded(index + 100) - 0.5) * 10;
   const rotate = (seeded(index + 200) - 0.5) * 10;
 
+  // 소원 돌(맨 아래): 다른 돌보다 밝고 반듯한 받침돌에 글씨를 또렷하게 새깁니다. 긴 소원은 두 줄까지
+  if (label) {
+    return (
+      <View
+        style={{
+          minWidth: width * scale,
+          maxWidth: WISH_STONE_MAX_WIDTH,
+          minHeight: Math.max(WISH_STONE_MIN_HEIGHT, height * scale),
+          paddingHorizontal: 18,
+          paddingVertical: 7,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: 'rgba(120,104,88,0.4)',
+          backgroundColor: WISH_STONE_COLOR,
+          boxShadow: '0 3px 8px rgba(40,30,70,0.28)',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Text
+          numberOfLines={2}
+          style={{ fontFamily: TITLE_FONT, fontSize: 14, lineHeight: 19, textAlign: 'center', color: WISH_TEXT_COLOR }}>
+          {label}
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View
       style={{
-        // 글씨를 새긴 돌(맨 아래 소원 돌)은 글자 길이만큼 넓어집니다.
-        ...(label ? { minWidth: width * scale, maxWidth: 260 } : { width: width * scale }),
+        width: width * scale,
         height: height * scale,
         borderRadius: (height * scale) / 2,
         backgroundColor: isToday ? TODAY_COLOR : STONE_COLORS[index % STONE_COLORS.length],
         transform: [{ translateX: offsetX * scale }, { rotate: `${rotate}deg` }],
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: (height * scale) / 2,
-      }}>
-      {label && (
-        <Text
-          numberOfLines={1}
-          style={{ fontFamily: TITLE_FONT, fontSize: Math.max(9, 11 * scale), color: 'rgba(68,64,60,0.75)' }}>
-          {label}
-        </Text>
-      )}
-    </View>
+      }}
+    />
   );
 }

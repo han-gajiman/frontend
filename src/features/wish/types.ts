@@ -69,6 +69,7 @@ export type RoundSummary = {
   reviewAt: string | null; // 1년 회고를 쓸 수 있는 날 (첫 돌탑 전이면 null)
   canWriteReview: boolean;
   review: string | null; // 1년 회고
+  visits: { spotId: number; spotName: string; visitedOn: string }[]; // 그 묶음에 방문 인증한 명소, 오래된 순
 };
 
 // POST /wishes/rounds/{round}/review
