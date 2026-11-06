@@ -171,7 +171,7 @@ const emptyDb = () => ({
   nickname: '',
   journeyStartedOn: null as string | null,
   yearReviews: {} as Record<number, string>, // 소원 묶음(회차) → 1년 회고
-  visitedSpotIds: [] as number[], // 방문 인증한 명소 (지도의 별)
+  spotVisits: [] as { spotId: number; visitedOn: string }[], // 방문 인증 (지도의 별)
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
   friends: [] as MockFriend[],
@@ -215,7 +215,11 @@ function seed() {
   const currentStart = addDays(today(), -12);
   db.journeyStartedOn = addDays(today(), -569); // 1년(365일) 전 묶음이 끝나고 204일째
   db.yearReviews[1] = '하루를 미루지 않는 사람이 되었어요. 작게라도 매일 쌓으면 된다는 걸 알았고, 올해도 그렇게 해 보려고 해요.';
-  db.visitedSpotIds = [8]; // 진행 중인 돌탑의 영덕 해맞이공원에 다녀옴
+  // 첫 번째 소원 때 호미곶과 영덕에 한 번씩 다녀옴. 진행 중인 돌탑의 영덕 배경도 이 방문으로 열립니다.
+  db.spotVisits = [
+    { spotId: 3, visitedOn: addDays(today(), -409) },
+    { spotId: 8, visitedOn: addDays(today(), -317) },
+  ];
 
   // 오래된 것부터. 첫 번째 소원은 30일 간격, 두 번째 소원은 30일 + 이틀 간격
   const pastTowers: {
@@ -347,6 +351,8 @@ function runScheduler() {
 const roundOf = (date: string) =>
   db.journeyStartedOn ? Math.floor(diffDays(db.journeyStartedOn, date) / 365) + 1 : 1;
 
+const isVisited = (spotId: number) => db.spotVisits.some((v) => v.spotId === spotId);
+
 const finishedTowers = (round: number) =>
   db.wishes.filter((w) => w.status !== 'ACTIVE' && roundOf(w.endDate) === round);
 
@@ -450,7 +456,7 @@ export const mockServer = {
       actionGoal: wish.actionGoal,
       status: wish.status,
       visibility: wish.visibility,
-      spot: { id: spot.id, name: spot.name, category: spot.category, visited: db.visitedSpotIds.includes(spot.id), backgroundImageUrl: null },
+      spot: { id: spot.id, name: spot.name, category: spot.category, visited: isVisited(spot.id), backgroundImageUrl: null },
       stoneCount: stoneCount(wish.id),
       stonedToday: db.stones.some((s) => s.wishId === wish.id && s.stoneDate === today()),
       dayIndex,
@@ -517,7 +523,7 @@ export const mockServer = {
         stoneCount: stoneCount(w.id),
         spotId: w.spotId,
         spotName: spotOf(w.spotId).name,
-        visited: db.visitedSpotIds.includes(w.spotId),
+        visited: isVisited(w.spotId),
         result: w.result,
         reflection: w.reflection,
       }));
@@ -538,6 +544,9 @@ export const mockServer = {
           reviewAt: db.journeyStartedOn ? addDays(db.journeyStartedOn, 365 * round) : null,
           canWriteReview: review === null && round < current && towerCount > 0,
           review,
+          visits: db.spotVisits
+            .filter((v) => roundOf(v.visitedOn) === round)
+            .map((v) => ({ spotId: v.spotId, spotName: spotOf(v.spotId).name, visitedOn: v.visitedOn })),
         };
       });
   },
@@ -555,12 +564,12 @@ export const mockServer = {
   getSpots(category?: string): Spot[] {
     return spots
       .filter((s) => !category || s.category === category)
-      .map((s) => ({ ...s, radiusM: SPOT_RADIUS_M, visited: db.visitedSpotIds.includes(s.id) }));
+      .map((s) => ({ ...s, radiusM: SPOT_RADIUS_M, visited: isVisited(s.id) }));
   },
 
   createVisit(spotId: number): VisitResponse {
-    const firstVisit = !db.visitedSpotIds.includes(spotId);
-    if (firstVisit) db.visitedSpotIds.push(spotId);
+    const firstVisit = !isVisited(spotId);
+    if (firstVisit) db.spotVisits.push({ spotId, visitedOn: today() });
     return { visitId: spotId, firstVisit };
   },
 
