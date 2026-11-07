@@ -22,6 +22,7 @@ import type {
   Visibility,
   WishResult,
   WishStatus,
+  WishSuggestion,
   WishSummary,
   YearReviewResponse,
 } from '@/features/wish/types';
@@ -171,6 +172,8 @@ const emptyDb = () => ({
   nickname: '',
   journeyStartedOn: null as string | null,
   yearReviews: {} as Record<number, string>, // 소원 묶음(회차) → 1년 회고
+  suggestionUse: { date: '', count: 0 }, // AI 추천 하루 횟수
+  suggestionTurn: 0, // 다시 추천받기마다 다음 고정 답변으로
   spotVisits: [] as { spotId: number; visitedOn: string }[], // 방문 인증 (지도의 별)
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
@@ -192,6 +195,19 @@ const localAccounts: Record<string, { password: string; nickname: string }> = {
 export const MOCK_RESET_CODE = '123456';
 
 const today = () => addDays(kstToday(), db.dayOffset);
+
+// WISH-02 고정 답변. 실제 AI가 붙기 전까지 어떤 소원을 적어도 이 답변을 번갈아 보여줍니다.
+const SUGGESTION_LIMIT_PER_DAY = 10;
+const FIXED_SUGGESTIONS: WishSuggestion[] = [
+  {
+    actionGoals: ['매일 영어 문장 3개 소리 내어 읽기', '하루 10분 영어 영상 따라 말하기', '매일 영어로 일기 한 문장 쓰기'],
+    spot: { spotId: 3, spotName: '호미곶 해맞이광장', reason: '새로운 나를 시작하는 소원이니, 해가 가장 먼저 뜨는 곳에서 다짐해 봐요.' },
+  },
+  {
+    actionGoals: ['점심시간에 영어 단어 10개 외우기', '자기 전 영어 팟캐스트 10분 듣기', '하루 한 번 영어로 혼잣말하기'],
+    spot: { spotId: 2, spotName: '문경새재 과거길', reason: '옛 선비들이 꿈을 안고 걷던 길에서 꾸준함을 다져 봐요.' },
+  },
+];
 
 function addStone(wishId: number, stoneDate: string, content: string | null) {
   const stone: MockStone = {
@@ -510,6 +526,16 @@ export const mockServer = {
     const wish = db.wishes.find((w) => w.id === wishId);
     if (!wish) throw new ApiError('WISH_NOT_FOUND', '돌탑을 찾을 수 없어요.', 404);
     wish.visibility = visibility;
+  },
+
+  suggestForWish(content: string): WishSuggestion {
+    if (!content.trim()) throw new ApiError('INVALID_INPUT', '소원을 먼저 적어 주세요.', 400);
+    if (db.suggestionUse.date !== today()) db.suggestionUse = { date: today(), count: 0 };
+    if (db.suggestionUse.count >= SUGGESTION_LIMIT_PER_DAY) {
+      throw new ApiError('AI_SUGGESTION_LIMIT', '오늘은 추천을 다 썼어요.', 429);
+    }
+    db.suggestionUse.count++;
+    return FIXED_SUGGESTIONS[db.suggestionTurn++ % FIXED_SUGGESTIONS.length];
   },
 
   getWishes(round?: number): WishSummary[] {
