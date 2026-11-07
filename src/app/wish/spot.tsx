@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { getSpots } from '@/features/spot/api';
 import { SpotExplorer } from '@/features/spot/components/SpotExplorer';
+import { VisitScreen } from '@/features/spot/components/VisitScreen';
 import type { Spot } from '@/features/spot/types';
 import { useWishDraftStore } from '@/features/wish/draftStore';
 import { Button } from '@/shared/components/Button';
@@ -20,6 +21,7 @@ export default function SpotSelectScreen() {
   const state = useApi(fetchSpots);
   const draft = useWishDraftStore();
   const [selected, setSelected] = useState<Spot | null>(null);
+  const [viewing, setViewing] = useState<Spot | null>(null);
 
   const recommended = draft.suggestion?.spot ?? null;
 
@@ -59,11 +61,25 @@ export default function SpotSelectScreen() {
               spots={spots}
               selected={selected}
               onSelect={setSelected}
+              onOpenDetail={setViewing}
               renderAction={(spot) => <Button label="이 명소로 정하기" onPress={() => handleChoose(spot)} />}
             />
           </View>
         )}
       </AsyncContent>
+      {viewing && (
+        <VisitScreen
+          spot={viewing}
+          onClose={() => setViewing(null)}
+          onVisited={() => {
+            // 바로 일러스트를 보여주고, 지도의 별표도 다시 불러와 맞춥니다.
+            const visited = { ...viewing, visited: true };
+            setViewing(visited);
+            setSelected(visited);
+            state.reload();
+          }}
+        />
+      )}
     </Screen>
   );
 }

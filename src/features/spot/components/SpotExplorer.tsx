@@ -12,11 +12,12 @@ type SpotExplorerProps = {
   onSelect: (spot: Spot | null) => void;
   // 고른 명소 아래에 놓을 버튼 (소원 등록: 이 명소로 정하기, 명소 탭: 방문 인증)
   renderAction: (spot: Spot) => ReactNode;
+  onOpenDetail?: (spot: Spot) => void; // 있으면 명소 이름 위에 "눌러서 자세히 보기"
 };
 
 // 명소 둘러보기 (SPOT-01 명소 고르기, SPOT-02 명소 탭 공용). 지도에서 명소를 누르면 확대되고 설명이 나옵니다.
 // 좌우 화살표로 다른 명소로 넘어가고(끝에서는 처음으로), 뒤로는 화면이 onSelect(null)로 처리합니다.
-export function SpotExplorer({ spots, selected, onSelect, renderAction }: SpotExplorerProps) {
+export function SpotExplorer({ spots, selected, onSelect, renderAction, onOpenDetail }: SpotExplorerProps) {
   const index = selected ? spots.findIndex((spot) => spot.id === selected.id) : -1;
   const move = (step: number) => onSelect(spots[(index + step + spots.length) % spots.length]);
   const hasVisited = spots.some((spot) => spot.visited);
@@ -41,15 +42,20 @@ export function SpotExplorer({ spots, selected, onSelect, renderAction }: SpotEx
         <View className="gap-3 px-6 pb-4 pt-4">
           <View className="flex-row items-center gap-3">
             <ArrowButton icon="chevron-back" label="이전 명소" onPress={() => move(-1)} />
-            <View className="flex-1 items-center gap-0.5">
+            <Pressable
+              onPress={onOpenDetail && (() => onOpenDetail(selected))}
+              disabled={!onOpenDetail}
+              accessibilityRole={onOpenDetail ? 'button' : undefined}
+              className="flex-1 items-center gap-0.5">
               <Text className="text-xs text-gray-500">
                 {selected.region} · {index + 1} / {spots.length}
               </Text>
+              {onOpenDetail && <Text className="text-sm font-semibold text-violet-700">눌러서 자세히 보기</Text>}
               <Text className="text-center text-lg font-bold text-gray-900">
                 {selected.visited && '★ '}
                 {selected.name}
               </Text>
-            </View>
+            </Pressable>
             <ArrowButton icon="chevron-forward" label="다음 명소" onPress={() => move(1)} />
           </View>
           {/* 설명 길이가 달라도 지도 크기가 크게 흔들리지 않게 두 줄 자리를 둡니다. */}

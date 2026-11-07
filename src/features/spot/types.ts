@@ -9,6 +9,7 @@ export type Spot = {
   region: string;
   category: SpotCategory;
   description: string;
+  story?: string; // 명소 이야기 (뒷면). 🟡 백엔드 미구현이라 지금은 목 데이터에만 있습니다.
   latitude: number;
   longitude: number;
   radiusM: number; // 방문 인증 반경. 앱이 기기 안에서 거리를 계산할 때 씁니다.
