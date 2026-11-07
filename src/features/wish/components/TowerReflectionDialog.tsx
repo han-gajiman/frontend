@@ -1,5 +1,6 @@
 import { ScrollView, Text, View } from 'react-native';
 
+import { StoneLogList } from '@/features/stone/components/StoneLogList';
 import { Button } from '@/shared/components/Button';
 import { Dialog } from '@/shared/components/Dialog';
 
@@ -18,10 +19,11 @@ export function TowerReflectionDialog({ wish, onClose }: { wish: WishSummary; on
         </Text>
         <Text className="text-lg font-bold text-gray-900">{wish.content}</Text>
       </View>
-      <ScrollView style={{ flexShrink: 1 }}>
+      <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 20 }}>
         <Text className={wish.reflection ? 'text-lg leading-7 text-gray-900' : 'text-gray-500'}>
           {wish.reflection ?? emptyText}
         </Text>
+        <StoneLogList wishId={wish.wishId} />
       </ScrollView>
       <Button label="닫기" variant="secondary" onPress={onClose} />
     </Dialog>

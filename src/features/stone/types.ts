@@ -9,3 +9,11 @@ export type CreateStoneResponse = {
   type: StoneType;
   stoneCount: number;
 };
+
+// GET /wishes/{wishId}/stones 항목. 글 없이 쌓았으면 content가 null
+export type StoneItem = {
+  stoneId: number;
+  stoneDate: string;
+  type: StoneType;
+  content: string | null;
+};
