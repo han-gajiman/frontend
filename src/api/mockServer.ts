@@ -12,7 +12,7 @@ import type {
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { AppNotification, NotificationType } from '@/features/notification/types';
 import type { Spot, VisitResponse } from '@/features/spot/types';
-import type { CreateStoneResponse, StoneType } from '@/features/stone/types';
+import type { CreateStoneResponse, StoneItem, StoneType } from '@/features/stone/types';
 import type {
   CreateWishRequest,
   CreateWishResponse,
@@ -231,6 +231,13 @@ function addStone(wishId: number, stoneDate: string, content: string | null) {
   return stone;
 }
 
+// 지난 돌탑의 매일 기록 예시. 네 번에 한 번은 글 없이 쌓은 날
+const DAILY_NOTES = ['오늘도 해냈다.', '귀찮았지만 끝까지 했다.', '아침에 바로 끝내니 마음이 편하다.', '생각보다 재밌었다.', '내일은 더 일찍 해야지.', '조금씩 익숙해지는 느낌이다.'];
+function dailyLog(actionGoal: string, day: number) {
+  if (day % 4 === 3) return null;
+  return day % 8 === 0 ? `${actionGoal} 완료!` : DAILY_NOTES[day % DAILY_NOTES.length];
+}
+
 // 시나리오별 초기 데이터
 function seed() {
   if (MOCK_SCENARIO === 'empty') return;
@@ -291,7 +298,7 @@ function seed() {
       result: tower.result,
       reflection: tower.reflection,
     });
-    for (let i = 0; i < tower.stones; i++) addStone(tower.id, addDays(startDate, i), null);
+    for (let i = 0; i < tower.stones; i++) addStone(tower.id, addDays(startDate, i), dailyLog(tower.actionGoal, i));
   }
 
   db.wishes.push({
@@ -546,6 +553,14 @@ export const mockServer = {
     }
     db.suggestionUse.count++;
     return FIXED_SUGGESTIONS[db.suggestionTurn++ % FIXED_SUGGESTIONS.length];
+  },
+
+  getStones(wishId: number): { content: StoneItem[]; page: number; size: number; hasNext: boolean } {
+    const content = db.stones
+      .filter((stone) => stone.wishId === wishId)
+      .sort((a, b) => b.stoneDate.localeCompare(a.stoneDate))
+      .map(({ id, stoneDate, type, content: text }) => ({ stoneId: id, stoneDate, type, content: text }));
+    return { content, page: 0, size: 30, hasNext: false };
   },
 
   getWishes(round?: number): WishSummary[] {
