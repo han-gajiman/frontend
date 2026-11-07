@@ -1,6 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { getSpots } from '@/features/spot/api';
 import { SpotExplorer } from '@/features/spot/components/SpotExplorer';
@@ -20,6 +21,8 @@ export default function SpotSelectScreen() {
   const draft = useWishDraftStore();
   const [selected, setSelected] = useState<Spot | null>(null);
 
+  const recommended = draft.suggestion?.spot ?? null;
+
   const handleChoose = (spot: Spot) => {
     draft.setSpot(spot.id, spot.name);
     router.push('/wish/confirm');
@@ -38,6 +41,20 @@ export default function SpotSelectScreen() {
         {(spots) => (
           <View className="flex-1">
             <Text className="px-6 pb-3 text-gray-500">2 / 3 · 소원을 들고 찾아갈 경북 명소를 골라 주세요</Text>
+            {/* WISH-02 AI 추천 명소: 누르면 지도가 그 명소로 확대되고, 정하는 건 "이 명소로 정하기"로 합니다. */}
+            {recommended && !selected && (
+              <Pressable
+                onPress={() => setSelected(spots.find((spot) => spot.id === recommended.spotId) ?? null)}
+                accessibilityRole="button"
+                className="mx-6 mb-3 flex-row items-center gap-3 rounded-2xl bg-violet-50 px-4 py-3">
+                <Ionicons name="sparkles" size={18} color="#6d4fc2" />
+                <View className="flex-1 gap-0.5">
+                  <Text className="font-semibold text-gray-900">AI 추천 · {recommended.spotName}</Text>
+                  <Text className="text-sm text-gray-600">{recommended.reason}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#6d4fc2" />
+              </Pressable>
+            )}
             <SpotExplorer
               spots={spots}
               selected={selected}

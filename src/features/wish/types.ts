@@ -48,6 +48,12 @@ export type ReflectionRequest = {
   reflection: string;
 };
 
+// POST /wishes/suggestions (WISH-02). 실패하거나 명소를 못 고르면 spot은 null
+export type WishSuggestion = {
+  actionGoals: string[]; // 실천 목표 후보 3개
+  spot: { spotId: number; spotName: string; reason: string } | null;
+};
+
 // GET /wishes?round=1
 export type WishSummary = {
   wishId: number;
