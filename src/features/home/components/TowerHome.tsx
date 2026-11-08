@@ -4,10 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CheerBalloons } from '@/features/friend/components/CheerBalloons';
 import { FriendTowersPeek } from '@/features/friend/components/FriendTowersPeek';
+import { MailboxButton } from '@/features/postcard/components/MailboxButton';
 import { StoneTower } from '@/features/stone/components/StoneTower';
 import { TowerBackground } from '@/features/stone/components/TowerBackground';
 import { MyTowerSheet } from '@/features/wish/components/MyTowerSheet';
 import type { CurrentWish } from '@/features/wish/types';
+import { useAppSize } from '@/shared/hooks/useAppSize';
 
 import { useGroundHeight } from '../useGroundHeight';
 import { useTowerDropZone } from '../useTowerDropZone';
@@ -30,6 +32,7 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
 
   const { groundHeight, onScreenLayout, onTowerLayout } = useGroundHeight(TOWER_GROUND);
   const { towerRef, measureTower, isOverTower } = useTowerDropZone();
+  const { height } = useAppSize();
 
   return (
     <View className="flex-1" onLayout={onScreenLayout}>
@@ -66,6 +69,8 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
               maxScale={TOWER_MAX_SCALE}
             />
             <FriendTowersPeek bottom={TOWER_GROUND - 14} />
+            {/* 친구 돌탑이 숨는 작은 화면에서는 오른쪽 끝으로 */}
+            <MailboxButton style={{ right: height < 700 ? 16 : 64, bottom: TOWER_GROUND - 14 }} />
             <CheerBalloons wishId={wish.wishId} bottom={TOWER_GROUND} towerWidth={TOWER_WIDTH} />
           </View>
 

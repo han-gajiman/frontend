@@ -1,0 +1,43 @@
+import { router } from 'expo-router';
+import { Text, View } from 'react-native';
+
+import { Button } from '@/shared/components/Button';
+import { Dialog } from '@/shared/components/Dialog';
+import { useApi } from '@/shared/hooks/useApi';
+
+import { getPostcards } from '../api';
+import { STYLE_NAMES, STYLES_PER_SPOT, TOTAL_POSTCARDS, type Postcard } from '../types';
+import { PostcardCard } from './PostcardCard';
+
+// 방문 인증으로 새 엽서를 받았을 때. 그 명소에서 몇 장, 전체에서 몇 장 모았는지 함께 보여줍니다.
+export function NewPostcardDialog({ postcard, onClose }: { postcard: Postcard; onClose: () => void }) {
+  const { data } = useApi(getPostcards);
+  const spotCount = data?.filter((p) => p.spotId === postcard.spotId).length;
+
+  return (
+    <Dialog onClose={onClose}>
+      <View className="items-center gap-1">
+        <Text className="text-lg font-bold text-gray-900">새 엽서를 받았어요</Text>
+        <Text className="text-sm text-gray-500">
+          {postcard.spotName} · {STYLE_NAMES[postcard.style]}
+        </Text>
+      </View>
+      <View className="items-center">
+        <PostcardCard spotId={postcard.spotId} style={postcard.style} width={180} />
+      </View>
+      {data && (
+        <Text className="text-center text-gray-700">
+          {postcard.spotName} {spotCount}/{STYLES_PER_SPOT} · 전체 {data.length}/{TOTAL_POSTCARDS}
+        </Text>
+      )}
+      <Button
+        label="우체통에서 보기"
+        onPress={() => {
+          onClose();
+          router.push('/mailbox?tab=collection');
+        }}
+      />
+      <Button label="닫기" variant="secondary" onPress={onClose} />
+    </Dialog>
+  );
+}

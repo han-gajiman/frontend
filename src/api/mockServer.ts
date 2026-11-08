@@ -11,6 +11,7 @@ import type {
 } from '@/features/auth/types';
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { AppNotification, NotificationType } from '@/features/notification/types';
+import type { Letter, Postcard, SendLetterRequest } from '@/features/postcard/types';
 import type { Spot, VisitResponse } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneItem, StoneType } from '@/features/stone/types';
 import type {
@@ -183,6 +184,8 @@ const emptyDb = () => ({
   journeyStartedOn: null as string | null,
   yearReviews: {} as Record<number, string>, // 소원 묶음(회차) → 1년 회고
   suggestionUse: { date: '', count: 0 }, // AI 추천 하루 횟수
+  postcards: [] as Postcard[], // 내 엽서함
+  letters: [] as (Omit<Letter, 'fromMe' | 'toNickname'> & { toMe: boolean })[], // 받은 엽서 (최신이 앞)
   suggestionTurn: 0, // 다시 추천받기마다 다음 고정 답변으로
   spotVisits: [] as { spotId: number; visitedOn: string; wishId: number | null }[], // 방문 인증 (지도의 별). 돌탑마다 명소별 한 번
   wishes: [] as MockWish[],
@@ -252,6 +255,24 @@ function seed() {
   db.spotVisits = [
     { spotId: 3, visitedOn: addDays(today(), -409), wishId: 26 },
     { spotId: 8, visitedOn: addDays(today(), -317), wishId: 29 },
+  ];
+  // 방문할 때 받은 엽서와, 친구 지기가 보낸 엽서 한 장 (아직 안 읽음 → 우체통 깃발)
+  db.postcards = [
+    { spotId: 3, spotName: '호미곶 해맞이광장', style: 2, issuedAt: `${addDays(today(), -409)}T10:00:00+09:00` },
+    { spotId: 8, spotName: '영덕 해맞이공원', style: 1, issuedAt: `${addDays(today(), -317)}T10:00:00+09:00` },
+  ];
+  db.letters = [
+    {
+      letterId: 801,
+      spotId: 8,
+      spotName: '영덕 해맞이공원',
+      style: 3,
+      message: '영덕에서 해 뜨는 거 보다가 네 생각 났어! 우리 30일 꼭 채우자.',
+      fromNickname: '지기',
+      toMe: false,
+      read: false,
+      sentAt: new Date().toISOString(),
+    },
   ];
 
   // 오래된 것부터. 첫 번째 소원은 30일 간격, 두 번째 소원은 30일 + 이틀 간격
@@ -471,6 +492,7 @@ export const mockServer = {
       profileImageUrl: null,
       provider: db.provider,
       hasActiveWish: openWish() !== undefined,
+      hasUnreadLetter: db.letters.some((l) => !l.read),
     };
   },
 
@@ -623,8 +645,61 @@ export const mockServer = {
 
   createVisit(spotId: number): VisitResponse {
     const firstVisit = !visitedThisTower(spotId);
-    if (firstVisit) db.spotVisits.push({ spotId, visitedOn: today(), wishId: openWish()?.id ?? null });
-    return { visitId: spotId, firstVisit };
+    if (!firstVisit) return { visitId: spotId, firstVisit, postcard: null };
+    db.spotVisits.push({ spotId, visitedOn: today(), wishId: openWish()?.id ?? null });
+    // 그 명소 엽서 4종 중 아직 없는 1장
+    const owned = db.postcards.filter((p) => p.spotId === spotId).map((p) => p.style);
+    const missing = [1, 2, 3, 4].filter((style) => !owned.includes(style));
+    if (missing.length === 0) return { visitId: spotId, firstVisit, postcard: null };
+    const postcard: Postcard = {
+      spotId,
+      spotName: spotOf(spotId).name,
+      style: missing[Math.floor(Math.random() * missing.length)],
+      issuedAt: new Date().toISOString(),
+    };
+    db.postcards.push(postcard);
+    return { visitId: spotId, firstVisit, postcard };
+  },
+
+  getPostcards(): Postcard[] {
+    return [...db.postcards].sort((a, b) => a.spotId - b.spotId || a.style - b.style);
+  },
+
+  sendLetter(body: SendLetterRequest): { letterId: number } {
+    if (!db.postcards.some((p) => p.spotId === body.spotId && p.style === body.style)) {
+      throw new ApiError('POSTCARD_NOT_OWNED', '가진 엽서만 보낼 수 있어요.', 403);
+    }
+    const message = body.message.trim();
+    if (!message || message.length > 100) throw new ApiError('INVALID_INPUT', '글은 1~100자로 적어 주세요.', 400);
+    const friend = body.receiverId === undefined ? null : db.friends.find((f) => f.id === body.receiverId);
+    if (body.receiverId !== undefined && !friend) throw new ApiError('FRIEND_NOT_FOUND', '친구를 찾을 수 없어요.', 404);
+    const letterId = db.nextId++;
+    // 친구에게 보낸 엽서는 친구 우체통으로 가므로 내 받은 엽서에는 나에게 보낸 것만 쌓입니다.
+    if (!friend) {
+      db.letters.unshift({
+        letterId,
+        spotId: body.spotId,
+        spotName: spotOf(body.spotId).name,
+        style: body.style,
+        message,
+        fromNickname: db.nickname,
+        toMe: true,
+        read: false,
+        sentAt: new Date().toISOString(),
+      });
+    }
+    return { letterId };
+  },
+
+  getReceivedLetters(): Page<Letter> {
+    const content = db.letters.map(({ toMe, ...letter }) => ({ ...letter, fromMe: toMe, toNickname: db.nickname }));
+    return { content, page: 0, size: 50, hasNext: false };
+  },
+
+  markLetterRead(letterId: number): void {
+    const letter = db.letters.find((l) => l.letterId === letterId);
+    if (!letter) throw new ApiError('LETTER_NOT_FOUND', '엽서를 찾을 수 없어요.', 404);
+    letter.read = true;
   },
 
   // --- 친구 (FRIEND-01~04) ---
