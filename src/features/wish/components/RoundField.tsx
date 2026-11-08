@@ -12,8 +12,8 @@ import type { RoundSummary, WishSummary } from '../types';
 import { CollectionTile } from './CollectionTile';
 
 const COLUMNS = 4;
-const MAX_ROW_HEIGHT = 300;
-const FIELD_PADDING_BOTTOM = 8;
+const FIELD_PADDING_X = 12;
+const MAX_FIELD_WIDTH = 480; // 웹 넓은 화면에서도 폰처럼 4열 크기로
 const TEXT_SHADOW = { textShadowColor: 'rgba(40,30,110,0.45)', textShadowRadius: 4 };
 
 // TOWER-03 필드: 소원 묶음 하나의 돌탑이 전부 놓여 있고, 화살표로 다른 묶음으로 넘어갑니다.
@@ -34,10 +34,9 @@ export function RoundField({
 }) {
   const insets = useSafeAreaInsets();
   const wishes = state.data;
-  const [fieldHeight, setFieldHeight] = useState(0);
-  const rows = Math.max(1, Math.ceil((wishes?.length ?? 0) / COLUMNS));
-  // 줄이 적으면 지금처럼 넉넉하게, 12개(3줄)여도 화면 안에 다 들어오게
-  const rowHeight = fieldHeight > 0 ? Math.min(MAX_ROW_HEIGHT, fieldHeight / rows) : MAX_ROW_HEIGHT;
+  const [fieldWidth, setFieldWidth] = useState(0);
+  // 한 화면에 다 안 들어오면 스크롤합니다.
+  const tileWidth = (Math.min(fieldWidth, MAX_FIELD_WIDTH) - FIELD_PADDING_X * 2) / COLUMNS;
 
   return (
     <View className="flex-1">
@@ -58,7 +57,7 @@ export function RoundField({
         <RoundArrow icon="chevron-forward" label="다음 소원" onPress={onNext} />
       </View>
 
-      <View className="flex-1" onLayout={(e) => setFieldHeight(e.nativeEvent.layout.height - FIELD_PADDING_BOTTOM)}>
+      <View className="flex-1" onLayout={(e) => setFieldWidth(e.nativeEvent.layout.width)}>
         {wishes === undefined && state.error ? (
           <ErrorState code={state.error.code} message={state.error.message} onRetry={state.reload} />
         ) : wishes === undefined ? (
@@ -74,14 +73,23 @@ export function RoundField({
               30일 돌탑을 완성하면 여기에 모여요.
             </Text>
           </View>
-        ) : (
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingHorizontal: 12, paddingBottom: FIELD_PADDING_BOTTOM }}>
+        ) : fieldWidth === 0 ? null : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'flex-end',
+              alignSelf: 'center',
+              width: Math.min(fieldWidth, MAX_FIELD_WIDTH),
+              paddingHorizontal: FIELD_PADDING_X,
+              paddingTop: 8,
+            }}>
             <View className="flex-row flex-wrap">
               {wishes.map((wish) => (
                 <CollectionTile
                   key={wish.wishId}
                   wish={wish}
-                  rowHeight={rowHeight}
+                  width={tileWidth}
                   onPress={() => onOpenTower(wish)}
                 />
               ))}

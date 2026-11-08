@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, Text, View } from 'react-native';
 
@@ -8,76 +7,71 @@ import { MiniTower, miniTowerHeight, STAR_SIZE } from '@/features/stone/componen
 import { crownOf } from '../towerLabels';
 import type { WishSummary } from '../types';
 
-const MAX_SCALE = 0.25; // 공간이 넉넉해도 이보다 크게 그리지 않음
-const MIN_SCALE = 0.08;
-const TILE_TOP = 12;
-const BADGE_SIZE = 40;
-const LABEL_HEIGHT = 28;
-// 돌탑 말고 한 칸이 차지하는 높이 (별, 명소 사진, 이름표)
-const OVERHEAD = TILE_TOP + STAR_SIZE + 4 + BADGE_SIZE + LABEL_HEIGHT;
+const FRAME_ASPECT = 0.6; // 액자 가로:세로 (아치형 세로 카드)
+const FRAME_PADDING_BOTTOM = 10;
+const FRAME_PADDING_TOP = 14; // 아치 안쪽 여백
 const TEXT_SHADOW = { textShadowColor: 'rgba(40,30,110,0.45)', textShadowRadius: 4 };
 
 const monthOf = (date: string) => `${Number(date.slice(5, 7))}월`;
 
-// 30개를 다 쌓은 돌탑이 height 안에 들어가는 크기. 돌탑끼리 높이를 비교할 수 있게 모든 칸이 같은 크기를 씁니다.
-function scaleFor(height: number) {
-  return Math.max(MIN_SCALE, Math.min(MAX_SCALE, height / miniTowerHeight(30, 1)));
+// 30개를 다 쌓은 돌탑이 액자 안에 꼭 맞는 크기. 모든 칸이 같은 크기라 돌탑끼리 높이를 비교할 수 있습니다.
+function towerScale(frameHeight: number) {
+  const room = frameHeight - FRAME_PADDING_TOP - FRAME_PADDING_BOTTOM - STAR_SIZE;
+  return room / miniTowerHeight(30, 1);
 }
 
-// 모아보기 필드의 돌탑 한 칸: 돌탑 + 받침 자리의 동그란 명소 사진 + 몇 월·명소 이름.
-// 돌탑만 봐도 어느 명소의 소원이었는지, 방문했는지(선명한 사진 / 흐린 사진 + 자물쇠) 알 수 있게 합니다.
+// 모아보기 필드의 돌탑 한 칸: 명소 풍경 액자 안에 돌탑, 아래에 몇 월·명소 이름.
+// 방문한 명소는 선명한 풍경, 아직 안 간 곳은 흐린 풍경이라 돌탑만 봐도 어디를 다녀왔는지 보입니다.
 export function CollectionTile({
   wish,
-  rowHeight,
+  width,
   onPress,
 }: {
   wish: WishSummary;
-  rowHeight: number; // 한 줄 높이. 줄 수에 맞춰 돌탑 크기를 줄여 스크롤 없이 다 보이게 합니다.
+  width: number; // 한 칸 너비 (4열)
   onPress: () => void;
 }) {
   const image = spotIllustration(wish.spotId);
+  const frameWidth = width - 8;
+  const frameHeight = frameWidth / FRAME_ASPECT;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${wish.content}, 돌 ${wish.stoneCount}개, ${wish.spotName} ${wish.visited ? '방문' : '미방문'}`}
-      style={{
-        width: '25%',
-        height: rowHeight,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingTop: TILE_TOP,
-        paddingHorizontal: 3,
-      }}>
-      <MiniTower count={wish.stoneCount} scale={scaleFor(rowHeight - OVERHEAD)} crown={crownOf(wish)} />
+      style={{ width, alignItems: 'center', marginBottom: 14 }}>
       <View
         style={{
-          width: BADGE_SIZE,
-          height: BADGE_SIZE,
-          marginTop: 4,
-          borderRadius: BADGE_SIZE / 2,
+          width: frameWidth,
+          height: frameHeight,
+          borderTopLeftRadius: frameWidth / 2,
+          borderTopRightRadius: frameWidth / 2,
+          borderBottomLeftRadius: 12,
+          borderBottomRightRadius: 12,
           overflow: 'hidden',
           borderWidth: 2,
-          borderColor: wish.visited ? 'white' : 'rgba(255,255,255,0.5)',
+          borderColor: wish.visited ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)',
+          backgroundColor: 'rgba(255,255,255,0.18)',
           alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'rgba(255,255,255,0.3)',
+          justifyContent: 'flex-end',
+          paddingBottom: FRAME_PADDING_BOTTOM,
         }}>
         {image && (
           <Image
             source={image}
-            style={{ position: 'absolute', width: '100%', height: '100%', opacity: wish.visited ? 1 : 0.45 }}
+            style={{ position: 'absolute', width: '100%', height: '100%', opacity: wish.visited ? 1 : 0.35 }}
             contentFit="cover"
-            blurRadius={wish.visited ? 0 : 6}
+            contentPosition="bottom"
+            blurRadius={wish.visited ? 0 : 8}
           />
         )}
-        {!wish.visited && <Ionicons name="lock-closed" size={13} color="white" />}
+        <MiniTower count={wish.stoneCount} scale={towerScale(frameHeight)} crown={crownOf(wish)} />
       </View>
-      <View style={{ width: '100%', alignItems: 'center', marginTop: 3 }}>
-        <Text style={{ fontSize: 9, color: 'white', ...TEXT_SHADOW }}>{monthOf(wish.startDate)}</Text>
+      <View style={{ width: '100%', alignItems: 'center', marginTop: 5 }}>
+        <Text style={{ fontSize: 10, color: 'white', ...TEXT_SHADOW }}>{monthOf(wish.startDate)}</Text>
         <Text
           numberOfLines={1}
-          style={{ width: '100%', textAlign: 'center', fontSize: 10, color: 'white', fontWeight: '600', ...TEXT_SHADOW }}>
+          style={{ width: '100%', textAlign: 'center', fontSize: 11, color: 'white', fontWeight: '600', ...TEXT_SHADOW }}>
           {wish.spotName}
         </Text>
       </View>
