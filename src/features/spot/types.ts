@@ -14,6 +14,7 @@ export type Spot = {
   longitude: number;
   radiusM: number; // 방문 인증 반경. 앱이 기기 안에서 거리를 계산할 때 씁니다.
   visited: boolean; // 내가 방문 인증한 명소 (지도에 별표). 로그인 전이면 false
+  visitedThisTower?: boolean; // 지금 진행 중인 돌탑 기간에 인증했는지. false면 "이 장소 다시 인증하기" (🟡 백엔드 반영 전)
 };
 
 // POST /spots/{spotId}/visits. firstVisit=false면 이미 인증한 명소

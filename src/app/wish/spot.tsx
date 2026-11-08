@@ -73,7 +73,7 @@ export default function SpotSelectScreen() {
           onClose={() => setViewing(null)}
           onVisited={() => {
             // 바로 일러스트를 보여주고, 지도의 별표도 다시 불러와 맞춥니다.
-            const visited = { ...viewing, visited: true };
+            const visited = { ...viewing, visited: true, visitedThisTower: true };
             setViewing(visited);
             setSelected(visited);
             state.reload();

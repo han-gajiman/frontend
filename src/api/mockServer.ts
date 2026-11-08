@@ -184,7 +184,7 @@ const emptyDb = () => ({
   yearReviews: {} as Record<number, string>, // 소원 묶음(회차) → 1년 회고
   suggestionUse: { date: '', count: 0 }, // AI 추천 하루 횟수
   suggestionTurn: 0, // 다시 추천받기마다 다음 고정 답변으로
-  spotVisits: [] as { spotId: number; visitedOn: string }[], // 방문 인증 (지도의 별)
+  spotVisits: [] as { spotId: number; visitedOn: string; wishId: number | null }[], // 방문 인증 (지도의 별). 돌탑마다 명소별 한 번
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
   friends: [] as MockFriend[],
@@ -250,8 +250,8 @@ function seed() {
   db.yearReviews[1] = '하루를 미루지 않는 사람이 되었어요. 작게라도 매일 쌓으면 된다는 걸 알았고, 올해도 그렇게 해 보려고 해요.';
   // 첫 번째 소원 때 호미곶과 영덕에 한 번씩 다녀옴. 진행 중인 돌탑의 영덕 배경도 이 방문으로 열립니다.
   db.spotVisits = [
-    { spotId: 3, visitedOn: addDays(today(), -409) },
-    { spotId: 8, visitedOn: addDays(today(), -317) },
+    { spotId: 3, visitedOn: addDays(today(), -409), wishId: 26 },
+    { spotId: 8, visitedOn: addDays(today(), -317), wishId: 29 },
   ];
 
   // 오래된 것부터. 첫 번째 소원은 30일 간격, 두 번째 소원은 30일 + 이틀 간격
@@ -385,6 +385,9 @@ const roundOf = (date: string) =>
   db.journeyStartedOn ? Math.floor(diffDays(db.journeyStartedOn, date) / 365) + 1 : 1;
 
 const isVisited = (spotId: number) => db.spotVisits.some((v) => v.spotId === spotId);
+// 지금 진행 중인 돌탑 기간에 인증했는지 (돌탑이 없으면 돌탑 없이 한 인증)
+const visitedThisTower = (spotId: number) =>
+  db.spotVisits.some((v) => v.spotId === spotId && v.wishId === (openWish()?.id ?? null));
 
 const finishedTowers = (round: number) =>
   db.wishes.filter((w) => w.status !== 'ACTIVE' && roundOf(w.endDate) === round);
@@ -615,12 +618,12 @@ export const mockServer = {
   getSpots(category?: string): Spot[] {
     return spots
       .filter((s) => !category || s.category === category)
-      .map((s) => ({ ...s, radiusM: SPOT_RADIUS_M, visited: isVisited(s.id) }));
+      .map((s) => ({ ...s, radiusM: SPOT_RADIUS_M, visited: isVisited(s.id), visitedThisTower: visitedThisTower(s.id) }));
   },
 
   createVisit(spotId: number): VisitResponse {
-    const firstVisit = !isVisited(spotId);
-    if (firstVisit) db.spotVisits.push({ spotId, visitedOn: today() });
+    const firstVisit = !visitedThisTower(spotId);
+    if (firstVisit) db.spotVisits.push({ spotId, visitedOn: today(), wishId: openWish()?.id ?? null });
     return { visitId: spotId, firstVisit };
   },
 
