@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { type ReactNode, useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -24,6 +24,7 @@ import { ErrorText } from '@/shared/components/ErrorText';
 import { WEB_APP_MAX_WIDTH } from '@/shared/hooks/useAppSize';
 
 import { DEFAULT_BACKGROUND, spotIllustration } from '../spotIllustrations';
+import { SPOT_SOURCES } from '../spotSources';
 import type { Spot } from '../types';
 import { useVisitVerification } from '../useVisitVerification';
 import { visitFog } from '../visitFog';
@@ -183,6 +184,7 @@ export function VisitScreen({
               <Text className="text-lg leading-8 text-white" style={{ fontFamily: TITLE_FONT }}>
                 {spot.story}
               </Text>
+              <StorySources spotId={spot.id} />
             </ScrollView>
             <Pressable
               onPress={() => flipTo(false)}
@@ -326,5 +328,28 @@ function PressScaleButton({ label, onPress, loading }: { label: string; onPress:
         </Text>
       </Pressable>
     </Animated.View>
+  );
+}
+
+// 이야기 출처: 누르면 그 사이트로 (웹은 새 탭, 폰은 브라우저)
+function StorySources({ spotId }: { spotId: number }) {
+  const sources = SPOT_SOURCES[spotId] ?? [];
+  if (sources.length === 0) return null;
+  return (
+    <View style={{ marginTop: 28, gap: 6 }}>
+      <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>출처</Text>
+      {sources.map((source) => (
+        <Pressable
+          key={source.url}
+          onPress={() => Linking.openURL(source.url)}
+          accessibilityRole="link"
+          accessibilityLabel={`출처 ${source.title}, 사이트 열기`}
+          hitSlop={4}>
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, lineHeight: 18, textDecorationLine: 'underline' }}>
+            - {source.title}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }
