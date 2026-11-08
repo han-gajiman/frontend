@@ -59,7 +59,8 @@ export function CollectionTile({
         {image && (
           <Image
             source={image}
-            style={{ position: 'absolute', width: '100%', height: '100%', opacity: wish.visited ? 1 : 0.35 }}
+            // 크기를 %로 주면 액자 아래 여백만큼 비어서, 네 변에 붙여 액자를 꽉 채웁니다.
+            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, opacity: wish.visited ? 1 : 0.35 }}
             contentFit="cover"
             contentPosition="bottom"
             blurRadius={wish.visited ? 0 : 8}
