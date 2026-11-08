@@ -20,12 +20,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { WEB_APP_MAX_WIDTH } from '@/shared/hooks/useAppSize';
-import { useSubmit } from '@/shared/hooks/useSubmit';
 
-import { createVisit } from '../api';
 import { DEFAULT_BACKGROUND, spotIllustration } from '../spotIllustrations';
 import type { Spot } from '../types';
-import { verifyVisit } from '../verifyVisit';
+import { useVisitVerification } from '../useVisitVerification';
 import { visitFog } from '../visitFog';
 
 // 피그마 "방문 인증 전" (204:74) 색과 크기
@@ -43,8 +41,6 @@ const FACE = { ...FILL, overflow: 'hidden', backfaceVisibility: 'hidden' } as co
 // 흐리게 할 때 가장자리가 비치지 않도록 화면보다 조금 크게 깝니다. (피그마 396×704 / 360×640)
 const BLEED = { position: 'absolute', top: '-5%', right: '-5%', bottom: '-5%', left: '-5%' } as const;
 
-const formatDistance = (m: number) => (m < 1000 ? `${m}m` : `${(m / 1000).toFixed(1)}km`);
-
 // SPOT-03 방문 인증 화면 (노션 "디자인 개발 요구사항"의 방문 인증 전·후 애니메이션)
 // 방문 전: 블러 그림 + 색 안개 + 자물쇠. 인증하면 안개가 걷히며 일러스트가 열리고, 열린 그림은 천천히 숨쉽니다.
 // 위치는 기기 안에서만 확인합니다(verifyVisit). 서버에는 인증 결과만 보내고 위치 정보는 보내지 않습니다.
@@ -61,12 +57,8 @@ export function VisitScreen({
   const reduceMotion = useReducedMotion();
   const illustration = spotIllustration(spot.id) ?? DEFAULT_BACKGROUND;
   const fogColors = visitFog(spot.id);
-  const [checking, setChecking] = useState(false);
-  const [notice, setNotice] = useState<string>();
-  const submit = useSubmit(createVisit);
+  const { verify, busy, notice, error } = useVisitVerification(spot, onVisited);
   const unlocked = spot.visited;
-  // 이미 방문했지만 지금 돌탑에서는 아직 인증하지 않은 명소 → 다시 인증하면 새 엽서
-  const canVisitAgain = unlocked && spot.visitedThisTower === false;
 
   // 카드 뒤집기: 0 = 앞면(일러스트), 180 = 뒷면(이야기)
   const [showStory, setShowStory] = useState(false);
@@ -122,24 +114,6 @@ export function VisitScreen({
   const fogStyle = useAnimatedStyle(() => ({ opacity: fog.get(), transform: [{ translateX: drift.get() }] }));
   const sunStyle = useAnimatedStyle(() => ({ opacity: sun.get() }));
 
-  const handleVerify = async () => {
-    setNotice(undefined);
-    setChecking(true);
-    const check = await verifyVisit(spot);
-    setChecking(false);
-
-    if (check.status === 'denied') {
-      setNotice('위치 권한이 필요해요. 기기 설정에서 허용한 뒤 다시 시도해 주세요.');
-    } else if (check.status === 'unavailable') {
-      setNotice('현재 위치를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.');
-    } else if (check.status === 'outOfRange') {
-      setNotice(`명소까지 약 ${formatDistance(check.distanceM)} 남았어요. 명소 가까이에서 다시 시도해 주세요.`);
-    } else {
-      const result = await submit.run(spot.id);
-      if (result.ok) onVisited();
-    }
-  };
-  const busy = checking || submit.submitting;
 
   return (
     <Modal transparent visible animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -228,13 +202,6 @@ export function VisitScreen({
                 <Animated.View entering={openedHere ? FadeIn.delay(1300).duration(600) : undefined} style={{ alignItems: 'center', gap: 12 }}>
                   {spot.story && <BlinkingStoryLink still={reduceMotion} onPress={() => flipTo(true)} />}
                   <Text className="text-center text-xl font-bold text-white">{spot.name}</Text>
-                  {canVisitAgain && (
-                    <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 8 }}>
-                      <VerifyNotice notice={notice} />
-                      <ErrorText error={submit.error} />
-                      <PressScaleButton label="이 장소 다시 인증하기" onPress={handleVerify} loading={busy} light />
-                    </View>
-                  )}
                 </Animated.View>
               ) : (
                 <Animated.View exiting={FadeOut.duration(300)} style={{ alignItems: 'center', gap: 24 }}>
@@ -250,9 +217,9 @@ export function VisitScreen({
                   </View>
                   <Rise delay={550} rise={10} stretch>
                     <View style={{ gap: 8 }}>
-                      <VerifyNotice notice={notice} dark />
-                      <ErrorText error={submit.error} />
-                      <PressScaleButton label="방문 인증하기" onPress={handleVerify} loading={busy} />
+                      <VerifyNotice notice={notice} />
+                      <ErrorText error={error} />
+                      <PressScaleButton label="방문 인증하기" onPress={verify} loading={busy} />
                     </View>
                   </Rise>
                 </Animated.View>
@@ -319,13 +286,13 @@ function BlinkingStoryLink({ still, onPress }: { still: boolean; onPress: () => 
   );
 }
 
-function VerifyNotice({ notice, dark = false }: { notice?: string; dark?: boolean }) {
+function VerifyNotice({ notice }: { notice?: string }) {
   if (!notice) return null;
-  return <Text style={{ color: dark ? NAVY : '#ffffff', fontSize: 13, textAlign: 'center' }}>{notice}</Text>;
+  return <Text style={{ color: NAVY, fontSize: 13, textAlign: 'center' }}>{notice}</Text>;
 }
 
 // 피그마 버튼 (48 높이, 둥글기 12). 누르면 97%로 살짝 눌림
-function PressScaleButton({ label, onPress, loading, light = false }: { label: string; onPress: () => void; loading: boolean; light?: boolean }) {
+function PressScaleButton({ label, onPress, loading }: { label: string; onPress: () => void; loading: boolean }) {
   const pressed = useSharedValue(1);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: pressed.get() }] }));
   return (
@@ -342,10 +309,10 @@ function PressScaleButton({ label, onPress, loading, light = false }: { label: s
           borderRadius: 12,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: light ? 'rgba(255,253,246,0.92)' : NAVY,
+          backgroundColor: NAVY,
           opacity: loading ? 0.6 : 1,
         }}>
-        <Text style={{ color: light ? NAVY : CREAM, fontSize: 16, lineHeight: 24, fontWeight: '700' }}>
+        <Text style={{ color: CREAM, fontSize: 16, lineHeight: 24, fontWeight: '700' }}>
           {loading ? '확인하는 중…' : label}
         </Text>
       </Pressable>
