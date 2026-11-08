@@ -219,7 +219,7 @@ export function VisitScreen({
                     </Rise>
                     <Rise delay={450}>
                       <Text style={{ color: NAVY, fontSize: 16, lineHeight: 23, textAlign: 'center' }}>
-                        방문을 인증하면{'\n'}이곳의 풍경 일러스트가 열려요.
+                        방문을 인증하고{'\n'}나만의 풍경 일러스트와 엽서를 만나보세요.
                       </Text>
                     </Rise>
                   </View>
