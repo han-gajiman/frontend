@@ -215,10 +215,14 @@ const FIXED_SUGGESTIONS: WishSuggestion[] = [
   {
     actionGoals: ['매일 영어 문장 3개 소리 내어 읽기', '하루 10분 영어 영상 따라 말하기', '매일 영어로 일기 한 문장 쓰기'],
     spot: { spotId: 3, spotName: '호미곶 해맞이광장', reason: '새로운 나를 시작하는 소원이니, 해가 가장 먼저 뜨는 곳에서 다짐해 봐요.' },
+    fallback: false,
+    supportMessage: null,
   },
   {
     actionGoals: ['점심시간에 영어 단어 10개 외우기', '자기 전 영어 팟캐스트 10분 듣기', '하루 한 번 영어로 혼잣말하기'],
     spot: { spotId: 2, spotName: '문경새재 과거길', reason: '옛 선비들이 꿈을 안고 걷던 길에서 꾸준함을 다져 봐요.' },
+    fallback: false,
+    supportMessage: null,
   },
 ];
 

@@ -73,7 +73,7 @@ export function writeYearReview(round: number, content: string): Promise<YearRev
 // 목 데이터로 볼 때 쓰는 예시 소원. 실제 서버에서는 보여주지 않습니다.
 export const EXAMPLE_WISH = USE_MOCK ? '영어로 자연스럽게 대화하기' : null;
 
-// POST /wishes/suggestions (WISH-02) — AI 실천 목표 3개 + 명소 추천. 🟡 백엔드 미구현이라 지금은 목 데이터만 동작합니다.
+// POST /wishes/suggestions (WISH-02) — AI 실천 목표 3개 + 명소 추천, 1인 하루 10회
 export function suggestForWish(content: string): Promise<WishSuggestion> {
   if (USE_MOCK) {
     return mockCall(() => mockServer.suggestForWish(content));

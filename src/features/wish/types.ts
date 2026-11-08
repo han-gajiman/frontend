@@ -50,8 +50,10 @@ export type ReflectionRequest = {
 
 // POST /wishes/suggestions (WISH-02). 실패하거나 명소를 못 고르면 spot은 null
 export type WishSuggestion = {
-  actionGoals: string[]; // 실천 목표 후보 3개
+  actionGoals: string[]; // 실천 목표 후보 3개 (위험한 소원이면 빈 배열)
   spot: { spotId: number; spotName: string; reason: string } | null;
+  fallback: boolean; // AI가 실패해 기본 문구를 씀
+  supportMessage: string | null; // 위험한 소원이면 추천 대신 도움 안내
 };
 
 // GET /wishes?round=1
