@@ -4,6 +4,8 @@ import { Text, View } from 'react-native';
 import { getSpots } from '@/features/spot/api';
 import { SpotExplorer } from '@/features/spot/components/SpotExplorer';
 import { VisitScreen } from '@/features/spot/components/VisitScreen';
+import { NewPostcardDialog } from '@/features/postcard/components/NewPostcardDialog';
+import type { Postcard } from '@/features/postcard/types';
 import type { Spot } from '@/features/spot/types';
 import { useVisitVerification } from '@/features/spot/useVisitVerification';
 import { Button } from '@/shared/components/Button';
@@ -62,11 +64,24 @@ export default function SpotsScreen() {
   );
 }
 
-// 방문한 명소: 일러스트 보기 옆에, 지금 돌탑에서 아직 인증하지 않았으면 "다시 인증하기"
+// 방문한 명소: 일러스트 보기 옆에, 지금 돌탑에서 아직 인증하지 않았으면 "다시 인증하기". 다시 인증하면 새 엽서
 function SpotActions({ spot, onOpen, onVisitedAgain }: { spot: Spot; onOpen: () => void; onVisitedAgain: () => void }) {
-  const { verify, busy, notice, error } = useVisitVerification(spot, onVisitedAgain);
+  const [gift, setGift] = useState<Postcard | null>(null);
+  const { verify, busy, notice, error } = useVisitVerification(spot, (visit) => {
+    setGift(visit.postcard);
+    onVisitedAgain();
+  });
+  const dialog = gift && <NewPostcardDialog postcard={gift} onClose={() => setGift(null)} />;
+
   if (!spot.visited) return <Button label="방문 인증" onPress={onOpen} />;
-  if (spot.visitedThisTower !== false) return <Button label="방문 완료 · 일러스트 보기" onPress={onOpen} />;
+  if (spot.visitedThisTower !== false) {
+    return (
+      <>
+        <Button label="방문 완료 · 일러스트 보기" onPress={onOpen} />
+        {dialog}
+      </>
+    );
+  }
 
   return (
     <View className="gap-2">
@@ -80,6 +95,7 @@ function SpotActions({ spot, onOpen, onVisitedAgain }: { spot: Spot; onOpen: () 
           <Button label="다시 인증하기" onPress={verify} loading={busy} />
         </View>
       </View>
+      {dialog}
     </View>
   );
 }

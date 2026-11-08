@@ -7,7 +7,7 @@ import { Screen } from '@/shared/components/Screen';
 import { AsyncContent, EmptyState } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
 
-// 알림을 누르면 이동할 화면. 엽서(POSTCARD)는 보관함이 생기면 연결합니다.
+// 알림을 누르면 이동할 화면. 엽서(POSTCARD)는 우체통으로
 function destinationOf(notification: AppNotification): Href | null {
   switch (notification.type) {
     case 'TOWER_COMPLETED':
@@ -15,6 +15,8 @@ function destinationOf(notification: AppNotification): Href | null {
       return '/'; // 홈 = 돌탑
     case 'CHEER':
       return '/cheers';
+    case 'POSTCARD':
+      return '/mailbox';
     case 'YEAR_REVIEW':
       return `/collection?round=${notification.targetId}`; // targetId = 끝난 회차
     default:
@@ -33,7 +35,7 @@ export default function NotificationsScreen() {
     }
     const destination = destinationOf(notification);
     if (!destination) state.reload();
-    else if (destination === '/cheers') router.push(destination);
+    else if (destination === '/cheers' || destination === '/mailbox') router.push(destination);
     else router.dismissTo(destination); // 홈·모아보기는 탭이라, 알림함을 닫고 그 탭으로 돌아갑니다.
   };
 

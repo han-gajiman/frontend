@@ -18,6 +18,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
+import { NewPostcardDialog } from '@/features/postcard/components/NewPostcardDialog';
+import type { Postcard } from '@/features/postcard/types';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { WEB_APP_MAX_WIDTH } from '@/shared/hooks/useAppSize';
 
@@ -57,7 +59,13 @@ export function VisitScreen({
   const reduceMotion = useReducedMotion();
   const illustration = spotIllustration(spot.id) ?? DEFAULT_BACKGROUND;
   const fogColors = visitFog(spot.id);
-  const { verify, busy, notice, error } = useVisitVerification(spot, onVisited);
+  // 새 엽서는 안개가 걷힌 뒤(약 1.9초) 보여줍니다.
+  const [gift, setGift] = useState<Postcard | null>(null);
+  const { verify, busy, notice, error } = useVisitVerification(spot, (visit) => {
+    onVisited();
+    const postcard = visit.postcard;
+    if (postcard) setTimeout(() => setGift(postcard), 1900);
+  });
   const unlocked = spot.visited;
 
   // 카드 뒤집기: 0 = 앞면(일러스트), 180 = 뒷면(이야기)
@@ -226,6 +234,7 @@ export function VisitScreen({
               )}
             </View>
           )}
+          {gift && <NewPostcardDialog postcard={gift} onClose={() => setGift(null)} />}
         </View>
       </View>
     </Modal>
