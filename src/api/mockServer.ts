@@ -549,7 +549,7 @@ export const mockServer = {
     if (!content.trim()) throw new ApiError('INVALID_INPUT', '소원을 먼저 적어 주세요.', 400);
     if (db.suggestionUse.date !== today()) db.suggestionUse = { date: today(), count: 0 };
     if (db.suggestionUse.count >= SUGGESTION_LIMIT_PER_DAY) {
-      throw new ApiError('AI_SUGGESTION_LIMIT', '오늘은 추천을 다 썼어요.', 429);
+      throw new ApiError('AI_RATE_LIMIT', '오늘은 추천을 다 썼어요.', 429);
     }
     db.suggestionUse.count++;
     return FIXED_SUGGESTIONS[db.suggestionTurn++ % FIXED_SUGGESTIONS.length];
