@@ -256,11 +256,11 @@ function seed() {
     { spotId: 3, visitedOn: addDays(today(), -409), wishId: 26 },
     { spotId: 8, visitedOn: addDays(today(), -317), wishId: 29 },
   ];
-  // 방문할 때 받은 엽서와, 친구 지기가 보낸 엽서 한 장 (아직 안 읽음 → 우체통 깃발)
-  db.postcards = [
-    { spotId: 3, spotName: '호미곶 해맞이광장', style: 2, issuedAt: `${addDays(today(), -409)}T10:00:00+09:00` },
-    { spotId: 8, spotName: '영덕 해맞이공원', style: 1, issuedAt: `${addDays(today(), -317)}T10:00:00+09:00` },
-  ];
+  // 친구 지기가 보낸 엽서 한 장 (아직 안 읽음)
+  // 데모: 엽서 40장(명소 10곳 × 4종)을 모두 모은 상태로 시작해 어떤 엽서든 보낼 수 있게 합니다.
+  db.postcards = spots.flatMap((spot) =>
+    [1, 2, 3, 4].map((style) => ({ spotId: spot.id, spotName: spot.name, style, issuedAt: `${addDays(today(), -30)}T10:00:00+09:00` })),
+  );
   db.letters = [
     {
       letterId: 801,
