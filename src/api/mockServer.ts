@@ -365,6 +365,7 @@ function seed() {
   notify('YEAR_REVIEW', 1, YEAR_REVIEW_MESSAGE);
   db.notifications[0].isRead = true;
   notify('NUDGE', 10, '돌돌이님이 콕 찔렀어요! 오늘의 돌을 쌓아 보세요.');
+  notify('POSTCARD', 801, '지기님이 엽서를 보냈어요');
   notify('CHEER', 902, '지기님이 응원을 보냈어요.');
 }
 

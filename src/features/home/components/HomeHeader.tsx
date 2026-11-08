@@ -10,7 +10,7 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const ICON_COLOR = '#ffffff'; // 배경 위쪽은 언제나 어두운 하늘
 
-// 홈 상단: 왼쪽에 진행 정보, 오른쪽에 알림 · 공개 범위 · 내 정보 아이콘
+// 홈 상단: 왼쪽에 진행 정보, 오른쪽에 우체통 · 알림 · 공개 범위 · 내 정보 아이콘 (받은 엽서 알림은 알림함에서)
 export function HomeHeader({
   children,
   visibility,
@@ -25,7 +25,8 @@ export function HomeHeader({
   return (
     <View className="flex-row items-start justify-between px-6 pt-6">
       <View className="flex-1 pr-3">{children}</View>
-      <View className="flex-row items-center gap-4">
+      <View className="flex-row items-center gap-3.5">
+        <HeaderIcon name="mail-outline" label="우체통" onPress={() => router.push('/mailbox')} />
         <HeaderIcon
           name="notifications-outline"
           label={hasUnread ? '알림, 새 알림 있음' : '알림'}

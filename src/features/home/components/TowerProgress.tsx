@@ -12,15 +12,17 @@ export function TowerProgress({ wish }: { wish: CurrentWish }) {
 
   return (
     <View className="gap-1">
-      <Text className={`text-sm ${theme.secondary}`}>
+      <Text numberOfLines={1} className={`text-sm ${theme.secondary}`}>
         {wish.spot.name}
         {wish.spot.visited ? ' · 방문함' : ' · 방문 전'}
       </Text>
-      <View className="flex-row items-baseline gap-2">
-        <Text className={`text-2xl font-bold ${theme.primary}`}>
+      <View className="flex-row flex-wrap items-baseline gap-x-2">
+        <Text numberOfLines={1} className={`text-2xl font-bold ${theme.primary}`}>
           돌 {wish.stoneCount}/{TOWER_DAYS}
         </Text>
-        <Text className={`text-sm ${theme.muted}`}>{wish.dayIndex}일째</Text>
+        <Text numberOfLines={1} className={`text-sm ${theme.muted}`}>
+          {wish.dayIndex}일째
+        </Text>
       </View>
     </View>
   );
