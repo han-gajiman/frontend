@@ -44,3 +44,4 @@ yarn-error.*
 credentials.json
 *.jks
 *.keystore
+dist-pages/
