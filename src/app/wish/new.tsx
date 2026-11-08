@@ -58,12 +58,22 @@ export default function NewWishScreen() {
           <SuggestButton
             disabled={content.trim().length === 0}
             loading={suggest.submitting}
-            again={goals !== undefined}
+            again={draft.suggestion !== null}
             onPress={handleSuggest}
           />
           {suggest.error && !suggest.submitting && <SuggestError error={suggest.error} />}
         </View>
-        {goals && <ActionGoalSuggestions goals={goals} selected={actionGoal} onSelect={setActionGoal} />}
+        {draft.suggestion?.supportMessage && (
+          <View className="gap-1 rounded-xl bg-violet-50 p-4">
+            <Text className="leading-6 text-gray-800">{draft.suggestion.supportMessage}</Text>
+          </View>
+        )}
+        {goals && goals.length > 0 && (
+          <View className="gap-1">
+            <ActionGoalSuggestions goals={goals} selected={actionGoal} onSelect={setActionGoal} />
+            {draft.suggestion?.fallback && <Text className="text-xs text-gray-400">지금은 AI가 바빠서 기본 추천을 보여드려요.</Text>}
+          </View>
+        )}
         <TextField
           label="매일 할 실천 목표"
           value={actionGoal}
