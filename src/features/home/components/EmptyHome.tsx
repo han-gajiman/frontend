@@ -4,7 +4,6 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
-import { MailboxButton } from '@/features/postcard/components/MailboxButton';
 import { StoneShape } from '@/features/stone/components/StoneShape';
 import { GROUND_HEIGHT, TowerBackground } from '@/features/stone/components/TowerBackground';
 
@@ -33,8 +32,6 @@ export function EmptyHome() {
           <StoneShape index={0} scale={0.6} isToday />
         </Pressable>
       </View>
-
-      <MailboxButton style={{ right: 28, bottom: FIELD_GROUND - 8 }} />
 
       <View className="absolute inset-x-0 items-center" style={{ bottom: tabBarHeight + 24 }}>
         <Pressable onPress={start} className="rounded-full bg-gray-900 px-6 py-3">
