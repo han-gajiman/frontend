@@ -252,8 +252,12 @@ function seed() {
   db.journeyStartedOn = addDays(today(), -569); // 1년(365일) 전 묶음이 끝나고 204일째
   db.yearReviews[1] = '하루를 미루지 않는 사람이 되었어요. 작게라도 매일 쌓으면 된다는 걸 알았고, 올해도 그렇게 해 보려고 해요.';
   // 첫 번째 소원 때 호미곶과 영덕에 한 번씩 다녀옴. 진행 중인 돌탑의 영덕 배경도 이 방문으로 열립니다.
-  // 데모: 명소 10곳을 모두 방문해 일러스트를 감상할 수 있게 합니다. (첫 번째 소원 기간, 지금 돌탑에서는 다시 인증 가능)
-  db.spotVisits = spots.map((spot, i) => ({ spotId: spot.id, visitedOn: addDays(today(), -560 + i * 30), wishId: 21 + i }));
+  // 첫 번째 소원 때 갓바위·호미곶·영덕을 한 번씩 방문 (진행 중인 돌탑의 영덕 배경도 이 방문으로 열림). 엽서는 데모라 40장 모두 해금
+  db.spotVisits = [
+    { spotId: 1, visitedOn: addDays(today(), -470), wishId: 24 },
+    { spotId: 3, visitedOn: addDays(today(), -409), wishId: 26 },
+    { spotId: 8, visitedOn: addDays(today(), -317), wishId: 29 },
+  ];
   // 친구 지기가 보낸 엽서 한 장 (아직 안 읽음)
   // 데모: 엽서 40장(명소 10곳 × 4종)을 모두 모은 상태로 시작해 어떤 엽서든 보낼 수 있게 합니다.
   db.postcards = spots.flatMap((spot) =>
