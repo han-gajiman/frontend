@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorState } from '@/shared/components/ScreenState';
@@ -11,8 +10,7 @@ import { roundTitle } from '../towerLabels';
 import type { RoundSummary, WishSummary } from '../types';
 import { CollectionTile } from './CollectionTile';
 import { PetalLayer } from './PetalLayer';
-
-const WISH_SCENERY = require('../../../../assets/backgrounds/wish-scenery.jpg');
+import { WishScenery } from './WishScenery';
 
 const COLUMNS = 4;
 const FIELD_PADDING_X = 12;
@@ -44,8 +42,8 @@ export function RoundField({
   return (
     <View className="flex-1">
       {/* 피그마 "소원 풍경" 배경 위로 꽃잎이 흩날립니다. 꽃잎은 돌탑·버튼보다 아래 */}
-      {/* 그림이 화면보다 길어서 위쪽 벚꽃 가지가 보이게 위에 맞춥니다. (아래 바위는 회고 버튼 뒤라 조금 잘려도 됨) */}
-      <Image source={WISH_SCENERY} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
+      {/* 그림이 화면보다 길면 가운데 안개를 덜어 내서 위 벚꽃 가지와 아래 바위가 모두 보입니다. */}
+      <WishScenery />
       <PetalLayer />
 
       <View className="flex-row items-center justify-between px-4 pb-2" style={{ paddingTop: insets.top + 16 }}>
@@ -148,7 +146,7 @@ function RoundArrow({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !onPress }}
-      className={`h-11 w-11 items-center justify-center rounded-full bg-white/30 ${onPress ? '' : 'opacity-30'}`}>
+      className={`h-11 w-11 items-center justify-center rounded-full bg-black/20 ${onPress ? '' : 'opacity-30'}`}>
       <Ionicons name={icon} size={22} color="white" />
     </Pressable>
   );
