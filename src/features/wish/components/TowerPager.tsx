@@ -14,6 +14,7 @@ const SWIPE_DISTANCE = 50; // 이만큼 밀면 다음 돌탑으로
 const TAP_SLOP = 8; // 이보다 많이 움직이면 누른 것이 아니라 민 것
 const AFTER_SWIPE_MS = 300; // 웹은 밀고 손을 떼도 누름(click)이 따라오므로 잠시 무시합니다.
 const MOVE = { duration: 280, easing: Easing.out(Easing.cubic) };
+const CARD_GROUND = 24; // 카드 아래쪽에 돌탑을 붙여 세웁니다.
 
 // TOWER-03 완성한 돌탑을 한 장씩 넘겨 봅니다. 왼쪽으로 밀면 다음 돌탑으로 갑니다. 돌탑을 누르면 30일 회고가 뜹니다.
 // 웹의 마우스 끌기와 폰의 손가락 밀기가 똑같이 동작하도록 기본 터치 이벤트로 만듭니다. 화살표로도 넘길 수 있습니다.
@@ -126,6 +127,7 @@ function TowerCard({ wish, onOpenReflection }: { wish: WishSummary; onOpenReflec
           crown={crownOf(wish)}
           inscription={wish.content}
           background={{ spotId: wish.spotId, visited: wish.visited }}
+          groundHeight={CARD_GROUND}
           onPress={onOpenReflection}
           pressLabel="30일 회고 보기"
         />

@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { Text, View } from 'react-native';
 
 import { getSpots } from '@/features/spot/api';
 import { SpotExplorer } from '@/features/spot/components/SpotExplorer';
 import { VisitScreen } from '@/features/spot/components/VisitScreen';
 import type { Spot } from '@/features/spot/types';
+import { useVisitVerification } from '@/features/spot/useVisitVerification';
 import { Button } from '@/shared/components/Button';
+import { ErrorText } from '@/shared/components/ErrorText';
 import { Screen } from '@/shared/components/Screen';
 import { AsyncContent, EmptyState } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
@@ -29,7 +32,15 @@ export default function SpotsScreen() {
             selected={selected}
             onSelect={setSelected}
             renderAction={(spot) => (
-              <Button label={spot.visited ? '방문 완료 · 일러스트 보기' : '방문 인증'} onPress={() => setVisiting(spot)} />
+              <SpotActions
+                key={spot.id}
+                spot={spot}
+                onOpen={() => setVisiting(spot)}
+                onVisitedAgain={() => {
+                  setSelected({ ...spot, visitedThisTower: true });
+                  state.reload();
+                }}
+              />
             )}
           />
         )}
@@ -48,5 +59,27 @@ export default function SpotsScreen() {
         />
       )}
     </Screen>
+  );
+}
+
+// 방문한 명소: 일러스트 보기 옆에, 지금 돌탑에서 아직 인증하지 않았으면 "다시 인증하기"
+function SpotActions({ spot, onOpen, onVisitedAgain }: { spot: Spot; onOpen: () => void; onVisitedAgain: () => void }) {
+  const { verify, busy, notice, error } = useVisitVerification(spot, onVisitedAgain);
+  if (!spot.visited) return <Button label="방문 인증" onPress={onOpen} />;
+  if (spot.visitedThisTower !== false) return <Button label="방문 완료 · 일러스트 보기" onPress={onOpen} />;
+
+  return (
+    <View className="gap-2">
+      {notice && <Text className="text-center text-sm text-gray-600">{notice}</Text>}
+      <ErrorText error={error} />
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Button label="방문 완료 · 일러스트" onPress={onOpen} variant="secondary" />
+        </View>
+        <View className="flex-1">
+          <Button label="다시 인증하기" onPress={verify} loading={busy} />
+        </View>
+      </View>
+    </View>
   );
 }
