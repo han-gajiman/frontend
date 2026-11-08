@@ -1,11 +1,18 @@
 import { Image } from 'expo-image';
 import { View } from 'react-native';
 
-import { StoneShape } from './StoneShape';
+import { StoneShape, stoneSize } from './StoneShape';
 
 const MAX_STONES = 30;
 const OVERLAP = 1;
-const STAR_SIZE = 20;
+export const STAR_SIZE = 20;
+
+// 돌 count개를 쌓은 작은 돌탑의 높이 (별 제외). 모아보기에서 화면에 맞는 크기를 고를 때 씁니다.
+export function miniTowerHeight(count: number, scale: number) {
+  let height = 0;
+  for (let i = 0; i < Math.min(count, MAX_STONES); i++) height += stoneSize(i).height * scale;
+  return height - Math.max(0, Math.min(count, MAX_STONES) - 1) * OVERLAP;
+}
 
 // 작은 돌탑 (친구 돌탑 맛보기, 모아보기 필드). crown: 꼭대기 별
 export function MiniTower({ count, scale, crown }: { count: number; scale: number; crown?: 'gold' | 'white' }) {

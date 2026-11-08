@@ -1,16 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MiniTower } from '@/features/stone/components/MiniTower';
 import { TowerBackground } from '@/features/stone/components/TowerBackground';
 import { ErrorState } from '@/shared/components/ScreenState';
 import type { ApiState } from '@/shared/hooks/useApi';
 
-import { crownOf, roundTitle } from '../towerLabels';
+import { roundTitle } from '../towerLabels';
 import type { RoundSummary, WishSummary } from '../types';
+import { CollectionTile } from './CollectionTile';
 
-const TOWER_SCALE = 0.25;
+const COLUMNS = 4;
+const MAX_ROW_HEIGHT = 300;
+const FIELD_PADDING_BOTTOM = 8;
 const TEXT_SHADOW = { textShadowColor: 'rgba(40,30,110,0.45)', textShadowRadius: 4 };
 
 // TOWER-03 필드: 소원 묶음 하나의 돌탑이 전부 놓여 있고, 화살표로 다른 묶음으로 넘어갑니다.
@@ -31,6 +34,10 @@ export function RoundField({
 }) {
   const insets = useSafeAreaInsets();
   const wishes = state.data;
+  const [fieldHeight, setFieldHeight] = useState(0);
+  const rows = Math.max(1, Math.ceil((wishes?.length ?? 0) / COLUMNS));
+  // 줄이 적으면 지금처럼 넉넉하게, 12개(3줄)여도 화면 안에 다 들어오게
+  const rowHeight = fieldHeight > 0 ? Math.min(MAX_ROW_HEIGHT, fieldHeight / rows) : MAX_ROW_HEIGHT;
 
   return (
     <View className="flex-1">
@@ -51,7 +58,7 @@ export function RoundField({
         <RoundArrow icon="chevron-forward" label="다음 소원" onPress={onNext} />
       </View>
 
-      <View className="flex-1">
+      <View className="flex-1" onLayout={(e) => setFieldHeight(e.nativeEvent.layout.height - FIELD_PADDING_BOTTOM)}>
         {wishes === undefined && state.error ? (
           <ErrorState code={state.error.code} message={state.error.message} onRetry={state.reload} />
         ) : wishes === undefined ? (
@@ -68,18 +75,15 @@ export function RoundField({
             </Text>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingHorizontal: 12, paddingBottom: 8 }}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingHorizontal: 12, paddingBottom: FIELD_PADDING_BOTTOM }}>
             <View className="flex-row flex-wrap">
               {wishes.map((wish) => (
-                <Pressable
+                <CollectionTile
                   key={wish.wishId}
+                  wish={wish}
+                  rowHeight={rowHeight}
                   onPress={() => onOpenTower(wish)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${wish.content}, 돌 ${wish.stoneCount}개`}
-                  style={{ width: '25%', alignItems: 'center', justifyContent: 'flex-end', paddingTop: 12 }}>
-                  <MiniTower count={wish.stoneCount} scale={TOWER_SCALE} crown={crownOf(wish)} />
-                  <View className="mt-1 h-1 w-10 rounded-full bg-white/50" />
-                </Pressable>
+                />
               ))}
             </View>
           </ScrollView>
