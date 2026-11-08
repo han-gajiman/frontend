@@ -1,8 +1,11 @@
+import { Platform } from 'react-native';
+
 import { apiRequest } from '@/api/client';
 import { mockCall, USE_MOCK } from '@/api/mock';
 import { mockServer } from '@/api/mockServer';
 
 import { getGoogleIdToken, getKakaoAccessToken } from './social';
+import { startGoogleWebLogin, startKakaoWebLogin, type WebSocialRedirect } from './socialWeb';
 import type { FindEmailResponse, LocalSignupRequest, LoginResponse, OnboardingRequest } from './types';
 
 // POST /auth/kakao — 카카오 SDK로 받은 액세스 토큰을 보냅니다. 로그인 창을 닫으면 null
@@ -10,6 +13,7 @@ export async function loginWithKakao(): Promise<LoginResponse | null> {
   if (USE_MOCK) {
     return mockCall(() => mockServer.login('KAKAO'));
   }
+  if (Platform.OS === 'web') return startKakaoWebLogin(); // 카카오 로그인 화면으로 이동 → /login으로 돌아옴
   const accessToken = await getKakaoAccessToken();
   if (!accessToken) return null;
   return apiRequest<LoginResponse>('/auth/kakao', { method: 'POST', body: { accessToken } });
@@ -20,6 +24,7 @@ export async function loginWithGoogle(): Promise<LoginResponse | null> {
   if (USE_MOCK) {
     return mockCall(() => mockServer.login('GOOGLE'));
   }
+  if (Platform.OS === 'web') return startGoogleWebLogin();
   const idToken = await getGoogleIdToken();
   if (!idToken) return null;
   return apiRequest<LoginResponse>('/auth/google', { method: 'POST', body: { idToken } });
@@ -31,6 +36,20 @@ export function loginWithEmail(email: string, password: string): Promise<LoginRe
     return mockCall(() => mockServer.loginLocal(email, password));
   }
   return apiRequest<LoginResponse>('/auth/login/local', { method: 'POST', body: { email, password } });
+}
+
+// 웹에서 카카오·Google 로그인 화면을 거쳐 돌아온 뒤 마무리 (takeWebSocialRedirect 결과)
+// 카카오: POST /auth/kakao/web/code (서버가 인가 코드를 토큰으로 바꿈), Google: POST /auth/google
+export function finishWebSocialLogin(
+  redirect: Extract<WebSocialRedirect, { provider: string }>,
+): Promise<LoginResponse> {
+  if (redirect.provider === 'KAKAO') {
+    return apiRequest<LoginResponse>('/auth/kakao/web/code', {
+      method: 'POST',
+      body: { code: redirect.code, redirectUri: redirect.redirectUri },
+    });
+  }
+  return apiRequest<LoginResponse>('/auth/google', { method: 'POST', body: { idToken: redirect.idToken } });
 }
 
 // POST /auth/signup/local — 자체 회원가입. 가입하면 바로 로그인 토큰이 오고, 약관 동의는 온보딩에서

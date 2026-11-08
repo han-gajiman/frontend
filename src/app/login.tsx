@@ -1,7 +1,7 @@
 import { Image, type ImageSource } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -20,7 +20,15 @@ import {
   AuthSectionLabel,
   GradientButton,
 } from '@/features/auth/components/AuthForm';
-import { DEV_LOGIN_ENABLED, loginForDev, loginWithEmail, loginWithGoogle, loginWithKakao } from '@/features/auth/api';
+import {
+  DEV_LOGIN_ENABLED,
+  finishWebSocialLogin,
+  loginForDev,
+  loginWithEmail,
+  loginWithGoogle,
+  loginWithKakao,
+} from '@/features/auth/api';
+import { clearWebSocialRedirect, takeWebSocialRedirect } from '@/features/auth/socialWeb';
 import { useAuthStore } from '@/features/auth/store';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { useSubmit } from '@/shared/hooks/useSubmit';
@@ -35,10 +43,27 @@ export default function LoginScreen() {
   const google = useSubmit(loginWithGoogle);
   const dev = useSubmit(loginForDev);
   const local = useSubmit(loginWithEmail);
-  const submitting = kakao.submitting || google.submitting || dev.submitting || local.submitting;
+  const webSocial = useSubmit(finishWebSocialLogin);
+  const submitting = kakao.submitting || google.submitting || dev.submitting || local.submitting || webSocial.submitting;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [notice, setNotice] = useState<string>();
+  const [webRedirect] = useState(takeWebSocialRedirect);
+  const webRedirectStarted = useRef(false);
+  const [notice, setNotice] = useState<string | undefined>(() =>
+    webRedirect && 'error' in webRedirect ? webRedirect.error : undefined,
+  );
+
+  // 웹: 카카오·Google 로그인 화면에서 돌아왔으면 이어서 로그인 (처음 한 번)
+  useEffect(() => {
+    if (!webRedirect) return;
+    clearWebSocialRedirect(); // 다시 로그인 화면에 와도 같은 결과를 또 쓰지 않게
+    if (!('provider' in webRedirect) || webRedirectStarted.current) return;
+    webRedirectStarted.current = true; // 카카오 인가 코드는 한 번만 쓸 수 있어서 (개발 모드의 effect 두 번 실행 대비)
+    webSocial.run(webRedirect).then((result) => {
+      if (result.ok) signIn(result.data);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 처음 한 번만
+  }, []);
 
   const handleKakao = async () => {
     setNotice(undefined);
@@ -152,7 +177,7 @@ export default function LoginScreen() {
 
           <View className="mt-4 min-h-5 gap-3">
             {notice && <Text className="text-center text-[13px] text-[#737a84]">{notice}</Text>}
-            <ErrorText error={local.error ?? kakao.error ?? google.error ?? dev.error} />
+            <ErrorText error={local.error ?? kakao.error ?? google.error ?? webSocial.error ?? dev.error} />
             {DEV_LOGIN_ENABLED && (
               <Pressable onPress={handleDev} disabled={submitting} hitSlop={8} accessibilityRole="button">
                 <Text className="text-center text-[13px] text-[#737a84] underline">
