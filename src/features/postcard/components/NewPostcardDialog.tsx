@@ -18,18 +18,20 @@ export function NewPostcardDialog({ postcard, onClose }: { postcard: Postcard; o
     <Dialog onClose={onClose}>
       <View className="items-center gap-1">
         <Text className="text-lg font-bold text-gray-900">새 엽서를 받았어요</Text>
-        <Text className="text-sm text-gray-500">
-          {postcard.spotName} · {STYLE_NAMES[postcard.style]}
+        <Text className="text-center font-semibold text-gray-800">
+          {postcard.spotName}
+          {data && (
+            <Text className="font-normal text-gray-500">
+              {'  '}
+              {spotCount} of {STYLES_PER_SPOT} · 전체 {data.length} of {TOTAL_POSTCARDS}
+            </Text>
+          )}
         </Text>
+        <Text className="text-xs text-gray-400">{STYLE_NAMES[postcard.style]}</Text>
       </View>
       <View className="items-center">
         <PostcardCard spotId={postcard.spotId} style={postcard.style} width={180} />
       </View>
-      {data && (
-        <Text className="text-center text-gray-700">
-          {postcard.spotName} {spotCount}/{STYLES_PER_SPOT} · 전체 {data.length}/{TOTAL_POSTCARDS}
-        </Text>
-      )}
       <Button
         label="우체통에서 보기"
         onPress={() => {

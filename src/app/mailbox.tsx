@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -23,7 +23,7 @@ export default function MailboxScreen() {
   const [notice, setNotice] = useState<string>();
 
   return (
-    <Screen title="우체통" showBack scroll={false}>
+    <Screen title="우체통" showBack onBack={() => (router.canGoBack() ? router.back() : router.dismissTo('/'))} scroll={false}>
       <View className="mx-6 mb-3 flex-row rounded-xl bg-gray-100 p-1" accessibilityRole="tablist">
         {TABS.map((t) => (
           <Pressable
