@@ -9,8 +9,10 @@
 -- 회원
 CREATE TABLE users (
   id                 BIGSERIAL PRIMARY KEY,
-  provider           VARCHAR(20)  NOT NULL CHECK (provider IN ('KAKAO','GOOGLE')),  -- [변경 10/27] Apple 제외, Google 추가 (V3 마이그레이션)
-  provider_user_id   VARCHAR(100) NOT NULL,                -- 소셜 회원 고유 ID
+  provider           VARCHAR(20)  NOT NULL CHECK (provider IN ('KAKAO','GOOGLE','LOCAL')),  -- [변경 10/27] Apple 제외, Google 추가 (V3) / [변경 11/3] 자체 로그인 LOCAL (V5)
+  provider_user_id   VARCHAR(100) NOT NULL,                -- 소셜 회원 고유 ID (LOCAL은 이메일)
+  email              VARCHAR(255),                         -- [추가 11/3] 자체 로그인 이메일(소문자), 소셜 회원은 NULL. 부분 유니크 uq_users_email (V5)
+  password           VARCHAR(255),                         -- [추가 11/3] BCrypt 해시, 소셜 회원은 NULL (V5)
   nickname           VARCHAR(30),                          -- 온보딩에서 설정
   profile_image_url  VARCHAR(500),
   push_token         VARCHAR(200),                         -- Expo push token (기기 1개 기준)
@@ -21,12 +23,24 @@ CREATE TABLE users (
   UNIQUE (provider, provider_user_id)
 );
 
--- [변경] 약관·위치정보 동의 이력
+-- [추가 11/3] 비밀번호 찾기 인증코드 (V6). 코드 원문 대신 BCrypt 해시, 10분 만료, 5번 틀리면 무효, 회원당 1개
+CREATE TABLE password_reset_codes (
+  id          BIGSERIAL PRIMARY KEY,
+  user_id     BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash   VARCHAR(100) NOT NULL,
+  expires_at  TIMESTAMPTZ  NOT NULL,
+  attempts    INT          NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_password_reset_codes_user ON password_reset_codes(user_id);
+
+-- [변경] 약관 동의 이력
 -- 기존 UNIQUE(user_id, type)을 제거해서 변경할 때마다 행을 추가 (최신 행 = 현재 상태)
 CREATE TABLE user_agreements (
   id         BIGSERIAL PRIMARY KEY,
   user_id    BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type       VARCHAR(20) NOT NULL CHECK (type IN ('TERMS','PRIVACY','LOCATION')),
+  type       VARCHAR(20) NOT NULL CHECK (type IN ('TERMS','PRIVACY')),  -- [변경 11/5] 위치 동의는 서버에 저장 안 함 (V7)
   version    VARCHAR(10) NOT NULL,                         -- 약관 버전
   agreed     BOOLEAN     NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -116,12 +130,11 @@ CREATE TABLE spot_visits (
   user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   spot_id     BIGINT      NOT NULL REFERENCES spots(id),
   wish_id     BIGINT      REFERENCES wishes(id) ON DELETE CASCADE,  -- 진행 중 돌탑 명소면 연결
-  distance_m  INT         NOT NULL,                        -- 인증 시점 명소까지 거리
   verified_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_spot_visits_user_spot ON spot_visits(user_id, spot_id);
+ALTER TABLE spot_visits ADD CONSTRAINT uq_spot_visits_user_spot UNIQUE (user_id, spot_id);  -- [변경 11/5] 회원당 명소 하나, 좌표·거리 컬럼 없음 (V7)
 CREATE INDEX idx_spot_visits_wish ON spot_visits(wish_id);
 
 -- 디지털 엽서 보관함
@@ -189,6 +202,17 @@ CREATE TABLE anonymous_keepers (
 CREATE INDEX idx_keepers_user ON anonymous_keepers(keeper_user_id);
 
 -- [변경] 알림 (앱 내 + 푸시 발송 기록)
+-- 1년 회고: 끝난 회차에 한 번 쓰고 수정 불가 (TOWER-04)
+CREATE TABLE year_reviews (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  round      INT          NOT NULL,
+  content    VARCHAR(200) NOT NULL,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  UNIQUE (user_id, round)
+);
+
 -- actor_id 추가: 보낸 사람 (CHEER, NUDGE). 시스템 알림은 NULL
 -- target_id 의미 (타입별 약속):
 --   CHEER           → cheers.id
