@@ -1,15 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TowerBackground } from '@/features/stone/components/TowerBackground';
 import { ErrorState } from '@/shared/components/ScreenState';
 import type { ApiState } from '@/shared/hooks/useApi';
 
 import { roundTitle } from '../towerLabels';
 import type { RoundSummary, WishSummary } from '../types';
 import { CollectionTile } from './CollectionTile';
+import { PetalLayer } from './PetalLayer';
+
+const WISH_SCENERY = require('../../../../assets/backgrounds/wish-scenery.jpg');
 
 const COLUMNS = 4;
 const FIELD_PADDING_X = 12;
@@ -40,7 +43,9 @@ export function RoundField({
 
   return (
     <View className="flex-1">
-      <TowerBackground spotId={null} visited={false} groundHeight={0} />
+      {/* 피그마 "소원 풍경" 배경 위로 꽃잎이 흩날립니다. 꽃잎은 돌탑·버튼보다 아래 */}
+      <Image source={WISH_SCENERY} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="bottom" />
+      <PetalLayer />
 
       <View className="flex-row items-center justify-between px-4 pb-2" style={{ paddingTop: insets.top + 16 }}>
         <RoundArrow icon="chevron-back" label="이전 소원" onPress={onPrevious} />

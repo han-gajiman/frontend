@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="petal_06_&#236;&#151;&#176;&#235;&#182;&#132;&#237;&#153;&#141;_&#236;&#158;&#145;&#236;&#157;&#128;&#237;&#152;&#149;">
+<path id="&#234;&#189;&#131;&#236;&#158;&#142;_&#235;&#170;&#184;&#236;&#178;&#180;" d="M9 34C17 34 25 27 31 25C39 22 43 28 47 30C51 32 55 32 58 30C53 36 46 39 40 40C28 42 21 35 9 34Z" fill="url(#paint0_linear_0_4)"/>
+<path id="&#234;&#189;&#131;&#236;&#158;&#142;_&#236;&#157;&#128;&#236;&#157;&#128;&#237;&#149;&#156;_&#236;&#160;&#145;&#237;&#158;&#152;" opacity="0.28" d="M23 33C31 31 40 30 48 33C38 32 33 36 23 33Z" fill="#FFFDF8"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="24" y1="20" x2="38" y2="44" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFF5F4"/>
+<stop offset="0.56" stop-color="#F7E0EE"/>
+<stop offset="1" stop-color="#DEBDDA"/>
+</linearGradient>
+</defs>
+</svg>

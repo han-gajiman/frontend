@@ -23,7 +23,6 @@ const SOFTENED_OPACITY = 0.3; // 평소 덮개
 const EVENING_OPACITY = 0.55; // 오늘 돌을 쌓은 저녁
 
 // 돌탑 배경 (STONE-02): 방문한 명소는 일러스트, 아니면 기본 화면. 오늘 쌓으면 저녁 하늘이 서서히 덮입니다.
-// 기본 화면에는 땅이 없어서, 돌탑이 설 자리에 반투명한 땅을 깝니다.
 export function TowerBackground({
   spotId,
   visited,
@@ -50,12 +49,6 @@ export function TowerBackground({
         contentFit="cover"
         contentPosition="bottom"
       />
-      {!showIllustration && (
-        <LinearGradient
-          colors={['rgba(255,255,255,0.45)', 'rgba(255,255,255,0.12)']}
-          style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: groundHeight }}
-        />
-      )}
 
       {bottomScrim && (
         <LinearGradient

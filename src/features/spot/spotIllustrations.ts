@@ -1,7 +1,7 @@
 import type { ImageSource } from 'expo-image';
 
-// 방문 전·명소 일러스트가 아직 없을 때 쓰는 기본 화면
-export const DEFAULT_BACKGROUND: ImageSource = require('../../../assets/spots/default.png');
+// 방문 전·명소가 없을 때 쓰는 기본 화면 (피그마 "안개 낀 파스텔 산맥과 바위 고원")
+export const DEFAULT_BACKGROUND: ImageSource = require('../../../assets/spots/default.jpg');
 
 // 명소 id별 일러스트 (assets/spots, 피그마 "명소 1–10"을 720×1280 JPEG로 내보냄 11/8)
 const ILLUSTRATIONS: Record<number, ImageSource> = {
