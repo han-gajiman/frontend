@@ -5,6 +5,8 @@ import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 
+// 웹 소셜 로그인에서 돌아온 주소(code·id_token)를 화면이 바뀌기 전에 기억해 둡니다
+import "@/features/auth/socialWeb";
 import { useAuthStore } from "@/features/auth/store";
 import { useIntroStore } from "@/features/intro/store";
 import { WEB_APP_MAX_WIDTH } from "@/shared/hooks/useAppSize";
