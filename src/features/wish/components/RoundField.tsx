@@ -44,7 +44,8 @@ export function RoundField({
   return (
     <View className="flex-1">
       {/* 피그마 "소원 풍경" 배경 위로 꽃잎이 흩날립니다. 꽃잎은 돌탑·버튼보다 아래 */}
-      <Image source={WISH_SCENERY} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="bottom" />
+      {/* 그림이 화면보다 길어서 위쪽 벚꽃 가지가 보이게 위에 맞춥니다. (아래 바위는 회고 버튼 뒤라 조금 잘려도 됨) */}
+      <Image source={WISH_SCENERY} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
       <PetalLayer />
 
       <View className="flex-row items-center justify-between px-4 pb-2" style={{ paddingTop: insets.top + 16 }}>
