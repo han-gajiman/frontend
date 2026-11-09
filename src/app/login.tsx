@@ -37,6 +37,8 @@ import { useSubmit } from '@/shared/hooks/useSubmit';
 // 위쪽은 자체 로그인(이메일·비밀번호, 회원가입은 /signup), 아래 동그란 아이콘은 카카오·Google 로그인입니다.
 // 아이디·비밀번호 찾기는 /find-account, 입력칸·버튼은 features/auth/components/AuthForm (회원가입·찾기 화면과 공용)
 
+const CANCELLED = '로그인을 취소했어요.';
+
 export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
   const kakao = useSubmit(loginWithKakao);
@@ -50,7 +52,11 @@ export default function LoginScreen() {
   const [webRedirect] = useState(takeWebSocialRedirect);
   const webRedirectStarted = useRef(false);
   const [notice, setNotice] = useState<string | undefined>(() =>
-    webRedirect && 'error' in webRedirect ? webRedirect.error : undefined,
+    webRedirect && 'error' in webRedirect
+      ? webRedirect.error
+      : webRedirect && 'cancelled' in webRedirect
+        ? CANCELLED
+        : undefined,
   );
 
   // 웹: 카카오·Google 로그인 화면에서 돌아왔으면 이어서 로그인 (처음 한 번)
@@ -68,13 +74,15 @@ export default function LoginScreen() {
   const handleKakao = async () => {
     setNotice(undefined);
     const result = await kakao.run();
-    if (result.ok && result.data) signIn(result.data); // data가 null이면 사용자가 로그인 창을 닫음
+    if (result.ok && result.data) signIn(result.data);
+    else if (result.ok) setNotice(CANCELLED); // 로그인 창을 닫았거나 뒤로 가기로 돌아옴
   };
 
   const handleGoogle = async () => {
     setNotice(undefined);
     const result = await google.run();
     if (result.ok && result.data) signIn(result.data);
+    else if (result.ok) setNotice(CANCELLED);
   };
 
   const handleDev = async () => {
