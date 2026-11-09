@@ -4,11 +4,12 @@ import { Pressable, Text, View } from 'react-native';
 import { logout } from '@/features/auth/api';
 import { signOutSocial } from '@/features/auth/social';
 import { useAuthStore } from '@/features/auth/store';
-import { deleteAccount, getMe } from '@/features/user/api';
+import { changeNickname, deleteAccount, getMe } from '@/features/user/api';
 import type { Me } from '@/features/user/types';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { Screen } from '@/shared/components/Screen';
+import { TextField } from '@/shared/components/TextField';
 import { AsyncContent } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
 import { useSubmit } from '@/shared/hooks/useSubmit';
@@ -50,7 +51,7 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
     <View className="flex-1 justify-between px-6 pb-4">
       <View className="gap-6 pt-2">
         <View className="gap-1">
-          <Text className="text-2xl font-bold text-gray-900">{me.nickname}</Text>
+          <NicknameRow nickname={me.nickname} onChanged={reload} />
           <Text className="text-gray-500">{PROVIDER_LABEL[me.provider]}</Text>
         </View>
 
@@ -74,6 +75,60 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
             <Text className="text-sm text-gray-400 underline">회원 탈퇴</Text>
           </Pressable>
         )}
+      </View>
+    </View>
+  );
+}
+
+// AUTH-04 닉네임 변경. 다른 회원이 쓰는 닉네임이면 서버가 409 NICKNAME_DUPLICATED로 알려줍니다.
+function NicknameRow({ nickname, onChanged }: { nickname: string; onChanged: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(nickname);
+  const save = useSubmit(changeNickname);
+  const trimmed = draft.trim();
+
+  const handleSave = async () => {
+    if (trimmed === nickname) {
+      setEditing(false);
+      return;
+    }
+    if ((await save.run(trimmed)).ok) {
+      setEditing(false);
+      onChanged();
+    }
+  };
+
+  if (!editing) {
+    return (
+      <View className="flex-row items-center gap-3">
+        <Text className="text-2xl font-bold text-gray-900">{nickname}</Text>
+        <Pressable
+          onPress={() => {
+            setDraft(nickname);
+            setEditing(true);
+          }}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="닉네임 변경"
+          className="rounded-full bg-gray-100 px-3 py-1">
+          <Text className="text-sm text-gray-700">변경</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-2">
+      <TextField label="새 닉네임" value={draft} onChangeText={setDraft} placeholder="닉네임" maxLength={30} />
+      <Text className="text-xs text-gray-400">다른 회원과 겹치지 않는 닉네임만 쓸 수 있어요.</Text>
+      <ErrorText error={save.error} />
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Button label="취소" variant="secondary" onPress={() => setEditing(false)} />
+        </View>
+        <View className="flex-1">
+          <Button label="저장" onPress={handleSave} disabled={trimmed.length === 0} loading={save.submitting} />
+        </View>
       </View>
     </View>
   );
