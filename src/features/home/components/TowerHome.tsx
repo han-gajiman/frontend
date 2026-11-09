@@ -25,7 +25,7 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
   const completed = wish.status === 'COMPLETED';
   const evening = wish.stonedToday && !completed;
 
-  const [sheetOpen, setSheetOpen] = useState(false); // 내 돌탑 시트: 돌탑, 공개 아이콘을 누르면 열림
+  const [sheetOpen, setSheetOpen] = useState(false); // 내 돌탑 시트: 돌탑을 누르면 열림 (공개 범위도 여기서)
   const openSheet = () => setSheetOpen(true);
 
   const { groundHeight, onScreenLayout, onTowerLayout } = useGroundHeight(TOWER_GROUND);
@@ -45,7 +45,7 @@ export function TowerHome({ wish, reload }: { wish: CurrentWish; reload: () => v
       {/* 아래쪽은 떠 있는 탭 바가 안전 영역까지 차지하므로 위쪽만 */}
       <SafeAreaView className="flex-1" edges={['top']}>
         <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <HomeHeader visibility={{ isFriends: wish.visibility === 'FRIENDS', onPress: openSheet }}>
+          <HomeHeader>
             <TowerProgress wish={wish} />
           </HomeHeader>
 

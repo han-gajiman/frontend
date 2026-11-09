@@ -7,6 +7,7 @@ import type { Postcard } from '@/features/postcard/types';
 import { createVisit, getSpots } from '@/features/spot/api';
 import { visitCheckNotice } from '@/features/spot/useVisitVerification';
 import { verifyVisit } from '@/features/spot/verifyVisit';
+import { deleteWishPlan } from '@/features/plan/api';
 import { createWish } from '@/features/wish/api';
 import { VisibilityPicker } from '@/features/wish/components/VisibilityPicker';
 import { useWishDraftStore } from '@/features/wish/draftStore';
@@ -46,6 +47,8 @@ export default function ConfirmWishScreen() {
     });
     if (!result.ok) return false;
     setDone(true);
+    // 소원 캘린더 메모에서 불러온 소원이면 메모는 지웁니다 (실패해도 등록은 끝난 것)
+    if (draft.planId !== null) await deleteWishPlan(draft.planId).catch(() => undefined);
     draft.reset();
     return true;
   };
