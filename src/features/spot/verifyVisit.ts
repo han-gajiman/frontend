@@ -5,6 +5,10 @@ import { DEMO_ENABLED } from '@/features/demo/api';
 import { distanceMeters } from './distance';
 import type { Spot } from './types';
 
+// 테스트 기간용: 시간 이동 없이 위치 확인만 건너뜁니다 (실서비스 웹 빌드에서 EXPO_PUBLIC_SKIP_LOCATION=true).
+// 정식 운영 때는 끄세요. 서버는 원래 위치를 받지 않으므로 앱 설정만으로 켜고 끕니다.
+const SKIP_LOCATION = process.env.EXPO_PUBLIC_SKIP_LOCATION === 'true';
+
 const LOCATION_TIMEOUT_MS = 15_000;
 // 웹 구현의 기본값은 처음 받은 위치를 계속 재사용합니다(maximumAge: Infinity). 명소에 도착해서 다시 눌러도 실패하지 않게 항상 새로 받습니다.
 const FRESH_POSITION = { accuracy: Location.Accuracy.Balanced, maximumAge: 0 };
@@ -19,7 +23,7 @@ export type VisitCheck =
 // 위치는 이 함수 안에서만 쓰고 저장하거나 서버로 보내지 않습니다. 그래서 결과에도 좌표를 담지 않습니다.
 export async function verifyVisit(spot: Spot): Promise<VisitCheck> {
   // DEMO-02 시연장은 명소 반경 밖이라, 시연 빌드(EXPO_PUBLIC_DEMO=true)에서는 위치를 묻지 않고 통과시킵니다.
-  if (DEMO_ENABLED) return { status: 'inRange' };
+  if (DEMO_ENABLED || SKIP_LOCATION) return { status: 'inRange' };
 
   try {
     const { granted } = await Location.requestForegroundPermissionsAsync();
