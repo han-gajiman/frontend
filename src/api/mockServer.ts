@@ -226,6 +226,14 @@ export const MOCK_RESET_CODE = '123456';
 
 const today = () => addDays(kstToday(), db.dayOffset);
 
+// AUTH-04 닉네임은 회원끼리 겹치면 안 됩니다. 목 서버에서는 친구들 닉네임과 겹치는지만 봅니다.
+const takenByFriends = (nickname: string) => db.friends.some((f) => f.nickname === nickname.trim());
+function requireFreeNickname(nickname: string): string {
+  const next = nickname.trim();
+  if (takenByFriends(next)) throw new ApiError('NICKNAME_DUPLICATED', '이미 쓰는 닉네임이에요. 다른 닉네임을 적어 주세요.', 409);
+  return next;
+}
+
 // PLAN-03 고정 답변 (목 서버). 다시 추천받기마다 다음 문구
 const FIXED_TODO_SUGGESTIONS = [
   '영어 단어 20개 소리 내어 외우기',
@@ -503,6 +511,9 @@ export const mockServer = {
   signupLocal(body: LocalSignupRequest): LoginResponse {
     const email = body.email.trim().toLowerCase();
     if (localAccounts[email]) throw new ApiError('AUTH_EMAIL_DUPLICATED', '이미 가입된 이메일이에요.', 409);
+    if (Object.values(localAccounts).some((a) => a.nickname === body.nickname.trim()) || takenByFriends(body.nickname)) {
+      throw new ApiError('NICKNAME_DUPLICATED', '이미 쓰는 닉네임이에요. 다른 닉네임을 적어 주세요.', 409);
+    }
     localAccounts[email] = { password: body.password, nickname: body.nickname };
     db = emptyDb(); // 새 회원
     db.nickname = body.nickname;
@@ -545,8 +556,14 @@ export const mockServer = {
     if (!body.agreements.terms || !body.agreements.privacy) {
       throw new ApiError('REQUIRED_AGREEMENT_MISSING', '필수 약관에 동의해 주세요.', 400);
     }
+    db.nickname = requireFreeNickname(body.nickname);
     db.onboarded = true;
-    db.nickname = body.nickname;
+  },
+
+  changeNickname(nickname: string): void {
+    const next = nickname.trim();
+    if (!next || next.length > 30) throw new ApiError('INVALID_INPUT', '닉네임은 1~30자로 적어 주세요.', 400);
+    db.nickname = requireFreeNickname(next);
   },
 
   getMe(): Me {
