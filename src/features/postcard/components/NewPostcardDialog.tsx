@@ -10,7 +10,17 @@ import { STYLE_NAMES, STYLES_PER_SPOT, TOTAL_POSTCARDS, type Postcard } from '..
 import { PostcardCard } from './PostcardCard';
 
 // 방문 인증으로 새 엽서를 받았을 때. 그 명소에서 몇 장, 전체에서 몇 장 모았는지 함께 보여줍니다.
-export function NewPostcardDialog({ postcard, onClose }: { postcard: Postcard; onClose: () => void }) {
+// onLeave: 우체통으로 갈 때 이 창을 띄운 화면(명소 일러스트 전체 화면 등)도 닫아야 하면 넘겨 주세요.
+// 그 화면이 모달이라 닫지 않으면 우체통으로 이동해도 계속 위를 덮고 있습니다.
+export function NewPostcardDialog({
+  postcard,
+  onClose,
+  onLeave,
+}: {
+  postcard: Postcard;
+  onClose: () => void;
+  onLeave?: () => void;
+}) {
   const { data } = useApi(getPostcards);
   const spotCount = data?.filter((p) => p.spotId === postcard.spotId).length;
 
@@ -36,6 +46,7 @@ export function NewPostcardDialog({ postcard, onClose }: { postcard: Postcard; o
         label="우체통에서 보기"
         onPress={() => {
           onClose();
+          onLeave?.();
           router.push('/mailbox?tab=collection');
         }}
       />

@@ -1,3 +1,4 @@
+import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Share, Text, View } from 'react-native';
@@ -18,6 +19,7 @@ export default function InviteScreen() {
   const [invite, setInvite] = useState<Invite | null>(null);
   const [code, setCode] = useState('');
   const [accepted, setAccepted] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleCreate = async () => {
     const result = await create.run();
@@ -30,6 +32,17 @@ export default function InviteScreen() {
       await Share.share({ message: `한 가지만에서 같이 돌탑을 쌓아요! ${invite.inviteUrl}` });
     } catch {
       // 공유를 지원하지 않는 환경(일부 웹 브라우저)에서는 화면의 링크를 직접 복사합니다.
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!invite) return;
+    try {
+      await Clipboard.setStringAsync(invite.inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // 복사를 막은 브라우저에서는 화면의 링크를 길게 눌러 직접 복사합니다.
     }
   };
 
@@ -55,7 +68,14 @@ export default function InviteScreen() {
               <Text className="text-sm text-gray-500">
                 초대 코드 {invite.inviteCode} · {invite.expiresAt.slice(0, 10)}까지
               </Text>
-              <Button label="공유하기" onPress={handleShare} />
+              <View className="flex-row gap-2">
+                <View className="flex-1">
+                  <Button label={copied ? '복사했어요' : '링크 복사'} variant="secondary" onPress={handleCopy} />
+                </View>
+                <View className="flex-1">
+                  <Button label="공유하기" onPress={handleShare} />
+                </View>
+              </View>
             </View>
           ) : (
             <Button label="초대 링크 만들기" onPress={handleCreate} loading={create.submitting} />
