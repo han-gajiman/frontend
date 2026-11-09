@@ -28,6 +28,14 @@ export function getReceivedLetters(): Promise<Page<Letter>> {
   return apiRequest<Page<Letter>>('/postcards/letters/received?size=50');
 }
 
+// GET /postcards/letters/sent — 내가 보낸 엽서 (나에게 보낸 것 포함), 최신순
+export function getSentLetters(): Promise<Page<Letter>> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.getSentLetters());
+  }
+  return apiRequest<Page<Letter>>('/postcards/letters/sent?size=50');
+}
+
 // PATCH /postcards/letters/{id}/read
 export function markLetterRead(letterId: number): Promise<void> {
   if (USE_MOCK) {
