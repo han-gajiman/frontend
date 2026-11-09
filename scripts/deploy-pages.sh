@@ -5,6 +5,8 @@
 set -euo pipefail
 
 API_URL="${API_URL:-https://hangajiman.duckdns.org/api/v1}"
+# 테스트 기간에는 방문 인증 위치 확인을 건너뜀. 정식 운영 때는 SKIP_LOCATION=false ./scripts/deploy-pages.sh
+SKIP_LOCATION="${SKIP_LOCATION:-true}"
 REPO="https://github.com/han-gajiman/han-gajiman.github.io.git"
 OUT=dist-pages
 WORK="$(mktemp -d)"
@@ -12,6 +14,7 @@ WORK="$(mktemp -d)"
 rm -rf "$OUT"
 # 시간 이동 버튼은 끕니다 (서버 시계가 모든 회원에게 함께 바뀜)
 EXPO_PUBLIC_USE_MOCK=false EXPO_PUBLIC_API_URL="$API_URL" EXPO_PUBLIC_DEMO=false EXPO_PUBLIC_DEV_LOGIN=false \
+  EXPO_PUBLIC_SKIP_LOCATION="$SKIP_LOCATION" \
   npx expo export -p web --output-dir "$OUT"
 
 # 한 페이지 앱이라 /invite/코드 같은 주소로 바로 들어와도 앱이 뜨게 404.html = index.html
