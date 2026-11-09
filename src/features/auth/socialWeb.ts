@@ -26,9 +26,32 @@ const initialLocation = isWeb ? { search: window.location.search, hash: window.l
 // 로그인 화면이 여러 번 그려져도(개발 모드 등) 같은 결과를 돌려주고, 한 번 처리하면 비웁니다.
 let redirectResult: WebSocialRedirect | null | undefined;
 
+const hasPending = () => {
+  try {
+    return sessionStorage.getItem(PENDING_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+
 // 카카오·Google에서 막 돌아온 페이지인지 (인트로를 건너뛰고 바로 로그인 화면을 띄우는 데 씀)
+// 로그인 화면에서 뒤로 가기로 돌아와 페이지가 새로 뜬 경우(주소에 state 없이 기록만 남음)도 포함합니다.
 export const returnedFromSocialLogin =
-  !!initialLocation && /[?&#]state=/.test(initialLocation.search + initialLocation.hash);
+  !!initialLocation && (/[?&#]state=/.test(initialLocation.search + initialLocation.hash) || hasPending());
+
+// 카카오·Google 로그인 화면으로 떠난 뒤 뒤로 가기로 돌아오면 브라우저가 이전 화면을 그대로 되살립니다(bfcache).
+// 그때 null(취소)로 끝내서 버튼 로딩이 풀리게 합니다.
+function untilBack(): Promise<null> {
+  return new Promise((resolve) => {
+    const onShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      window.removeEventListener('pageshow', onShow);
+      takePending();
+      resolve(null);
+    };
+    window.addEventListener('pageshow', onShow);
+  });
+}
 
 const redirectUri = () => `${window.location.origin}/login`;
 
@@ -56,18 +79,18 @@ function takePending(): Pending | null {
   }
 }
 
-// 카카오 로그인 화면으로 이동합니다. 페이지를 떠나므로 돌아오지 않습니다.
-export async function startKakaoWebLogin(): Promise<never> {
+// 카카오 로그인 화면으로 이동합니다. 뒤로 가기로 돌아오면 null(취소)
+export async function startKakaoWebLogin(): Promise<null> {
   const state = randomString();
   const query = `redirectUri=${encodeURIComponent(redirectUri())}&state=${state}`;
   const { url } = await apiRequest<{ url: string }>(`/auth/kakao/web/authorize-url?${query}`);
   savePending({ provider: 'KAKAO', state });
   window.location.assign(url);
-  return new Promise<never>(() => {}); // 이동하는 동안 버튼은 계속 로딩
+  return untilBack(); // 이동하는 동안 버튼은 계속 로딩
 }
 
-// Google 로그인 화면으로 이동합니다. ID 토큰을 주소 # 뒤로 돌려받습니다.
-export function startGoogleWebLogin(): Promise<never> {
+// Google 로그인 화면으로 이동합니다. ID 토큰을 주소 # 뒤로 돌려받습니다. 뒤로 가기로 돌아오면 null(취소)
+export function startGoogleWebLogin(): Promise<null> {
   if (!GOOGLE_WEB_CLIENT_ID) throw new ApiError('SOCIAL_LOGIN_UNAVAILABLE', 'Google 로그인 키가 설정되지 않았어요.');
   const state = randomString();
   const nonce = randomString();
@@ -82,7 +105,7 @@ export function startGoogleWebLogin(): Promise<never> {
     prompt: 'select_account',
   });
   window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
-  return new Promise<never>(() => {});
+  return untilBack();
 }
 
 // ID 토큰 안의 nonce (서명 검증은 서버가 Google에 맡기고, 여기서는 우리가 보낸 요청인지만 확인)
@@ -113,7 +136,10 @@ function readRedirect(): WebSocialRedirect | null {
   const query = new URLSearchParams(initialLocation.search);
   const hash = new URLSearchParams(initialLocation.hash.replace(/^#/, ''));
   const state = query.get('state') ?? hash.get('state');
-  if (!state) return null;
+  if (!state) {
+    // 뒤로 가기로 돌아와 페이지가 새로 뜬 경우: 로그인 기록만 남아 있음 → 취소
+    return takePending() ? { cancelled: true } : null;
+  }
 
   // 주소에 남은 코드·토큰은 바로 지웁니다 (새로고침·공유 방지)
   window.history.replaceState(null, '', window.location.pathname);
