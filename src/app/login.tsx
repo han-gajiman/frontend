@@ -29,6 +29,9 @@ import {
   loginWithKakao,
 } from '@/features/auth/api';
 import { clearWebSocialRedirect, takeWebSocialRedirect } from '@/features/auth/socialWeb';
+import { DEMO_ENABLED } from '@/features/demo/api';
+import { USE_MOCK } from '@/api/mock';
+import { MOCK_DEMO_ACCOUNT } from '@/api/mockServer';
 import { useAuthStore } from '@/features/auth/store';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { useSubmit } from '@/shared/hooks/useSubmit';
@@ -38,6 +41,7 @@ import { useSubmit } from '@/shared/hooks/useSubmit';
 // 아이디·비밀번호 찾기는 /find-account, 입력칸·버튼은 features/auth/components/AuthForm (회원가입·찾기 화면과 공용)
 
 const CANCELLED = '로그인을 취소했어요.';
+const DEMO_PREFILL = USE_MOCK && DEMO_ENABLED ? MOCK_DEMO_ACCOUNT : null;
 
 export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
@@ -47,8 +51,9 @@ export default function LoginScreen() {
   const local = useSubmit(loginWithEmail);
   const webSocial = useSubmit(finishWebSocialLogin);
   const submitting = kakao.submitting || google.submitting || dev.submitting || local.submitting || webSocial.submitting;
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // 데모 웹(목 서버 + 시연 모드)은 데모 계정을 미리 채워서 로그인 버튼만 누르면 들어가게 합니다.
+  const [email, setEmail] = useState(DEMO_PREFILL?.email ?? '');
+  const [password, setPassword] = useState(DEMO_PREFILL?.password ?? '');
   const [webRedirect] = useState(takeWebSocialRedirect);
   const webRedirectStarted = useRef(false);
   const [notice, setNotice] = useState<string | undefined>(() =>

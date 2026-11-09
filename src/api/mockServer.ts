@@ -200,9 +200,12 @@ const emptyDb = () => ({
 
 let db = emptyDb();
 
+// 데모 웹 로그인 화면에 미리 채워 두는 계정 (목 서버 전용)
+export const MOCK_DEMO_ACCOUNT = { email: 'demo@hangajiman.app', password: 'password123' };
+
 // 자체 로그인 계정 (이메일 → 비밀번호·닉네임). 목 서버라 평문으로 둡니다.
 const localAccounts: Record<string, { password: string; nickname: string }> = {
-  'demo@hangajiman.app': { password: 'password123', nickname: '소원지기' },
+  [MOCK_DEMO_ACCOUNT.email]: { password: MOCK_DEMO_ACCOUNT.password, nickname: '소원지기' },
 };
 // 비밀번호 찾기 인증코드: 목 모드에서는 메일 없이 항상 이 코드
 export const MOCK_RESET_CODE = '123456';
