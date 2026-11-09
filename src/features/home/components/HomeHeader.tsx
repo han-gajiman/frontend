@@ -10,14 +10,9 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const ICON_COLOR = '#ffffff'; // 배경 위쪽은 언제나 어두운 하늘
 
-// 홈 상단: 왼쪽에 진행 정보, 오른쪽에 우체통 · 알림 · 공개 범위 · 내 정보 아이콘 (받은 엽서 알림은 알림함에서)
-export function HomeHeader({
-  children,
-  visibility,
-}: {
-  children?: ReactNode; // 진행 정보 (돌탑이 없으면 비어 있음)
-  visibility?: { isFriends: boolean; onPress: () => void }; // 공개 범위 아이콘 (누르면 내 돌탑 시트)
-}) {
+// 홈 상단: 왼쪽에 진행 정보, 오른쪽에 우체통 · 알림 · 소원 캘린더 · 내 정보 아이콘 (받은 엽서 알림은 알림함에서)
+// 공개 범위는 돌탑을 누르면 열리는 "내 돌탑" 시트에서 바꿉니다.
+export function HomeHeader({ children }: { children?: ReactNode /* 진행 정보 (돌탑이 없으면 비어 있음) */ }) {
   // 알림 점: 최근 알림 중 안 읽은 게 있으면 표시 (화면에 돌아올 때마다 다시 확인)
   const notifications = useApi(getNotifications);
   const hasUnread = notifications.data?.content.some((n) => !n.isRead) ?? false;
@@ -33,13 +28,7 @@ export function HomeHeader({
           dot={hasUnread}
           onPress={() => router.push('/notifications')}
         />
-        {visibility && (
-          <HeaderIcon
-            name={visibility.isFriends ? 'people-outline' : 'lock-closed-outline'}
-            label={`공개 범위: ${visibility.isFriends ? '친구 공개' : '나만 보기'}, 내 돌탑 열기`}
-            onPress={visibility.onPress}
-          />
-        )}
+        <HeaderIcon name="calendar-outline" label="소원 캘린더" onPress={() => router.push('/planner')} />
         <HeaderIcon name="person-circle-outline" label="내 정보" onPress={() => router.push('/me')} />
       </View>
     </View>

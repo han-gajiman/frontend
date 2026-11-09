@@ -55,6 +55,7 @@ export default function RootLayout() {
           <Stack.Screen name="notifications" />
           <Stack.Screen name="cheers" />
           <Stack.Screen name="mailbox" />
+          <Stack.Screen name="planner" />
         </Stack.Protected>
 
         {/* 초대 링크는 로그인 전에도 열려야 해서 보호 밖에 둡니다 (화면 안에서 로그인 여부 확인) */}

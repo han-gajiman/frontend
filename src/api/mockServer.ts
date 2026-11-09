@@ -11,6 +11,15 @@ import type {
 } from '@/features/auth/types';
 import type { AcceptedFriend, Cheer, Friend, Invite } from '@/features/friend/types';
 import type { AppNotification, NotificationType } from '@/features/notification/types';
+import {
+  type PlanCalendar,
+  type PlanTodo,
+  TODO_SUGGESTION_LIMIT,
+  TODOS_PER_DAY,
+  type TodoSuggestion,
+  WISH_PLAN_LIMIT,
+  type WishPlan,
+} from '@/features/plan/types';
 import type { Letter, Postcard, SendLetterRequest } from '@/features/postcard/types';
 import type { Spot, VisitResponse } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneItem, StoneType } from '@/features/stone/types';
@@ -191,6 +200,10 @@ const emptyDb = () => ({
   spotVisits: [] as { spotId: number; visitedOn: string; wishId: number | null }[], // 방문 인증 (지도의 별). 돌탑마다 명소별 한 번
   wishes: [] as MockWish[],
   stones: [] as MockStone[],
+  todos: [] as PlanTodo[], // PLAN-02 날짜별 할 일
+  wishPlans: [] as WishPlan[], // PLAN-01 앞으로 할 소원 메모
+  todoSuggestionUse: { date: '', count: 0 }, // PLAN-03 할 일 추천 하루 횟수 (소원 추천과 따로)
+  todoSuggestionTurn: 0,
   friends: [] as MockFriend[],
   notifications: [] as AppNotification[], // 최신이 앞
   cheers: {} as Record<number, Cheer[]>, // wishId → 응원 (최신이 앞)
@@ -212,6 +225,16 @@ const localAccounts: Record<string, { password: string; nickname: string }> = {
 export const MOCK_RESET_CODE = '123456';
 
 const today = () => addDays(kstToday(), db.dayOffset);
+
+// PLAN-03 고정 답변 (목 서버). 다시 추천받기마다 다음 문구
+const FIXED_TODO_SUGGESTIONS = [
+  '영어 단어 20개 소리 내어 외우기',
+  '어제 외운 단어 10개 복습하기',
+  '관심 회사 채용 공고 1개 읽기',
+  '알고리즘 문제 1개 풀고 풀이 정리하기',
+  '포트폴리오 프로젝트 커밋 1개 남기기',
+  '기술 블로그 글 1편 읽고 요약하기',
+];
 
 // WISH-02 고정 답변. 실제 AI가 붙기 전까지 어떤 소원을 적어도 이 답변을 번갈아 보여줍니다.
 const SUGGESTION_LIMIT_PER_DAY = 10;
@@ -256,7 +279,8 @@ function seed() {
   // 기존 회원: 첫 번째 소원(1년 전) 돌탑 12개 + 1년 회고, 두 번째 소원 돌탑 6개 + 13일째 진행 중인 돌탑 1개
   db.onboarded = true;
   db.nickname = '소원지기';
-  const currentStart = addDays(today(), -12);
+  const fresh = MOCK_SCENARIO === 'fresh'; // 처음 쌓는 날: 진행 중 돌탑이 오늘 시작, 돌 0개
+  const currentStart = fresh ? today() : addDays(today(), -12);
   db.journeyStartedOn = addDays(today(), -569); // 1년(365일) 전 묶음이 끝나고 204일째
   db.yearReviews[1] = '하루를 미루지 않는 사람이 되었어요. 작게라도 매일 쌓으면 된다는 걸 알았고, 올해도 그렇게 해 보려고 해요.';
   // 첫 번째 소원 때 호미곶과 영덕에 한 번씩 다녀옴. 진행 중인 돌탑의 영덕 배경도 이 방문으로 열립니다.
@@ -358,7 +382,23 @@ function seed() {
     result: null,
     reflection: null,
   });
-  for (let i = 0; i < 12; i++) addStone(10, addDays(currentStart, i), i % 2 ? '영어 단어 20개 외움' : null);
+  if (!fresh) for (let i = 0; i < 12; i++) addStone(10, addDays(currentStart, i), i % 2 ? '영어 단어 20개 외움' : null);
+
+  // 소원 캘린더: 어제 끝낸 할 일, 오늘·앞으로 할 일, 이번 돌탑이 끝난 다음 날 시작할 소원 메모
+  const todo = (offset: number, content: string, done = false) =>
+    db.todos.push({ todoId: db.nextId++, date: addDays(today(), offset), content, done });
+  todo(-1, '영어 단어 20개 외우기', true);
+  todo(-1, '이력서 초안 쓰기', true);
+  todo(0, '영어 단어 20개 외우기');
+  todo(0, '알고리즘 문제 1개 풀기');
+  todo(1, '포트폴리오 README 다듬기');
+  todo(3, '모의 면접 영상 보기');
+  db.wishPlans.push({
+    planId: db.nextId++,
+    content: '하프 마라톤 완주하기',
+    startDate: addDays(currentStart, TOWER_DAYS),
+    endDate: addDays(currentStart, TOWER_DAYS * 2 - 1),
+  });
 
   // 친구 3명: 콕 찌를 수 있는 친구 / 오늘 이미 쌓은 친구 / 비공개 돌탑 친구
   db.friends.push(
@@ -567,7 +607,7 @@ export const mockServer = {
     return { wishId: wish.id, startDate, endDate };
   },
 
-  createStone(wishId: number, content: string | null): CreateStoneResponse {
+  createStone(wishId: number, content: string | null, doneTodoIds: number[] = []): CreateStoneResponse {
     runScheduler();
     const wish = findWish(wishId);
     if (wish.status !== 'ACTIVE') throw new ApiError('WISH_NOT_ACTIVE', '진행 중인 돌탑이 아니에요.', 400);
@@ -576,6 +616,10 @@ export const mockServer = {
     }
 
     const stone = addStone(wishId, today(), content);
+    // PLAN-02 기록에 넣은 오늘 할 일은 완료 (오늘 것만)
+    db.todos.forEach((t) => {
+      if (doneTodoIds.includes(t.todoId) && t.date === today()) t.done = true;
+    });
     return { stoneId: stone.id, stoneDate: stone.stoneDate, type: stone.type, stoneCount: stoneCount(wishId) };
   },
 
@@ -593,6 +637,99 @@ export const mockServer = {
     const wish = db.wishes.find((w) => w.id === wishId);
     if (!wish) throw new ApiError('WISH_NOT_FOUND', '돌탑을 찾을 수 없어요.', 404);
     wish.visibility = visibility;
+  },
+
+  // ---- PLAN-01~03 소원 캘린더 ----
+
+  getPlanCalendar(requested?: string): PlanCalendar {
+    runScheduler();
+    const month = requested ?? today().slice(0, 7);
+    const first = `${month}-01`;
+    const last = addDays(addDays(first, 32).slice(0, 8) + '01', -1); // 그 달 마지막 날
+    const overlaps = (start: string, end: string) => start <= last && end >= first;
+    return {
+      month,
+      today: today(),
+      wishes: db.wishes
+        .filter((w) => overlaps(w.startDate, w.endDate))
+        .map((w) => ({ wishId: w.id, content: w.content, startDate: w.startDate, endDate: w.endDate, status: w.status })),
+      wishPlans: db.wishPlans.filter((p) => overlaps(p.startDate, p.endDate)),
+      todos: db.todos.filter((t) => t.date >= first && t.date <= last),
+    };
+  },
+
+  getTodayTodos(): PlanTodo[] {
+    return db.todos.filter((t) => t.date === today());
+  },
+
+  addTodo(date: string, content: string): PlanTodo {
+    const text = content.trim();
+    if (!text) throw new ApiError('INVALID_INPUT', '할 일을 적어 주세요.', 400);
+    if (date < today()) throw new ApiError('PLAN_PAST_DATE', '지난 날짜에는 적을 수 없어요.', 400);
+    if (db.todos.filter((t) => t.date === date).length >= TODOS_PER_DAY) {
+      throw new ApiError('PLAN_TODO_LIMIT', `하루에 ${TODOS_PER_DAY}개까지 적을 수 있어요.`, 400);
+    }
+    const todo = { todoId: db.nextId++, date, content: text, done: false };
+    db.todos.push(todo);
+    return todo;
+  },
+
+  updateTodo(todoId: number, change: { done?: boolean }): void {
+    const todo = db.todos.find((t) => t.todoId === todoId);
+    if (!todo) throw new ApiError('PLAN_TODO_NOT_FOUND', '할 일을 찾을 수 없어요.', 404);
+    if (todo.date < today()) throw new ApiError('PLAN_PAST_DATE', '지난 날짜는 바꿀 수 없어요.', 400);
+    if (change.done !== undefined) todo.done = change.done;
+  },
+
+  deleteTodo(todoId: number): void {
+    const todo = db.todos.find((t) => t.todoId === todoId);
+    if (!todo) throw new ApiError('PLAN_TODO_NOT_FOUND', '할 일을 찾을 수 없어요.', 404);
+    if (todo.date < today()) throw new ApiError('PLAN_PAST_DATE', '지난 날짜는 바꿀 수 없어요.', 400);
+    db.todos = db.todos.filter((t) => t.todoId !== todoId);
+  },
+
+  suggestTodo(date: string): TodoSuggestion {
+    runScheduler();
+    const wish = db.wishes.find((w) => w.status === 'ACTIVE');
+    if (!wish || date < wish.startDate || date > wish.endDate) {
+      throw new ApiError('PLAN_SUGGEST_OUT_OF_TOWER', '진행 중인 돌탑 기간에만 추천받을 수 있어요.', 400);
+    }
+    if (db.todoSuggestionUse.date !== today()) db.todoSuggestionUse = { date: today(), count: 0 };
+    if (db.todoSuggestionUse.count >= TODO_SUGGESTION_LIMIT) {
+      throw new ApiError('AI_RATE_LIMIT', '오늘 할 일 추천을 다 썼어요.', 429);
+    }
+    db.todoSuggestionUse.count++;
+    const content = FIXED_TODO_SUGGESTIONS[db.todoSuggestionTurn++ % FIXED_TODO_SUGGESTIONS.length];
+    return { content, remaining: TODO_SUGGESTION_LIMIT - db.todoSuggestionUse.count, fallback: false };
+  },
+
+  getWishPlans(): WishPlan[] {
+    return [...db.wishPlans].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  },
+
+  addWishPlan(content: string, startDate: string): WishPlan {
+    const text = content.trim();
+    if (!text) throw new ApiError('INVALID_INPUT', '소원을 적어 주세요.', 400);
+    if (startDate < today()) throw new ApiError('PLAN_PAST_DATE', '지난 날짜에는 적을 수 없어요.', 400);
+    // 30일 동안 소원은 하나: 진행 중 돌탑 기간, 다른 메모의 30일과 겹치면 안 됨
+    const active = db.wishes.find((w) => w.status === 'ACTIVE');
+    if (active && startDate <= active.endDate) {
+      throw new ApiError('PLAN_WISH_IN_TOWER', '진행 중인 돌탑이 끝난 뒤 날짜에만 적을 수 있어요.', 400);
+    }
+    const endDate = addDays(startDate, TOWER_DAYS - 1);
+    if (db.wishPlans.some((p) => p.startDate <= endDate && p.endDate >= startDate)) {
+      throw new ApiError('PLAN_WISH_OVERLAP', '다른 소원 메모의 30일과 겹쳐요.', 400);
+    }
+    if (db.wishPlans.length >= WISH_PLAN_LIMIT) {
+      throw new ApiError('PLAN_WISH_LIMIT', `소원 메모는 ${WISH_PLAN_LIMIT}개까지 적을 수 있어요.`, 400);
+    }
+    const plan = { planId: db.nextId++, content: text, startDate, endDate: addDays(startDate, TOWER_DAYS - 1) };
+    db.wishPlans.push(plan);
+    return plan;
+  },
+
+  deleteWishPlan(planId: number): void {
+    db.wishPlans = db.wishPlans.filter((p) => p.planId !== planId);
   },
 
   suggestForWish(content: string): WishSuggestion {

@@ -11,7 +11,8 @@ import { ApiError } from './client';
 
 export const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 
-export type MockScenario = 'normal' | 'empty' | 'error' | 'offline' | 'slow';
+// fresh: normal과 같지만 진행 중 돌탑이 오늘 시작해서 돌 0개 (처음 쌓는 날 시연)
+export type MockScenario = 'normal' | 'fresh' | 'empty' | 'error' | 'offline' | 'slow';
 
 export const MOCK_SCENARIO = (process.env.EXPO_PUBLIC_MOCK_SCENARIO ?? 'normal') as MockScenario;
 
