@@ -186,6 +186,7 @@ const emptyDb = () => ({
   suggestionUse: { date: '', count: 0 }, // AI 추천 하루 횟수
   postcards: [] as Postcard[], // 내 엽서함
   letters: [] as (Omit<Letter, 'fromMe' | 'toNickname'> & { toMe: boolean })[], // 받은 엽서 (최신이 앞)
+  sentLetters: [] as Letter[], // 보낸 엽서 (나에게 보낸 것 포함, 최신이 앞)
   suggestionTurn: 0, // 다시 추천받기마다 다음 고정 답변으로
   spotVisits: [] as { spotId: number; visitedOn: string; wishId: number | null }[], // 방문 인증 (지도의 별). 돌탑마다 명소별 한 번
   wishes: [] as MockWish[],
@@ -281,6 +282,20 @@ function seed() {
       toMe: false,
       read: false,
       sentAt: new Date().toISOString(),
+    },
+  ];
+  db.sentLetters = [
+    {
+      letterId: 802,
+      spotId: 3,
+      spotName: '호미곶 해맞이광장',
+      style: 2,
+      message: '지기야 호미곶 손 조형물 진짜 크더라. 다음엔 같이 가자!',
+      fromNickname: db.nickname || '소원지기',
+      toNickname: '지기',
+      fromMe: true,
+      read: true,
+      sentAt: `${addDays(today(), -3)}T18:20:00+09:00`,
     },
   ];
 
@@ -684,6 +699,18 @@ export const mockServer = {
     const friend = body.receiverId === undefined ? null : db.friends.find((f) => f.id === body.receiverId);
     if (body.receiverId !== undefined && !friend) throw new ApiError('FRIEND_NOT_FOUND', '친구를 찾을 수 없어요.', 404);
     const letterId = db.nextId++;
+    db.sentLetters.unshift({
+      letterId,
+      spotId: body.spotId,
+      spotName: spotOf(body.spotId).name,
+      style: body.style,
+      message,
+      fromNickname: db.nickname,
+      toNickname: friend ? friend.nickname : db.nickname,
+      fromMe: true,
+      read: true,
+      sentAt: new Date().toISOString(),
+    });
     // 친구에게 보낸 엽서는 친구 우체통으로 가므로 내 받은 엽서에는 나에게 보낸 것만 쌓입니다.
     if (!friend) {
       db.letters.unshift({
@@ -704,6 +731,10 @@ export const mockServer = {
   getReceivedLetters(): Page<Letter> {
     const content = db.letters.map(({ toMe, ...letter }) => ({ ...letter, fromMe: toMe, toNickname: db.nickname }));
     return { content, page: 0, size: 50, hasNext: false };
+  },
+
+  getSentLetters(): Page<Letter> {
+    return { content: db.sentLetters, page: 0, size: 50, hasNext: false };
   },
 
   markLetterRead(letterId: number): void {
