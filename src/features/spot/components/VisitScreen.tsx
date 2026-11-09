@@ -252,7 +252,7 @@ export function VisitScreen({
               )}
             </View>
           )}
-          {gift && <NewPostcardDialog postcard={gift} onClose={() => setGift(null)} />}
+          {gift && <NewPostcardDialog postcard={gift} onClose={() => setGift(null)} onLeave={onClose} />}
         </View>
       </View>
     </Modal>
