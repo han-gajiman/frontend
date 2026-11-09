@@ -17,15 +17,21 @@ type ScreenProps = {
 };
 
 // 모든 화면의 기본 틀: 안전 영역 + 간단한 헤더 + 하단 버튼 영역
+// 뒤로 가기. 웹에서 새로고침하거나 주소로 바로 들어오면 앱 안의 이동 기록이 없어서, 그때는 홈(로그인 전이면 로그인)으로 갑니다.
+function goBack() {
+  if (router.canGoBack()) router.back();
+  else router.dismissTo('/');
+}
+
 export function Screen({ title, showBack = false, onBack, footer, scroll = true, children }: ScreenProps) {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
       {(title || showBack) && (
         <View className="h-12 flex-row items-center px-4">
-          {showBack && (onBack || router.canGoBack()) && (
+          {showBack && (
             <Pressable
-              onPress={onBack ?? (() => router.back())}
+              onPress={onBack ?? goBack}
               hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel="뒤로"
