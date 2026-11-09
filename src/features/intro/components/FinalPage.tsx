@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { FinalPageData } from '../pages';
 import { DescriptionText, DesignCanvas, LayerImage, TitleText } from './DesignCanvas';
+import { Drift, SunsetGlow } from './ambient';
 import { FadeUp, PressScale, Twinkle } from './motion';
 import { Stone } from './StonePage';
 
@@ -38,7 +39,15 @@ export function FinalPage({
           locations={data.gradient.locations}
           style={StyleSheet.absoluteFill}
         />
-        <LayerImage layer={data.decoration} />
+        {/* 노을이 은은하게 밝아졌다 어두워지고, 하늘 장식(유성·산·구름)이 아주 느리게 흐름 */}
+        <SunsetGlow
+          active={active}
+          colors={['rgba(255,196,160,0)', 'rgba(255,190,150,0.9)', 'rgba(255,196,160,0)']}
+          style={StyleSheet.absoluteFill}
+        />
+        <Drift active={active} range={[-6, 6]} period={24000} style={StyleSheet.absoluteFill}>
+          <LayerImage layer={data.decoration} />
+        </Drift>
 
         <FadeUp active={active} delay={150} duration={700} distance={0} style={StyleSheet.absoluteFill}>
           <LayerImage layer={data.map} />

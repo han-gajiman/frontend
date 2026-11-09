@@ -30,6 +30,10 @@ export type StonePageData = {
   stoneMotion: 'rise' | 'drop';
   stoneDuration: number;
   stoneInterval: number;
+  // 2차 연출: 배경이 좌우로 흐르는 범위(px, 그림이 프레임 밖으로 남는 만큼만), 유성, 돌탑 주위 빛 궤도
+  artDrift: [number, number];
+  meteor?: { from: { x: number; y: number }; to: { x: number; y: number } };
+  orbit?: { center: { x: number; y: number }; radius: { x: number; y: number } };
 };
 
 // 3장: 경북 지도와 명소, 돌탑, 시작 버튼
@@ -87,6 +91,8 @@ export const STONE_PAGES: StonePageData[] = [
     stoneMotion: 'rise',
     stoneDuration: 800,
     stoneInterval: 0,
+    artDrift: [-14, -2], // 그림 412px, 프레임 393px
+    meteor: { from: { x: 395, y: 58 }, to: { x: 262, y: 132 } }, // 오른쪽 위 하늘
   },
   {
     frame: STONE_FRAME,
@@ -117,6 +123,9 @@ export const STONE_PAGES: StonePageData[] = [
     stoneMotion: 'drop',
     stoneDuration: 500,
     stoneInterval: 700,
+    artDrift: [-12, 10], // 그림 -13 ~ 410px
+    // 그림에 그려진 왼쪽 궤도 선(35,585 → 110,540)을 지나는 타원. 뒤쪽(위)은 흐려져 돌탑 뒤로 도는 것처럼 보임
+    orbit: { center: { x: 195, y: 575 }, radius: { x: 160, y: 40 } },
   },
 ];
 
