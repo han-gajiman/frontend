@@ -2,6 +2,7 @@ import type { WishStatus } from '@/features/wish/types';
 
 // PLAN-01~03 소원 캘린더 (API 명세서 /plans)
 
+export const TOWER_DAYS = 30; // 돌탑 하나 = 30일 (소원 메모도 30일로 표시)
 export const TODO_MAX_LENGTH = 40;
 export const TODOS_PER_DAY = 5;
 export const WISH_PLAN_MAX_LENGTH = 100;

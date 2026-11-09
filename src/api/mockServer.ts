@@ -695,6 +695,15 @@ export const mockServer = {
     const text = content.trim();
     if (!text) throw new ApiError('INVALID_INPUT', '소원을 적어 주세요.', 400);
     if (startDate < today()) throw new ApiError('PLAN_PAST_DATE', '지난 날짜에는 적을 수 없어요.', 400);
+    // 30일 동안 소원은 하나: 진행 중 돌탑 기간, 다른 메모의 30일과 겹치면 안 됨
+    const active = db.wishes.find((w) => w.status === 'ACTIVE');
+    if (active && startDate <= active.endDate) {
+      throw new ApiError('PLAN_WISH_IN_TOWER', '진행 중인 돌탑이 끝난 뒤 날짜에만 적을 수 있어요.', 400);
+    }
+    const endDate = addDays(startDate, TOWER_DAYS - 1);
+    if (db.wishPlans.some((p) => p.startDate <= endDate && p.endDate >= startDate)) {
+      throw new ApiError('PLAN_WISH_OVERLAP', '다른 소원 메모의 30일과 겹쳐요.', 400);
+    }
     if (db.wishPlans.length >= WISH_PLAN_LIMIT) {
       throw new ApiError('PLAN_WISH_LIMIT', `소원 메모는 ${WISH_PLAN_LIMIT}개까지 적을 수 있어요.`, 400);
     }

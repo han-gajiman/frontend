@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useBottomTabBarHeight } from 'expo-router/js-tabs';
-import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, Text, TextInput, type TextInputInstance, View } from 'react-native';
 
 import { DEMO_ENABLED } from '@/features/demo/api';
 import { DemoTimeTravel } from '@/features/demo/components/DemoTimeTravel';
@@ -33,30 +33,44 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   // 쌓기 성공 직후 새로 불러오기 전까지 오늘의 돌을 숨깁니다. (쌓은 시점의 돌 개수로 기억해서, 다음 날이 되면 다시 보임)
   const [stackedAt, setStackedAt] = useState<number | null>(null);
   const stone = useSubmit(createStone);
-  // PLAN-02 소원 캘린더에 적어 둔 오늘 할 일. 누르면 기록에 붙고, 쌓으면 완료 체크
+  // PLAN-02 소원 캘린더에 적어 둔 오늘 할 일. 기록 칸을 누르면 아래로 펼쳐지고, 하나 고르면 기록에 붙고 닫힙니다.
+  // 쌓을 때 기록에 남아 있는 할 일은 완료 체크
   const todayTodos = useApi(getTodayTodos);
-  const [pickedTodoIds, setPickedTodoIds] = useState<number[]>([]);
-  const openTodos = (todayTodos.data ?? []).filter((t) => !t.done);
+  const [pickedTodos, setPickedTodos] = useState<PlanTodo[]>([]);
+  const [listOpen, setListOpen] = useState(false);
+  const inputRef = useRef<TextInputInstance>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const choices = (todayTodos.data ?? []).filter((t) => !t.done && !pickedTodos.some((p) => p.todoId === t.todoId));
 
-  const toggleTodo = (todo: PlanTodo) => {
-    if (pickedTodoIds.includes(todo.todoId)) {
-      setPickedTodoIds(pickedTodoIds.filter((id) => id !== todo.todoId));
-      setPractice(removePiece(practice, todo.content));
-      return;
-    }
+  const pickTodo = (todo: PlanTodo) => {
     const next = practice.trim() ? `${practice.trim()}, ${todo.content}` : todo.content;
-    if (next.length > PRACTICE_MAX_LENGTH) return; // 100자를 넘으면 붙이지 않음
-    setPickedTodoIds([...pickedTodoIds, todo.todoId]);
-    setPractice(next);
+    if (next.length <= PRACTICE_MAX_LENGTH) {
+      // 100자를 넘으면 붙이지 않음
+      setPickedTodos([...pickedTodos, todo]);
+      setPractice(next);
+    }
+    setListOpen(false);
+    inputRef.current?.blur();
+  };
+
+  // 입력칸에서 포커스가 빠지면 닫음. 목록을 누르는 사이 먼저 닫히지 않게 조금 기다립니다(웹은 누르기 전에 blur가 옴).
+  const handleBlur = () => {
+    closeTimer.current = setTimeout(() => setListOpen(false), 150);
+  };
+  const handleFocus = () => {
+    clearTimeout(closeTimer.current);
+    setListOpen(true);
   };
   const tabBarHeight = useBottomTabBarHeight(); // 떠 있는 탭 바에 가리지 않게
 
   const handleDrop = async () => {
-    const result = await stone.run(wish.wishId, practice.trim(), pickedTodoIds);
+    // 고른 뒤 기록에서 지운 할 일은 완료로 치지 않음
+    const doneIds = pickedTodos.filter((t) => practice.includes(t.content)).map((t) => t.todoId);
+    const result = await stone.run(wish.wishId, practice.trim(), doneIds);
     if (!result.ok) return false;
     setStackedAt(wish.stoneCount);
     setPractice('');
-    setPickedTodoIds([]);
+    setPickedTodos([]);
     todayTodos.reload();
     reload();
     return true;
@@ -76,33 +90,31 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
       ) : (
         <>
           <TextInput
+            ref={inputRef}
             value={practice}
             onChangeText={setPractice}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder="오늘 하루는 어땠나요?"
             placeholderTextColor="#78716c"
             maxLength={PRACTICE_MAX_LENGTH}
             accessibilityLabel="오늘의 실천 기록 (선택)"
             className="h-11 rounded-xl bg-white/70 px-4 text-base text-gray-900"
           />
-          {openTodos.length > 0 && (
-            <View className="flex-row flex-wrap gap-1.5">
-              {openTodos.map((todo) => {
-                const picked = pickedTodoIds.includes(todo.todoId);
-                return (
-                  <Pressable
-                    key={todo.todoId}
-                    onPress={() => toggleTodo(todo)}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: picked }}
-                    accessibilityLabel={`오늘 할 일: ${todo.content}`}
-                    className={`rounded-full px-3 py-1.5 ${picked ? 'bg-white' : 'bg-white/35'}`}>
-                    <Text className={`text-[13px] ${picked ? 'font-semibold text-gray-900' : 'text-white'}`}>
-                      {picked ? '✓ ' : '+ '}
-                      {todo.content}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+          {listOpen && choices.length > 0 && (
+            <View className="overflow-hidden rounded-xl bg-white/90">
+              <Text className="px-4 pb-1 pt-2.5 text-xs font-semibold text-gray-500">캘린더에 적어 둔 오늘 할 일</Text>
+              {choices.map((todo, i) => (
+                <Pressable
+                  key={todo.todoId}
+                  onPress={() => pickTodo(todo)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`오늘 할 일: ${todo.content}`}
+                  className={`flex-row items-center gap-2 px-4 py-3 active:bg-gray-100 ${i > 0 ? 'border-t border-gray-100' : ''}`}>
+                  <Text className="text-gray-400">+</Text>
+                  <Text className="flex-1 text-[15px] text-gray-900">{todo.content}</Text>
+                </Pressable>
+              ))}
             </View>
           )}
           <ErrorText error={stone.error} />
@@ -123,10 +135,3 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   );
 }
 
-// 기록에서 붙였던 할 일 문구를 뺍니다 (", "로 이어 붙인 조각 단위)
-function removePiece(text: string, piece: string): string {
-  return text
-    .split(', ')
-    .filter((part) => part !== piece)
-    .join(', ');
-}
