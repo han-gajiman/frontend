@@ -3,7 +3,7 @@ import { useBottomTabBarHeight } from 'expo-router/js-tabs';
 import { useRef, useState } from 'react';
 import { Pressable, Text, TextInput, type TextInputInstance, View } from 'react-native';
 
-import { DEMO_ENABLED } from '@/features/demo/api';
+import { TIME_TRAVEL_ENABLED } from '@/features/demo/api';
 import { DemoTimeTravel } from '@/features/demo/components/DemoTimeTravel';
 import { TITLE_FONT } from '@/features/intro/components/DesignCanvas';
 import { getTodayTodos } from '@/features/plan/api';
@@ -130,7 +130,7 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
         </>
       )}
 
-      {DEMO_ENABLED && <DemoTimeTravel onDone={reload} />}
+      {TIME_TRAVEL_ENABLED && <DemoTimeTravel onDone={reload} />}
     </View>
   );
 }

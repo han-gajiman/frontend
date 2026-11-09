@@ -278,7 +278,8 @@ function seed() {
   // 기존 회원: 첫 번째 소원(1년 전) 돌탑 12개 + 1년 회고, 두 번째 소원 돌탑 6개 + 13일째 진행 중인 돌탑 1개
   db.onboarded = true;
   db.nickname = '소원지기';
-  const currentStart = addDays(today(), -12);
+  const fresh = MOCK_SCENARIO === 'fresh'; // 처음 쌓는 날: 진행 중 돌탑이 오늘 시작, 돌 0개
+  const currentStart = fresh ? today() : addDays(today(), -12);
   db.journeyStartedOn = addDays(today(), -569); // 1년(365일) 전 묶음이 끝나고 204일째
   db.yearReviews[1] = '하루를 미루지 않는 사람이 되었어요. 작게라도 매일 쌓으면 된다는 걸 알았고, 올해도 그렇게 해 보려고 해요.';
   // 첫 번째 소원 때 호미곶과 영덕에 한 번씩 다녀옴. 진행 중인 돌탑의 영덕 배경도 이 방문으로 열립니다.
@@ -366,7 +367,7 @@ function seed() {
     result: null,
     reflection: null,
   });
-  for (let i = 0; i < 12; i++) addStone(10, addDays(currentStart, i), i % 2 ? '영어 단어 20개 외움' : null);
+  if (!fresh) for (let i = 0; i < 12; i++) addStone(10, addDays(currentStart, i), i % 2 ? '영어 단어 20개 외움' : null);
 
   // 소원 캘린더: 어제 끝낸 할 일, 오늘·앞으로 할 일, 이번 돌탑이 끝난 다음 날 시작할 소원 메모
   const todo = (offset: number, content: string, done = false) =>
