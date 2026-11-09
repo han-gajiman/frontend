@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Layer, StonePageData } from '../pages';
 import { boxStyle, DescriptionText, DesignCanvas, LayerImage, TitleText } from './DesignCanvas';
+import { Drift, LightOrbit, Meteor } from './ambient';
 import { FadeUp, PressScale, Twinkle, useEntrance } from './motion';
 
 const STONE_START = 300; // 제목이 먼저 나타난 뒤 돌이 쌓이기 시작
@@ -38,7 +39,10 @@ export function StonePage({
   return (
     <View style={{ width, height }}>
       <DesignCanvas frame={frame} width={width} height={height}>
-        <LayerImage layer={data.art} />
+        <Drift active={active} range={data.artDrift} style={StyleSheet.absoluteFill}>
+          <LayerImage layer={data.art} />
+        </Drift>
+        {data.meteor && <Meteor active={active} from={data.meteor.from} to={data.meteor.to} delay={stonesDone + 400} />}
 
         <FadeUp active={active} style={StyleSheet.absoluteFill}>
           {data.titleGlow && <LayerImage layer={data.titleGlow} />}
@@ -72,6 +76,10 @@ export function StonePage({
               duration={data.stoneDuration}
             />
           ),
+        )}
+        {/* 돌 위에 그려서 앞쪽(아래 반)을 지날 때 돌 앞으로 지나감 */}
+        {data.orbit && (
+          <LightOrbit active={active} center={data.orbit.center} radius={data.orbit.radius} startDelay={stonesDone + 300} />
         )}
       </DesignCanvas>
 

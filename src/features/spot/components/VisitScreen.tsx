@@ -27,6 +27,7 @@ import { DEFAULT_BACKGROUND, spotIllustration } from '../spotIllustrations';
 import { SPOT_SOURCES } from '../spotSources';
 import type { Spot } from '../types';
 import { useVisitVerification } from '../useVisitVerification';
+import { LIGHT_DIRECTION, spotAmbience, transparent } from '../spotAmbience';
 import { visitFog } from '../visitFog';
 
 // 피그마 "방문 인증 전" (204:74) 색과 크기
@@ -60,6 +61,7 @@ export function VisitScreen({
   const reduceMotion = useReducedMotion();
   const illustration = spotIllustration(spot.id) ?? DEFAULT_BACKGROUND;
   const fogColors = visitFog(spot.id);
+  const ambience = spotAmbience(spot.id);
   // 새 엽서는 안개가 걷힌 뒤(약 1.9초) 보여줍니다.
   const [gift, setGift] = useState<Postcard | null>(null);
   const { verify, busy, notice, error } = useVisitVerification(spot, (visit) => {
@@ -100,15 +102,21 @@ export function VisitScreen({
     zoom.set(withDelay(300, withTiming(1, REVEAL)));
   }, [unlocked, openedHere, fog, blurred, zoom]);
 
-  // 열린 그림: 풍경이 100% → 102%로 아주 천천히 숨쉬고, 햇빛이 은은하게 바뀝니다.
+  // 열린 그림: 풍경이 100% → 102%로 아주 천천히 숨쉬고, 빛이 은은하게 바뀝니다.
+  // 명소마다 빛 색·방향·주기와 느린 좌우 이동이 조금씩 다릅니다 (spotAmbience).
   const breath = useSharedValue(1);
   const sun = useSharedValue(0);
+  const pan = useSharedValue(0);
   useEffect(() => {
     if (!unlocked || reduceMotion) return;
-    const slow = { duration: 5000, easing: Easing.inOut(Easing.sin) };
-    breath.set(withRepeat(withSequence(withTiming(1.02, slow), withTiming(1, slow)), -1));
-    sun.set(withRepeat(withSequence(withTiming(0.08, { duration: 4000 }), withTiming(0, { duration: 4000 })), -1));
-  }, [unlocked, reduceMotion, breath, sun]);
+    const wave = (period: number) => ({ duration: period / 2, easing: Easing.inOut(Easing.sin) });
+    breath.set(withRepeat(withSequence(withTiming(1.02, wave(ambience.breathPeriod)), withTiming(1, wave(ambience.breathPeriod))), -1));
+    sun.set(withRepeat(withSequence(withTiming(0.08, wave(ambience.lightPeriod)), withTiming(0, wave(ambience.lightPeriod))), -1));
+    if (ambience.pan) {
+      const panWave = wave(ambience.breathPeriod * 1.3);
+      pan.set(withRepeat(withSequence(withTiming(ambience.pan, panWave), withTiming(-ambience.pan, panWave)), -1, true));
+    }
+  }, [unlocked, reduceMotion, breath, sun, pan, ambience]);
 
   // 안개가 좌우로 아주 천천히 흐름 (잠겨 있을 때만)
   const drift = useSharedValue(0);
@@ -118,7 +126,11 @@ export function VisitScreen({
     drift.set(withRepeat(withSequence(withTiming(12, slow), withTiming(-12, slow)), -1, true));
   }, [unlocked, reduceMotion, drift]);
 
-  const imageStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() * breath.get() }] }));
+  // 좌우로 움직이는 명소는 가장자리가 비지 않게 조금 키워 둡니다 (4px ÷ 화면 너비 ≈ 1%)
+  const panScale = ambience.pan ? 1.02 : 1;
+  const imageStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: pan.get() }, { scale: zoom.get() * breath.get() * panScale }],
+  }));
   const blurStyle = useAnimatedStyle(() => ({ opacity: blurred.get() }));
   const fogStyle = useAnimatedStyle(() => ({ opacity: fog.get(), transform: [{ translateX: drift.get() }] }));
   const sunStyle = useAnimatedStyle(() => ({ opacity: sun.get() }));
@@ -141,7 +153,11 @@ export function VisitScreen({
             {unlocked && (
               <Animated.View pointerEvents="none" entering={openedHere ? FadeIn.delay(1300).duration(600) : undefined} style={FILL}>
                 <Animated.View style={[FILL, sunStyle]}>
-                  <LinearGradient colors={['#ffd9a8', 'rgba(255,217,168,0)']} style={{ flex: 1 }} />
+                  <LinearGradient
+                    colors={[ambience.light, transparent(ambience.light)]}
+                    {...LIGHT_DIRECTION[ambience.from]}
+                    style={{ flex: 1 }}
+                  />
                 </Animated.View>
                 {/* 아래쪽 글자가 잘 보이게 */}
                 <LinearGradient
