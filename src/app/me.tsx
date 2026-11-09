@@ -100,8 +100,10 @@ function NicknameRow({ nickname, onChanged }: { nickname: string; onChanged: () 
 
   if (!editing) {
     return (
-      <View className="flex-row items-center gap-3">
-        <Text className="text-2xl font-bold text-gray-900">{nickname}</Text>
+      <View className="flex-row items-center justify-between gap-3">
+        <Text className="flex-1 text-2xl font-bold text-gray-900" numberOfLines={1}>
+          {nickname}
+        </Text>
         <Pressable
           onPress={() => {
             setDraft(nickname);
@@ -111,7 +113,7 @@ function NicknameRow({ nickname, onChanged }: { nickname: string; onChanged: () 
           accessibilityRole="button"
           accessibilityLabel="닉네임 변경"
           className="rounded-full bg-gray-100 px-3 py-1">
-          <Text className="text-sm text-gray-700">변경</Text>
+          <Text className="text-sm text-gray-700">닉네임 변경</Text>
         </Pressable>
       </View>
     );
@@ -120,7 +122,6 @@ function NicknameRow({ nickname, onChanged }: { nickname: string; onChanged: () 
   return (
     <View className="gap-2">
       <TextField label="새 닉네임" value={draft} onChangeText={setDraft} placeholder="닉네임" maxLength={30} />
-      <Text className="text-xs text-gray-400">다른 회원과 겹치지 않는 닉네임만 쓸 수 있어요.</Text>
       <ErrorText error={save.error} />
       <View className="flex-row gap-2">
         <View className="flex-1">
