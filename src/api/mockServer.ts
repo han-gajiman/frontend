@@ -990,4 +990,9 @@ export const mockServer = {
     runScheduler();
     return { serverNow: `${today()}T09:00:00+09:00` };
   },
+
+  resetTimeTravel(): { serverNow: string } {
+    db.dayOffset = 0;
+    return { serverNow: `${today()}T09:00:00+09:00` };
+  },
 };

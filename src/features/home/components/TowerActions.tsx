@@ -10,6 +10,7 @@ import { getTodayTodos } from '@/features/plan/api';
 import type { PlanTodo } from '@/features/plan/types';
 import { createStone } from '@/features/stone/api';
 import { TodayStone } from '@/features/stone/components/TodayStone';
+import { getMe } from '@/features/user/api';
 import type { CurrentWish } from '@/features/wish/types';
 import { Button } from '@/shared/components/Button';
 import { ErrorText } from '@/shared/components/ErrorText';
@@ -38,6 +39,9 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   // PLAN-02 소원 캘린더에 적어 둔 오늘 할 일. 기록 칸을 누르면 아래로 펼쳐지고, 하나 고르면 기록에 붙고 닫힙니다.
   // 쌓을 때 기록에 남아 있는 할 일은 완료 체크
   const todayTodos = useApi(getTodayTodos);
+  // 실서비스: 서버가 허락한 시연 계정만 시간 이동 버튼 (DEMO-01)
+  const me = useApi(getMe);
+  const canTimeTravel = !TIME_TRAVEL_ENABLED && me.data?.canTimeTravel === true;
   const [pickedTodos, setPickedTodos] = useState<PlanTodo[]>([]);
   const [listOpen, setListOpen] = useState(false);
   const inputRef = useRef<TextInputInstance>(null);
@@ -157,7 +161,7 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
         </>
       )}
 
-      {TIME_TRAVEL_ENABLED && <DemoTimeTravel onDone={reload} />}
+      {(TIME_TRAVEL_ENABLED || canTimeTravel) && <DemoTimeTravel onDone={reload} withReset={canTimeTravel} />}
     </View>
   );
 }

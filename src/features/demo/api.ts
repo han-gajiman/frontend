@@ -7,10 +7,19 @@ export const DEMO_ENABLED = process.env.EXPO_PUBLIC_DEMO === 'true';
 // 시연 모드여도 시간 이동 버튼만 숨기기 (EXPO_PUBLIC_DEMO_TIME_TRAVEL=false)
 export const TIME_TRAVEL_ENABLED = DEMO_ENABLED && process.env.EXPO_PUBLIC_DEMO_TIME_TRAVEL !== 'false';
 
-// POST /demo/time-travel (DEMO-01) — 서버 시계를 N일 이동하고 완성 스케줄러를 즉시 실행
+// POST /demo/time-travel (DEMO-01) — N일 이동하고 완성 처리를 즉시 실행
+// 실서버는 시연 계정만 자기 날짜를 이동하고(다른 회원은 그대로), 로컬·목 서버는 전체가 이동합니다.
 export function timeTravel(days: number): Promise<{ serverNow: string }> {
   if (USE_MOCK) {
     return mockCall(() => mockServer.timeTravel(days));
   }
   return apiRequest<{ serverNow: string }>('/demo/time-travel', { method: 'POST', body: { days } });
+}
+
+// POST /demo/time-travel/reset — 실제 날짜로 되돌리기 (실서버는 시연 계정만)
+export function resetTimeTravel(): Promise<{ serverNow: string }> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.resetTimeTravel());
+  }
+  return apiRequest<{ serverNow: string }>('/demo/time-travel/reset', { method: 'POST' });
 }
