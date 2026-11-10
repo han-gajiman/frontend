@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { logout } from '@/features/auth/api';
+import { LegalLinks } from '@/features/legal/components/LegalLinks';
 import { signOutSocial } from '@/features/auth/social';
 import { useAuthStore } from '@/features/auth/store';
 import { resetDemoScenario } from '@/features/demo/api';
@@ -55,7 +56,6 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
           <NicknameRow nickname={me.nickname} onChanged={reload} />
           <Text className="text-gray-500">{PROVIDER_LABEL[me.provider]}</Text>
         </View>
-
       </View>
 
       <View className="gap-3">
@@ -77,6 +77,8 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
             <Text className="text-sm text-gray-400 underline">회원 탈퇴</Text>
           </Pressable>
         )}
+        <LegalLinks />
+        <Text className="text-center text-[12px] text-gray-400">문의 hangajiman.service@gmail.com</Text>
       </View>
     </View>
   );

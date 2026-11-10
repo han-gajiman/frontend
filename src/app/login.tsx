@@ -33,6 +33,7 @@ import { DEMO_ENABLED } from '@/features/demo/api';
 import { USE_MOCK } from '@/api/mock';
 import { MOCK_DEMO_ACCOUNT } from '@/api/mockServer';
 import { useAuthStore } from '@/features/auth/store';
+import { LegalLinks } from '@/features/legal/components/LegalLinks';
 import { ErrorText } from '@/shared/components/ErrorText';
 import { useSubmit } from '@/shared/hooks/useSubmit';
 
@@ -199,6 +200,8 @@ export default function LoginScreen() {
               </Pressable>
             )}
           </View>
+
+          <LegalLinks className="mt-8" />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

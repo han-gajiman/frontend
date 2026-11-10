@@ -60,6 +60,8 @@ export default function RootLayout() {
 
         {/* 초대 링크는 로그인 전에도 열려야 해서 보호 밖에 둡니다 (화면 안에서 로그인 여부 확인) */}
         <Stack.Screen name="invite/[code]" />
+        {/* 약관·처리방침 전문도 로그인 전(로그인 화면)과 후(온보딩, 내 정보) 모두에서 엽니다 */}
+        <Stack.Screen name="legal/[doc]" />
 
         <Stack.Protected guard={loggedIn && !onboarded}>
           <Stack.Screen name="onboarding" />
