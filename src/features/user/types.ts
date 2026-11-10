@@ -12,4 +12,6 @@ export type Me = {
   hasUnreadLetter: boolean; // 안 읽은 받은 엽서 (서버 응답에 있음, 지금 화면에서는 안 씀)
   canTimeTravel?: boolean; // 실서버에서 시연 계정이면 true → 홈에 시간 이동 버튼 (DEMO-01, 11/9)
   canResetDemo?: boolean; // 시연 계정 본인이면 true → 내 정보에 "시연 처음 상태로" 버튼 (DEMO-03, 11/10)
+  // 내 정보 아래 기록 (11/10). 완성한 돌탑(30일이 끝난 것, 모아보기 기준) · 방문 인증한 명소 수 · 모은 엽서 수
+  stats?: { towerCount: number; visitedSpotCount: number; postcardCount: number };
 };

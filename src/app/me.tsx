@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -56,6 +57,7 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
           <NicknameRow nickname={me.nickname} onChanged={reload} />
           <Text className="text-gray-500">{PROVIDER_LABEL[me.provider]}</Text>
         </View>
+        {me.stats && <MyStats stats={me.stats} />}
       </View>
 
       <View className="gap-3">
@@ -85,6 +87,28 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
 }
 
 // AUTH-04 닉네임 변경. 다른 회원이 쓰는 닉네임이면 서버가 409 NICKNAME_DUPLICATED로 알려줍니다.
+// 지금까지의 기록. 누르면 모아보기 · 명소 · 우체통 내 엽서함으로
+function MyStats({ stats }: { stats: NonNullable<Me['stats']> }) {
+  return (
+    <View className="flex-row rounded-2xl bg-gray-50 py-4">
+      <StatItem label="완성한 돌탑" value={stats.towerCount} onPress={() => router.dismissTo('/collection')} />
+      <View className="w-px bg-gray-200" />
+      <StatItem label="방문한 명소" value={stats.visitedSpotCount} onPress={() => router.dismissTo('/spots')} />
+      <View className="w-px bg-gray-200" />
+      <StatItem label="모은 엽서" value={stats.postcardCount} onPress={() => router.push('/mailbox?tab=collection')} />
+    </View>
+  );
+}
+
+function StatItem({ label, value, onPress }: { label: string; value: number; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label} ${value}개`} className="flex-1 items-center gap-1">
+      <Text className="text-2xl font-bold text-gray-900">{value}</Text>
+      <Text className="text-[13px] text-gray-500">{label}</Text>
+    </Pressable>
+  );
+}
+
 function NicknameRow({ nickname, onChanged }: { nickname: string; onChanged: () => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(nickname);
