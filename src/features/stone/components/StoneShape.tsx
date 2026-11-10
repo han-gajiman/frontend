@@ -54,9 +54,17 @@ function StonePicture({ stone, width, height }: { stone: StoneImage; width: numb
   const scaleX = width / (right - left);
   const scaleY = height / (bottom - top);
   return (
+    // 그림은 터치·마우스를 받지 않습니다. 웹에서 <img>를 마우스로 끌면 브라우저가 그림 자체를 끌어 가서 오늘의 돌 드래그가 끊깁니다.
     <Image
       source={stone.source}
-      style={{ position: 'absolute', left: -left * scaleX, top: -top * scaleY, width: imageWidth * scaleX, height: imageHeight * scaleY }}
+      style={{
+        position: 'absolute',
+        left: -left * scaleX,
+        top: -top * scaleY,
+        width: imageWidth * scaleX,
+        height: imageHeight * scaleY,
+        pointerEvents: 'none',
+      }}
       contentFit="fill"
     />
   );
