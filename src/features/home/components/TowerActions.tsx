@@ -46,25 +46,44 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
   const [listOpen, setListOpen] = useState(false);
   const inputRef = useRef<TextInputInstance>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const choices = (todayTodos.data ?? []).filter((t) => !t.done && !pickedTodos.some((p) => p.todoId === t.todoId));
+  const pressingList = useRef(false); // 목록을 누르는 중이면 입력칸 포커스가 빠져도 닫지 않음
+  const choices = (todayTodos.data ?? []).filter((t) => !t.done); // 고른 할 일도 목록에 그대로 (✓ 표시)
+  const isPicked = (todo: PlanTodo) => pickedTodos.some((p) => p.todoId === todo.todoId);
 
+  // 누르면 기록 칸에 붙이고, 이미 붙인 할 일을 다시 누르면 뺍니다. 목록은 열린 채로 둡니다.
   const pickTodo = (todo: PlanTodo) => {
-    const next = practice.trim() ? `${practice.trim()}, ${todo.content}` : todo.content;
-    if (next.length <= PRACTICE_MAX_LENGTH) {
-      // 100자를 넘으면 붙이지 않음
-      setPickedTodos([...pickedTodos, todo]);
-      setPractice(next);
+    if (isPicked(todo)) {
+      setPickedTodos(pickedTodos.filter((p) => p.todoId !== todo.todoId));
+      setPractice(
+        practice
+          .split(', ')
+          .filter((part) => part !== todo.content)
+          .join(', '),
+      );
+    } else {
+      const next = practice.trim() ? `${practice.trim()}, ${todo.content}` : todo.content;
+      if (next.length <= PRACTICE_MAX_LENGTH) {
+        // 100자를 넘으면 붙이지 않음
+        setPickedTodos([...pickedTodos, todo]);
+        setPractice(next);
+      }
     }
-    setListOpen(false);
-    inputRef.current?.blur();
+    inputRef.current?.focus(); // 이어서 쓰거나 더 고를 수 있게
   };
 
-  // 입력칸에서 포커스가 빠지면 닫음. 목록을 누르는 사이 먼저 닫히지 않게 조금 기다립니다(웹은 누르기 전에 blur가 옴).
+  // 입력칸 바깥을 누르면 닫음. 목록을 누를 때는 (웹은 누르기 전에 blur가 와서) 닫지 않습니다.
   const handleBlur = () => {
-    closeTimer.current = setTimeout(() => setListOpen(false), 150);
+    closeTimer.current = setTimeout(() => {
+      if (pressingList.current) {
+        pressingList.current = false;
+        return;
+      }
+      setListOpen(false);
+    }, 150);
   };
   const handleFocus = () => {
     clearTimeout(closeTimer.current);
+    pressingList.current = false; // 목록을 누른 뒤 다시 포커스가 오면 표시를 지워서, 다음 바깥 누름에는 닫히게
     setListOpen(true);
   };
   const tabBarHeight = useBottomTabBarHeight(); // 떠 있는 탭 바에 가리지 않게
@@ -133,13 +152,21 @@ export function TowerActions({ wish, reload, isOverTower, onDragStart }: TowerAc
                   {choices.map((todo, i) => (
                     <Pressable
                       key={todo.todoId}
+                      onPressIn={() => {
+                        pressingList.current = true;
+                      }}
                       onPress={() => pickTodo(todo)}
-                      accessibilityRole="button"
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: isPicked(todo) }}
                       accessibilityLabel={`오늘 할 일: ${todo.content}`}
                       style={{ height: LIST_ROW_HEIGHT }}
                       className={`flex-row items-center gap-2 px-4 active:bg-gray-100 ${i > 0 ? 'border-t border-gray-100' : ''}`}>
-                      <Text className="text-gray-400">+</Text>
-                      <Text numberOfLines={1} className="flex-1 text-[15px] text-gray-900">
+                      <Text className={isPicked(todo) ? 'font-bold text-violet-600' : 'text-gray-400'}>
+                        {isPicked(todo) ? '✓' : '+'}
+                      </Text>
+                      <Text
+                        numberOfLines={1}
+                        className={`flex-1 text-[15px] ${isPicked(todo) ? 'font-semibold text-gray-900' : 'text-gray-900'}`}>
                         {todo.content}
                       </Text>
                     </Pressable>
