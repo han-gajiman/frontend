@@ -42,7 +42,11 @@ export default function SpotSelectScreen() {
         empty={<EmptyState title="고를 수 있는 명소가 없어요" />}>
         {(spots) => (
           <View className="flex-1">
-            <Text className="px-6 pb-3 text-gray-500">2 / 3 · 소원을 들고 찾아갈 경북 명소를 골라 주세요</Text>
+            <View className="gap-1 px-6 pb-3">
+              <Text className="text-gray-500">2 / 3 · 소원을 들고 찾아갈 경북 명소를 골라 주세요</Text>
+              {/* 한 번이라도 방문 인증한 명소는 새 돌탑도 처음부터 그 명소 풍경 위에 쌓입니다 (서버 기준) */}
+              <Text className="text-[13px] text-gray-400">★ 다녀온 명소를 고르면 처음부터 그 풍경 위에 돌탑을 쌓아요</Text>
+            </View>
             {/* WISH-02 AI 추천 명소: 누르면 지도가 그 명소로 확대되고, 정하는 건 "이 명소로 정하기"로 합니다. */}
             {recommended && !selected && (
               <Pressable
@@ -62,7 +66,14 @@ export default function SpotSelectScreen() {
               selected={selected}
               onSelect={setSelected}
               onOpenDetail={setViewing}
-              renderAction={(spot) => <Button label="이 명소로 정하기" onPress={() => handleChoose(spot)} />}
+              renderAction={(spot) => (
+                <View className="gap-2">
+                  {spot.visited && (
+                    <Text className="text-center text-[13px] text-gray-500">다녀온 명소라 풍경 배경으로 시작해요</Text>
+                  )}
+                  <Button label="이 명소로 정하기" onPress={() => handleChoose(spot)} />
+                </View>
+              )}
             />
           </View>
         )}
