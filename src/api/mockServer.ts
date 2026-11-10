@@ -595,6 +595,11 @@ export const mockServer = {
       provider: db.provider,
       hasActiveWish: openWish() !== undefined,
       hasUnreadLetter: db.letters.some((l) => !l.read),
+      stats: {
+        towerCount: db.wishes.filter((w) => w.status !== 'ACTIVE').length,
+        visitedSpotCount: new Set(db.spotVisits.map((v) => v.spotId)).size,
+        postcardCount: db.postcards.length,
+      },
     };
   },
 
