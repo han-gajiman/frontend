@@ -82,6 +82,16 @@ export default function NewWishScreen() {
               <Text className="text-sm text-gray-500 underline">예시로 채우기: {EXAMPLE_WISH}</Text>
             </Pressable>
           )}
+        </View>
+        {/* 실천 목표를 적는 칸 바로 아래에서 AI 추천을 받고, 고르면 위 칸에 채워집니다 */}
+        <View className="gap-3">
+          <TextField
+            label="매일 할 실천 목표"
+            value={actionGoal}
+            onChangeText={setActionGoal}
+            placeholder="예: 매일 영어 단어 20개 외우기"
+            maxLength={100}
+          />
           <SuggestButton
             disabled={content.trim().length === 0}
             loading={suggest.submitting}
@@ -89,25 +99,18 @@ export default function NewWishScreen() {
             onPress={handleSuggest}
           />
           {suggest.error && !suggest.submitting && <SuggestError error={suggest.error} />}
+          {draft.suggestion?.supportMessage && (
+            <View className="gap-1 rounded-xl bg-violet-50 p-4">
+              <Text className="leading-6 text-gray-800">{draft.suggestion.supportMessage}</Text>
+            </View>
+          )}
+          {goals && goals.length > 0 && (
+            <View className="gap-1">
+              <ActionGoalSuggestions goals={goals} selected={actionGoal} onSelect={setActionGoal} />
+              {draft.suggestion?.fallback && <Text className="text-xs text-gray-400">지금은 AI가 바빠서 기본 추천을 보여드려요.</Text>}
+            </View>
+          )}
         </View>
-        {draft.suggestion?.supportMessage && (
-          <View className="gap-1 rounded-xl bg-violet-50 p-4">
-            <Text className="leading-6 text-gray-800">{draft.suggestion.supportMessage}</Text>
-          </View>
-        )}
-        {goals && goals.length > 0 && (
-          <View className="gap-1">
-            <ActionGoalSuggestions goals={goals} selected={actionGoal} onSelect={setActionGoal} />
-            {draft.suggestion?.fallback && <Text className="text-xs text-gray-400">지금은 AI가 바빠서 기본 추천을 보여드려요.</Text>}
-          </View>
-        )}
-        <TextField
-          label="매일 할 실천 목표"
-          value={actionGoal}
-          onChangeText={setActionGoal}
-          placeholder="예: 매일 영어 단어 20개 외우기"
-          maxLength={100}
-        />
       </View>
     </Screen>
   );
