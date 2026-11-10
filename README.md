@@ -1,167 +1,145 @@
-# Frontend
+# frontend
 
-한 가지만(2026 단디톤) 모바일 앱입니다. 소원 하나를 정하고 30일 동안 매일 돌을 쌓으며, 경북 명소를 방문해 이어가는 서비스입니다.
+**한 가지만**(2026 단디톤 출품작)의 앱·웹입니다. 소원 하나를 정하고, 30일 동안 매일 돌을 하나씩 쌓으며, 경북 명소를 방문해 이어가는 서비스입니다.
 
-- 개발 규칙과 코드 패턴: `CLAUDE.md`
-- 기능·API·ERD 기준 문서: `docs/`
+- 실서비스 웹: https://han-gajiman.github.io (실제 서버 연결, 이메일·카카오·Google 가입)
+- 데모 웹: https://han-gajiman.expo.app (서버 없이 예시 데이터로 동작, 로그인 버튼만 누르면 체험)
+- API 서버: [backend](https://github.com/han-gajiman/backend)
+- 기준 문서: `docs/` (기능명세서·API 명세서·ERD, 노션 원본과 같은 내용) · 개발 규칙: `CLAUDE.md`
+
+웹이 1순위, Android가 2순위입니다. iOS는 배포하지 않습니다.
 
 ## 기술 스택
 
-- Expo SDK 58 · React Native 0.88 · React 19 · TypeScript (폰의 Expo Go도 SDK 58 버전이어야 합니다)
-- Expo Router (파일 기반 라우팅)
-- NativeWind 4 (Tailwind 3 문법 스타일링)
-- Zustand (상태 관리)
-- Reanimated (애니메이션)
-- 카카오 지도 (명소 지도, 폰은 WebView·웹은 iframe으로 같은 지도 HTML을 띄움)
+- Expo SDK 58 · React Native 0.88 · React 19 · TypeScript
+- Expo Router (파일 기반 라우팅) · Zustand · NativeWind 4 (Tailwind 3 문법)
+- Reanimated 4 (인트로·방문 인증·돌탑·꽃잎 애니메이션, 기기의 동작 줄이기 설정 존중)
+- expo-image · expo-linear-gradient · expo-location(방문 인증) · expo-media-library · react-native-view-shot(엽서 저장) · expo-clipboard
+- 카카오 지도 (같은 지도 HTML을 폰은 WebView, 웹은 iframe으로)
+- 카카오·Google 로그인 (앱은 네이티브 SDK, 웹은 로그인 화면으로 이동했다 돌아오는 방식)
 
 ## 처음 받았을 때
 
 ```bash
-cd frontend
 npm install
-cp .env.example .env.local
-npx expo start -c
+cp .env.example .env.local     # 개인 설정 (git에 안 올라감)
+npx expo start -c              # w: 웹, QR: 폰
 ```
 
-`.env.local`은 git에 올라가지 않는 개인 설정 파일입니다. 값은 `.env.example`의 설명을 참고하세요.
+`git pull` 뒤에는 라이브러리가 바뀌었을 수 있으니 `npm install`과 `npx expo start -c`를 다시 하세요. `.env.example`에 새 값이 생겼으면 `.env.local`에도 넣으세요.
 
-## git pull 받은 뒤
+## 설정 (`.env.local`)
 
-라이브러리가 추가됐을 수 있으니 항상 아래를 실행하세요.
-
-```bash
-npm install
-npx expo start -c
-```
-
-- `.env.example`에 새 값이 추가됐다면 `.env.local`에도 같이 추가하세요.
-- 설정 파일이나 `.env.local`을 바꾼 뒤에는 `-c`(캐시 삭제)를 꼭 붙여서 다시 실행하세요.
-
-## 화면 보기
-
-**설치 없이 보기**: 웹 데모 https://han-gajiman.expo.app (목 모드, main에 머지한 뒤 직접 배포)
-
-`npx expo start -c` 실행 후:
-
-- **폰 (개발 빌드)**: EAS로 만든 개발 빌드 앱을 설치하고 터미널의 QR 코드를 찍습니다. PC와 폰이 같은 와이파이에 있어야 합니다. (아래 "카카오·Google 로그인" 참고)
-- **폰 (Expo Go)**: `npx expo start -c --go`로 실행하거나 실행 중에 `s`를 눌러 Expo Go 모드로 바꾼 뒤 QR을 찍습니다. 카카오·Google 로그인 버튼만 안내 문구가 뜹니다.
-- **웹**: 터미널에서 `w`.
-
-## 목 데이터로 실행하기
-
-백엔드 없이 화면을 확인할 수 있도록 목 서버(`src/api/mockServer.ts`)가 들어 있습니다. 데이터는 메모리에만 있어서 앱을 새로 켜면 초기화됩니다.
-
-`.env.local` 설정:
+`EXPO_PUBLIC_` 값은 앱에 그대로 들어가므로 **비밀값은 넣지 마세요.** (AI 키 등은 서버에만)
 
 | 값 | 설명 |
 | --- | --- |
-| `EXPO_PUBLIC_USE_MOCK=true` | 목 서버 사용 (`false`면 `EXPO_PUBLIC_API_URL`의 실제 서버) |
-| `EXPO_PUBLIC_MOCK_SCENARIO` | `normal` 진행 중 돌탑이 있는 회원 / `empty` 신규 회원(시연 경로 처음부터) / `error` 서버 에러 / `offline` 인터넷 끊김 / `slow` 3초 로딩 |
-| `EXPO_PUBLIC_DEMO=true` | 시연 모드: 홈에 시간 이동 버튼(+1일, +30일) 표시, 방문 인증은 위치를 확인하지 않고 통과 (DEMO-01, DEMO-02). 실제 출시 빌드에서는 끄세요 |
+| `EXPO_PUBLIC_USE_MOCK` | `true`면 목 서버(`src/api/mockServer.ts`), `false`면 `EXPO_PUBLIC_API_URL`의 실제 서버 |
+| `EXPO_PUBLIC_API_URL` | 실제 서버 주소 (예: `http://localhost:8080/api/v1`, 폰에서는 PC의 IP) |
+| `EXPO_PUBLIC_MOCK_SCENARIO` | 목 서버 상태: `normal` 진행 중 돌탑 / `fresh` 처음 쌓는 날 / `empty` 신규 회원 / `error` / `offline` / `slow` |
+| `EXPO_PUBLIC_DEMO` | 시연 모드: 시간 이동 버튼, 방문 인증 위치 확인 생략. 실서비스 빌드에서는 끔 |
+| `EXPO_PUBLIC_DEMO_TIME_TRAVEL` | `false`면 시연 모드여도 시간 이동 버튼만 숨김 |
+| `EXPO_PUBLIC_SKIP_LOCATION` | `true`면 방문 인증 위치 확인만 건너뜀 (테스트 기간 실서비스 웹) |
+| `EXPO_PUBLIC_DEV_LOGIN`, `EXPO_PUBLIC_DEV_LOGIN_KEY` | 실제 로컬 서버에 붙을 때 "개발용 로그인" 버튼 (같은 키 = 같은 회원) |
+| `EXPO_PUBLIC_KAKAO_JS_KEY` | 카카오 지도 (없으면 명소 목록으로 대신 보여줌) |
+| `EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY` | 앱 카카오 로그인 |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google 로그인 (웹 클라이언트 ID는 웹·Android 공통) |
 
-목 모드 이메일 로그인: `demo@hangajiman.app` / `password123`, 닉네임 `소원지기` (회원가입한 계정도 앱을 끄기 전까지 로그인 가능). 비밀번호 찾기 인증코드는 항상 `123456`
+## 목 서버로 보기
 
-실제 서버로 비밀번호 찾기를 확인할 때 백엔드에 메일 설정(`SPRING_MAIL_HOST` 등)이 없으면, 인증코드는 백엔드 콘솔 로그에 찍힙니다.
+백엔드 없이 모든 화면을 볼 수 있도록 목 서버가 들어 있습니다. 데이터는 메모리에만 있어서 새로고침하면 처음으로 돌아갑니다.
 
-## 웹 데모 배포 (EAS Hosting)
+- 이메일 로그인 `demo@hangajiman.app` / `password123` (데모 웹은 미리 채워져 있음), 카카오·Google 버튼은 바로 로그인
+- 비밀번호 찾기 인증코드는 항상 `123456`
+- `normal` 시나리오: 진행 중 돌탑 13일째(돌 12개), 지난 돌탑과 1년 회고, 엽서 40장, 친구 3명, 캘린더 할 일
 
-main에 머지한 뒤 아래 명령으로 목 모드 웹을 내보내 https://han-gajiman.expo.app 에 배포합니다. Expo 계정(`han-gajiman`)에 로그인되어 있어야 하고, 카카오 지도를 보이려면 `.env.local`에 `EXPO_PUBLIC_KAKAO_JS_KEY`가 있어야 합니다. 배포 후 반영까지 10분 정도 걸릴 수 있습니다.
+## 실제 서버로 보기
 
-```
-EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
-npx eas-cli@27.2.0 deploy --prod
-```
-
-## 명소 일러스트
-
-그림은 `assets/spots/`에 넣고 `src/features/spot/spotIllustrations.ts`에 명소 id와 연결합니다. 없는 명소는 기본 화면(`default.png`)으로 나옵니다. 파일 이름에 `@3x` 같은 표시를 붙이면 웹 내보내기에서 깨집니다.
-
-## 카카오 지도 (명소)
-
-`src/features/spot/components/`의 `SpotMap`이 카카오 지도 JavaScript API를 씁니다. 카카오는 앱용 지도 SDK가 없어서, 지도 HTML(`kakaoMapHtml.ts`) 하나를 폰에서는 WebView로, 웹에서는 iframe으로 띄웁니다.
-
-- `.env.local`에 `EXPO_PUBLIC_KAKAO_JS_KEY`(JavaScript 키)를 넣으면 지도가 뜹니다. 없거나 불러오기에 실패하면 명소 목록으로 대신 보여줍니다.
-- 카카오는 등록된 도메인에서만 지도를 허용합니다. 콘솔 → 플랫폼 → Web에 `http://localhost:8081`, `https://han-gajiman.expo.app`을 등록하세요. 폰 WebView는 `https://han-gajiman.expo.app`에서 연 것으로 띄웁니다.
-
-## 실제 서버로 실행하기
-
-로컬 백엔드를 `local` 프로필로 켜고(`backend/README.md`), `.env.local`을 이렇게 바꾼 뒤 `npx expo start -c`로 다시 실행합니다.
+로컬 백엔드를 `local` 프로필로 켜고(`backend/README.md`), `.env.local`을 바꾼 뒤 `npx expo start -c`로 다시 켭니다.
 
 ```
 EXPO_PUBLIC_USE_MOCK=false
-EXPO_PUBLIC_API_URL=http://localhost:8080/api/v1   # 폰에서는 localhost 대신 PC의 IP
-EXPO_PUBLIC_DEV_LOGIN=true                         # 로그인 화면에 "개발용 로그인" 버튼
-EXPO_PUBLIC_DEV_LOGIN_KEY=me                       # 같은 키 = 같은 회원, 바꾸면 새 회원
+EXPO_PUBLIC_API_URL=http://localhost:8080/api/v1
+EXPO_PUBLIC_DEV_LOGIN=true
 ```
 
-- Expo Go·웹에서는 카카오·Google 로그인이 안 되므로 **개발용 로그인** 버튼으로 실제 서버에 로그인합니다.
-- 로그인 상태는 기기에 저장되어 앱을 다시 켜도 유지됩니다. (폰: SecureStore, 웹: localStorage)
-- Access Token이 만료되면 자동으로 재발급받아 요청을 다시 보내고, 재발급도 실패하면 로그인 화면으로 갑니다.
-- Expo 개발 서버가 8081 포트를 쓰므로, 백엔드는 8080(기본) 또는 8082처럼 다른 포트로 켜세요.
+- 로그인 상태는 기기에 저장되고(폰: SecureStore, 웹: localStorage), Access Token이 만료되면 자동으로 재발급합니다.
+- Expo 개발 서버가 8081 포트를 쓰므로 백엔드는 8080을 씁니다.
 
-## 카카오·Google 로그인 (개발 빌드)
+## 배포
 
-카카오·Google SDK는 네이티브 코드라 **Expo Go와 웹에서는 동작하지 않습니다.** 목 모드에서는 SDK 없이 버튼만 누르면 로그인되고, Expo Go·웹에서 실제 서버로 붙을 때는 개발용 로그인을 씁니다.
+웹은 두 곳에 배포합니다. 화면이 바뀌면 main에 머지한 뒤 둘 다 올립니다.
 
-실제 소셜 로그인 확인 방법:
+| | 주소 | 데이터 | 명령 |
+| --- | --- | --- | --- |
+| 실서비스 웹 | https://han-gajiman.github.io | 실제 서버 | `./scripts/deploy-pages.sh` |
+| 데모 웹 | https://han-gajiman.expo.app | 목 서버 | 아래 명령 |
 
-1. `.env.local`에 키를 넣습니다. (`.env.example` 참고: `EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY`, `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`)
-2. 개발 빌드를 만듭니다. `npx eas-cli@latest build -p android --profile development` (EAS 프로젝트 `@han-gajiman/han-gajiman`, 빌드용 키는 EAS 환경변수에 등록됨)
-3. 빌드 페이지의 QR로 APK를 폰에 설치하고, `npx expo start`로 띄운 개발 서버에 접속합니다. JS 코드는 개발 서버에서 받으므로 코드만 바꿨다면 다시 빌드할 필요가 없습니다.
-4. 키나 네이티브 라이브러리를 바꾸면 네이티브 설정이 바뀌므로 개발 빌드를 다시 만들어야 합니다.
+```bash
+# 데모 웹 (Expo 계정 han-gajiman 로그인 필요, 반영까지 최대 10분)
+rm -rf dist && EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
+npx eas-cli@27.2.0 deploy --prod
+```
 
-Android 서명은 팀 키스토어를 씁니다(`eas.json`의 `credentialsSource: local`). 키스토어 파일과 비밀번호가 담긴 `credentials.json`은 git에 올리지 않으니 담당자에게 따로 받으세요. 카카오 키 해시와 Google Android SHA-1이 이 키스토어 기준으로 등록되어 있어서, 다른 키로 서명하면 소셜 로그인이 실패합니다.
+- `deploy-pages.sh`는 실서버 주소로 빌드하고, `404.html`(주소로 바로 들어와도 앱이 뜨게)과 `.nojekyll`(`_expo` 폴더 무시 방지)을 넣어 [han-gajiman.github.io](https://github.com/han-gajiman/han-gajiman.github.io) 저장소에 올립니다. 시간 이동 버튼은 서버가 허락한 시연 계정에만 보입니다. 테스트 기간에는 위치 확인을 건너뛰며, 정식 운영 때는 `SKIP_LOCATION=false ./scripts/deploy-pages.sh`로 배포합니다.
+- 카카오 지도와 로그인은 등록된 도메인에서만 됩니다. 카카오 콘솔(Web 도메인, Redirect URI `…/login`)과 Google 콘솔(승인된 JavaScript 원본·리디렉션 URI)에 두 주소와 `http://localhost:8081`이 등록되어 있어야 합니다.
+- 탭 아이콘은 `public/favicon-v2.png`입니다. 브라우저가 예전 아이콘을 기억하므로, 바꿀 때는 파일 이름의 숫자를 올리고 `public/index.html`도 고칩니다.
 
-콘솔 설정:
+## Android 개발 빌드
 
-- **카카오 개발자 콘솔**: 플랫폼에 Android 패키지명·키 해시, iOS 번들 ID 등록, 카카오 로그인 활성화
-- **Google Cloud 콘솔**: OAuth 클라이언트 ID를 웹·Android(패키지명 + SHA-1)·iOS(번들 ID)로 각각 만들기
-- **백엔드**: `GOOGLE_CLIENT_IDS`에 웹·iOS 클라이언트 ID, `KAKAO_ADMIN_KEY`에 카카오 어드민 키 (`backend/README.md`)
+카카오·Google SDK, 사진첩 저장, 클립보드는 네이티브 코드라 Expo Go에서는 안 됩니다.
 
-## 현재 화면
+```bash
+npx eas-cli@latest build -p android --profile development
+```
+
+- 빌드 페이지 QR로 APK를 설치하고 `npx expo start`로 띄운 개발 서버에 접속합니다. JS만 바꿨다면 다시 빌드할 필요가 없습니다.
+- 네이티브 라이브러리나 키를 바꾸면 다시 빌드해야 합니다.
+- Android 서명은 팀 키스토어(`credentials.json`, git에 안 올라감)를 씁니다. 카카오 키 해시와 Google SHA-1이 이 키 기준으로 등록되어 있습니다.
+
+## 화면
 
 | 화면 | 파일 | 기능 ID |
 | --- | --- | --- |
-| 로그인 (이메일·카카오·Google) | `src/app/login.tsx` | AUTH-01, AUTH-03 (토큰 저장·자동 재발급) |
-| 회원가입 (이메일·비밀번호·닉네임, 로그인 화면 디자인) | `src/app/signup.tsx` | AUTH-01 (자체 로그인) |
-| 계정 찾기 (아이디: 닉네임 → 가린 이메일 / 비밀번호: 이메일 인증코드) | `src/app/find-account.tsx` | AUTH-01 (자체 로그인) |
-| 온보딩 | `src/app/onboarding.tsx` | AUTH-02 |
-| 탭: 홈 = 돌탑 (오늘의 돌 끌어서 쌓기, 실천 기록, 받은 응원 풍선, 친구 돌탑 맛보기, 시연용 시간 이동) | `src/app/(tabs)/index.tsx` → `features/home/components` | HOME-01, STONE-01, STONE-02, DEMO-01 |
-| 내 돌탑 시트 (소원 보기, 공개 범위, 받은 응원) | `features/wish/components/MyTowerSheet.tsx` | WISH-04, FRIEND-03 |
-| 소원 적기 → 명소 고르기 → 다짐 확인 (공개 범위 선택) | `src/app/wish/` | WISH-01, SPOT-01, WISH-03, WISH-04 |
+| 인트로 3장 (유성·빛 궤도·노을 연출, 건너뛰기) | `src/app/intro.tsx`, `features/intro/` | - |
+| 로그인 · 회원가입 · 계정 찾기 (웹 소셜 로그인은 `/login`으로 돌아옴) | `src/app/login.tsx`, `signup.tsx`, `find-account.tsx` | AUTH-01 |
+| 온보딩 (약관·닉네임) | `src/app/onboarding.tsx` | AUTH-02 |
+| 홈 = 돌탑 (오늘의 돌 끌어 쌓기, 기록 칸을 누르면 캘린더 할 일 목록, 응원 풍선, 친구 돌탑, 시간 이동) | `src/app/(tabs)/index.tsx`, `features/home/` | HOME-01, STONE-01·02, PLAN-02, DEMO-01 |
+| 내 돌탑 시트 (돌탑을 누르면: 소원, 공개 범위, 받은 응원) | `features/wish/components/MyTowerSheet.tsx` | WISH-04, FRIEND-03 |
+| 소원 적기 (메모한 소원 불러오기, AI 추천) → 명소 고르기 → 다짐 확인 | `src/app/wish/` | WISH-01·02·03, SPOT-01 |
+| 명소 지도 · 방문 인증 (잠긴 화면 → 안개 걷힘, 명소별 빛 연출, 스토리 카드·출처, 다시 인증) | `src/app/(tabs)/spots.tsx`, `features/spot/` | SPOT-02·03·05 |
+| 우체통 (받은 엽서 · 보낸 엽서 · 내 엽서함 · 엽서 보내기, 앞뒷면 PNG 저장) | `src/app/mailbox.tsx`, `features/postcard/` | SPOT-04 |
+| 소원 캘린더 (기간 줄, 날짜별 할 일, AI 할 일 추천, 소원 메모) | `src/app/planner.tsx`, `features/plan/` | PLAN-01·02·03 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
-| 탭: 모아보기 (완성한 돌탑을 최근 것부터 한 장씩 넘겨 보기, 30개를 채우면 금색 별, 이루었으면 흰색 별, 회차 선택) | `src/app/(tabs)/collection.tsx` | TOWER-03, TOWER-04 |
-| 탭: 명소 지도 (누르면 확대·설명, 좌우 화살표, 방문한 곳 별표, 방문 인증: 기기 안에서 반경 확인) | `src/app/(tabs)/spots.tsx` → `features/spot/components/SpotExplorer.tsx`, `VisitScreen.tsx` | SPOT-02, SPOT-03 |
-| 내 정보·탈퇴 | `src/app/me.tsx` | AUTH-04, AUTH-06 |
-| 탭: 친구 목록 | `src/app/(tabs)/friends.tsx` | FRIEND-02 |
-| 친구 초대 (링크 만들기·공유, 코드로 추가) | `src/app/friends/invite.tsx` | FRIEND-01 |
-| 친구 돌탑 (응원, 콕 찌르기) | `src/app/friends/[friendId].tsx` | FRIEND-02, FRIEND-03, FRIEND-04 |
-| 초대 링크로 열기 (로그인 전이면 로그인 후 이어서) | `src/app/invite/[code].tsx` | FRIEND-01 |
-| 알림함 (안 읽은 알림 점, 누르면 관련 화면으로) | `src/app/notifications.tsx` | NOTI-01 |
-| 받은 응원 (내 진행 중 돌탑) | `src/app/cheers.tsx` | FRIEND-03 |
+| 모아보기 (1년 묶음별 돌탑 액자, 꽃잎 흩날림, 30일 회고·매일 기록, 1년 회고·방문 명소) | `src/app/(tabs)/collection.tsx`, `features/wish/components/` | TOWER-03·04 |
+| 친구 목록 · 초대(링크 복사·공유) · 친구 돌탑(응원, 콕 찌르기) · 초대 링크로 열기 | `src/app/(tabs)/friends.tsx`, `src/app/friends/`, `src/app/invite/` | FRIEND-01~04 |
+| 알림함 · 받은 응원 | `src/app/notifications.tsx`, `cheers.tsx` | NOTI-01, FRIEND-03 |
+| 내 정보 (닉네임 변경, 시연 계정이면 "시연 처음 상태로", 로그아웃, 탈퇴) | `src/app/me.tsx` | AUTH-04·06, DEMO-03 |
 
-아직 없는 화면(P1): 엽서, AI 실천 목표 추천. 푸시 알림 받기(기기 푸시 토큰 등록)는 개발 빌드에서 추가 예정
+모든 화면에 로딩·에러·빈 상태·오프라인 화면이 있습니다 (`shared/components/ScreenState.tsx`의 `AsyncContent`).
 
 ## 폴더 구조
 
 ```text
 src/
-├── app/          화면(라우트). 파일 하나 = 화면 하나, _layout.tsx에서 로그인 상태별 접근 제어
-│   └── (tabs)/   하단 탭 4개 (홈·명소·친구·모아보기). 나머지 화면은 탭 위에 뜨는 Stack
-├── features/     도메인별 types.ts(API 타입) · api.ts(API 함수) · components/
-│   ├── auth/  user/  home/  wish/  stone/  spot/  friend/  demo/
-├── shared/       공통 컴포넌트(Screen, Button, TextField, ScreenState)와 훅(useApi, useSubmit)
-├── api/          API 클라이언트(client.ts), 목 서버(mock.ts, mockServer.ts)
-└── global.css    NativeWind 진입점
+├── app/        화면(라우트). 파일 하나 = 화면 하나, _layout.tsx에서 로그인·온보딩 상태별 접근 제어
+│   └── (tabs)/ 하단 탭 4개 (홈·명소·친구·모아보기). 나머지는 탭 위에 뜨는 화면
+├── features/   도메인별 types.ts(API 타입) · api.ts(API 함수) · components/
+│   └── auth  user  intro  home  wish  stone  spot  postcard  plan  friend  notification  demo
+├── shared/     공통 컴포넌트(Screen, Button, TextField, Dialog, ScreenState)와 훅(useApi, useSubmit)
+└── api/        API 클라이언트(client.ts, 토큰 재발급), 목 서버(mock.ts, mockServer.ts)
+assets/         명소 일러스트, 엽서(앱용), 돌, 배경, 꽃잎, 인트로 그림
+public/         웹 전용 정적 파일 (엽서 원본, 탭 아이콘, index.html)
+scripts/        deploy-pages.sh (실서비스 웹 배포)
 ```
 
 ## 스크립트
 
 ```bash
-npx expo start -c      # 개발 서버 (캐시 삭제)
-npx expo lint          # 린트
-npx tsc --noEmit       # 타입 검사
-npx expo install 패키지  # 라이브러리 추가 (npm install 대신, SDK 호환 버전으로 설치)
+npx expo start -c       # 개발 서버 (캐시 삭제)
+npx tsc --noEmit        # 타입 검사
+npx expo lint           # 린트
+npx expo install 패키지   # 라이브러리 추가 (SDK 호환 버전으로)
 ```
 
-작업을 마치기 전에 린트와 타입 검사를 실행하세요.
+작업을 마치기 전에 타입 검사와 린트를 실행하세요.
