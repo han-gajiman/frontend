@@ -99,7 +99,7 @@ export function startGoogleWebLogin(): Promise<null> {
     client_id: GOOGLE_WEB_CLIENT_ID,
     redirect_uri: redirectUri(),
     response_type: 'id_token',
-    scope: 'openid email profile',
+    scope: 'openid', // 계정 고유 ID(sub)만 필요 (이메일·프로필은 받지 않음, 개인정보 처리방침)
     nonce,
     state,
     prompt: 'select_account',
