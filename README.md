@@ -1,5 +1,7 @@
 # frontend
 
+[![CI](https://github.com/han-gajiman/frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/han-gajiman/frontend/actions/workflows/ci.yml)
+
 **한 가지만**(2026 단디톤 출품작)의 앱·웹입니다. 소원 하나를 정하고, 30일 동안 매일 돌을 하나씩 쌓으며, 경북 명소를 방문해 이어가는 서비스입니다.
 
 - 실서비스 웹: https://han-gajiman.github.io (실제 서버 연결, 이메일·카카오·Google 가입)
@@ -39,7 +41,7 @@ npx expo start -c              # w: 웹, QR: 폰
 | `EXPO_PUBLIC_MOCK_SCENARIO` | 목 서버 상태: `normal` 진행 중 돌탑 / `fresh` 처음 쌓는 날 / `empty` 신규 회원 / `error` / `offline` / `slow` |
 | `EXPO_PUBLIC_DEMO` | 시연 모드: 시간 이동 버튼, 방문 인증 위치 확인 생략. 실서비스 빌드에서는 끔 |
 | `EXPO_PUBLIC_DEMO_TIME_TRAVEL` | `false`면 시연 모드여도 시간 이동 버튼만 숨김 |
-| `EXPO_PUBLIC_SKIP_LOCATION` | `true`면 방문 인증 위치 확인만 건너뜀 (테스트 기간 실서비스 웹) |
+| `EXPO_PUBLIC_SKIP_LOCATION` | `true`면 방문 인증 위치 확인을 모두 건너뜀. 실서비스 웹은 11/10부터 끔 (시연 계정은 "시연용 명소 인증" 버튼) |
 | `EXPO_PUBLIC_DEV_LOGIN`, `EXPO_PUBLIC_DEV_LOGIN_KEY` | 실제 로컬 서버에 붙을 때 "개발용 로그인" 버튼 (같은 키 = 같은 회원) |
 | `EXPO_PUBLIC_KAKAO_JS_KEY` | 카카오 지도 (없으면 명소 목록으로 대신 보여줌) |
 | `EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY` | 앱 카카오 로그인 |
@@ -77,11 +79,11 @@ EXPO_PUBLIC_DEV_LOGIN=true
 
 ```bash
 # 데모 웹 (Expo 계정 han-gajiman 로그인 필요, 반영까지 최대 10분)
-rm -rf dist && EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=normal EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
+rm -rf dist && EXPO_PUBLIC_USE_MOCK=true EXPO_PUBLIC_MOCK_SCENARIO=fresh EXPO_PUBLIC_DEMO=true EXPO_PUBLIC_DEV_LOGIN=false npx expo export -p web
 npx eas-cli@27.2.0 deploy --prod
 ```
 
-- `deploy-pages.sh`는 실서버 주소로 빌드하고, `404.html`(주소로 바로 들어와도 앱이 뜨게)과 `.nojekyll`(`_expo` 폴더 무시 방지)을 넣어 [han-gajiman.github.io](https://github.com/han-gajiman/han-gajiman.github.io) 저장소에 올립니다. 시간 이동 버튼은 서버가 허락한 시연 계정에만 보입니다. 테스트 기간에는 위치 확인을 건너뛰며, 정식 운영 때는 `SKIP_LOCATION=false ./scripts/deploy-pages.sh`로 배포합니다.
+- `deploy-pages.sh`는 실서버 주소로 빌드하고, `404.html`(주소로 바로 들어와도 앱이 뜨게)과 `.nojekyll`(`_expo` 폴더 무시 방지)을 넣어 [han-gajiman.github.io](https://github.com/han-gajiman/han-gajiman.github.io) 저장소에 올립니다. 시간 이동 버튼과 "시연용 명소 인증"(위치 확인 없이 방문 인증) 버튼은 서버가 허락한 시연 계정(`/users/me`의 `canTimeTravel`)에만 보입니다. 다른 회원은 명소 반경 안에서만 인증됩니다.
 - 카카오 지도와 로그인은 등록된 도메인에서만 됩니다. 카카오 콘솔(Web 도메인, Redirect URI `…/login`)과 Google 콘솔(승인된 JavaScript 원본·리디렉션 URI)에 두 주소와 `http://localhost:8081`이 등록되어 있어야 합니다.
 - 탭 아이콘은 `public/favicon-v2.png`입니다. 브라우저가 예전 아이콘을 기억하므로, 바꿀 때는 파일 이름의 숫자를 올리고 `public/index.html`도 고칩니다.
 
@@ -103,18 +105,19 @@ npx eas-cli@latest build -p android --profile development
 | --- | --- | --- |
 | 인트로 3장 (유성·빛 궤도·노을 연출, 건너뛰기) | `src/app/intro.tsx`, `features/intro/` | - |
 | 로그인 · 회원가입 · 계정 찾기 (웹 소셜 로그인은 `/login`으로 돌아옴) | `src/app/login.tsx`, `signup.tsx`, `find-account.tsx` | AUTH-01 |
-| 온보딩 (약관·닉네임) | `src/app/onboarding.tsx` | AUTH-02 |
+| 온보딩 (전체 동의, 만 14세 확인, 약관·개인정보 동의와 [보기], 수집·이용 안내 요약, 닉네임) | `src/app/onboarding.tsx` | AUTH-02 |
+| 이용약관 · 개인정보 처리방침 전문 (로그인 전후 모두 열림) | `src/app/legal/[doc].tsx`, `features/legal/` | AUTH-02 |
 | 홈 = 돌탑 (오늘의 돌 끌어 쌓기, 기록 칸을 누르면 캘린더 할 일 목록, 응원 풍선, 친구 돌탑, 시간 이동) | `src/app/(tabs)/index.tsx`, `features/home/` | HOME-01, STONE-01·02, PLAN-02, DEMO-01 |
 | 내 돌탑 시트 (돌탑을 누르면: 소원, 공개 범위, 받은 응원) | `features/wish/components/MyTowerSheet.tsx` | WISH-04, FRIEND-03 |
 | 소원 적기 (메모한 소원 불러오기, AI 추천) → 명소 고르기 → 다짐 확인 | `src/app/wish/` | WISH-01·02·03, SPOT-01 |
-| 명소 지도 · 방문 인증 (잠긴 화면 → 안개 걷힘, 명소별 빛 연출, 스토리 카드·출처, 다시 인증) | `src/app/(tabs)/spots.tsx`, `features/spot/` | SPOT-02·03·05 |
+| 명소 지도 · 방문 인증 (잠긴 화면 → 안개 걷힘, 명소별 빛 연출, 스토리 카드·출처, 다시 인증, 시연 계정만 시연용 명소 인증) | `src/app/(tabs)/spots.tsx`, `features/spot/` | SPOT-02·03·05 |
 | 우체통 (받은 엽서 · 보낸 엽서 · 내 엽서함 · 엽서 보내기, 앞뒷면 PNG 저장) | `src/app/mailbox.tsx`, `features/postcard/` | SPOT-04 |
 | 소원 캘린더 (기간 줄, 날짜별 할 일, AI 할 일 추천, 소원 메모) | `src/app/planner.tsx`, `features/plan/` | PLAN-01·02·03 |
 | 완성 회고 | `src/app/reflection.tsx` | TOWER-02 |
 | 모아보기 (1년 묶음별 돌탑 액자, 꽃잎 흩날림, 30일 회고·매일 기록, 1년 회고·방문 명소) | `src/app/(tabs)/collection.tsx`, `features/wish/components/` | TOWER-03·04 |
 | 친구 목록 · 초대(링크 복사·공유) · 친구 돌탑(응원, 콕 찌르기) · 초대 링크로 열기 | `src/app/(tabs)/friends.tsx`, `src/app/friends/`, `src/app/invite/` | FRIEND-01~04 |
 | 알림함 · 받은 응원 | `src/app/notifications.tsx`, `cheers.tsx` | NOTI-01, FRIEND-03 |
-| 내 정보 (닉네임 변경, 시연 계정이면 "시연 처음 상태로", 로그아웃, 탈퇴) | `src/app/me.tsx` | AUTH-04·06, DEMO-03 |
+| 내 정보 (닉네임 변경, 기록: 완성한 돌탑·방문한 명소·모은 엽서, 시연 계정이면 "시연 처음 상태로", 약관 링크, 로그아웃, 탈퇴) | `src/app/me.tsx` | AUTH-04·06, DEMO-03 |
 
 모든 화면에 로딩·에러·빈 상태·오프라인 화면이 있습니다 (`shared/components/ScreenState.tsx`의 `AsyncContent`).
 
@@ -142,4 +145,4 @@ npx expo lint           # 린트
 npx expo install 패키지   # 라이브러리 추가 (SDK 호환 버전으로)
 ```
 
-작업을 마치기 전에 타입 검사와 린트를 실행하세요.
+작업을 마치기 전에 타입 검사와 린트를 실행하세요. GitHub Actions(`.github/workflows/ci.yml`)도 main에 푸시하거나 PR을 열 때마다 타입 검사, 린트, 웹 빌드(목 서버 모드)를 실행합니다.

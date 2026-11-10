@@ -1,0 +1,28 @@
+# 푸시·PR마다 타입 검사, 린트, 웹 빌드 (목 서버 모드, 비밀값 없이)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx expo lint
+      - name: Web build
+        run: npx expo export -p web
+        env:
+          EXPO_PUBLIC_USE_MOCK: "true"
+          EXPO_PUBLIC_MOCK_SCENARIO: fresh
+          EXPO_PUBLIC_DEMO: "true"
