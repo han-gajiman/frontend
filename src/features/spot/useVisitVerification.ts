@@ -23,11 +23,11 @@ export function useVisitVerification(spot: Spot, onVisited: (visit: VisitRespons
   const [notice, setNotice] = useState<string>();
   const submit = useSubmit(createVisit);
 
-  // 성공하면 true (인증 결과는 onVisited로)
-  const verify = async () => {
+  // 성공하면 true (인증 결과는 onVisited로). skipLocation은 시연용 명소 인증 (시연 계정만)
+  const verify = async (skipLocation = false) => {
     setNotice(undefined);
     setChecking(true);
-    const check = await verifyVisit(spot);
+    const check = await verifyVisit(spot, skipLocation);
     setChecking(false);
 
     const checkNotice = visitCheckNotice(check);

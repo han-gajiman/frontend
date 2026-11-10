@@ -5,8 +5,8 @@
 set -euo pipefail
 
 API_URL="${API_URL:-https://hangajiman.duckdns.org/api/v1}"
-# 테스트 기간에는 방문 인증 위치 확인을 건너뜀. 정식 운영 때는 SKIP_LOCATION=false ./scripts/deploy-pages.sh
-SKIP_LOCATION="${SKIP_LOCATION:-true}"
+# 방문 인증은 위치를 확인함 (11/10부터). 시연 계정은 앱 안의 "시연용 명소 인증" 버튼을 씀
+SKIP_LOCATION="${SKIP_LOCATION:-false}"
 REPO="https://github.com/han-gajiman/han-gajiman.github.io.git"
 OUT=dist-pages
 WORK="$(mktemp -d)"

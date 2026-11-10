@@ -16,6 +16,7 @@ import { ErrorText } from '@/shared/components/ErrorText';
 import { Screen } from '@/shared/components/Screen';
 import { useApi } from '@/shared/hooks/useApi';
 import { useSubmit } from '@/shared/hooks/useSubmit';
+import { DemoVisitButton, useCanDemoVisit } from '@/features/spot/components/DemoVisitButton';
 
 const fetchSpots = () => getSpots();
 
@@ -32,6 +33,7 @@ export default function ConfirmWishScreen() {
   const [notice, setNotice] = useState<string>();
   const [gift, setGift] = useState<Postcard | null>(null);
   const [startedWithoutVisit, setStartedWithoutVisit] = useState(false); // 등록은 됐지만 인증 요청이 실패
+  const canDemoVisit = useCanDemoVisit(); // DEMO-02 시연 계정만 "시연용 명소 인증"
 
   // 앞 단계를 거치지 않고 들어온 경우 (예: 웹 새로고침). 등록 직후 draft를 비울 때는 제외
   if (!done && (!draft.content || draft.spotId === null)) return <Redirect href="/wish/new" />;
@@ -60,12 +62,12 @@ export default function ConfirmWishScreen() {
 
   // 명소 인증하고 시작하기: 기기 안에서 위치를 먼저 확인하고, 반경 안이면 돌탑을 시작한 뒤 방문 인증까지 (새 엽서)
   // 반경 밖이면 안내만 하고, "다음에 인증하기"로 시작할 수 있습니다.
-  const handleStartWithVisit = async () => {
+  const handleStartWithVisit = async (skipLocation = false) => {
     const spot = spots.data?.find((s) => s.id === draft.spotId);
     if (!spot) return;
     setNotice(undefined);
     setChecking(true);
-    const check = await verifyVisit(spot);
+    const check = await verifyVisit(spot, skipLocation);
     setChecking(false);
     const checkNotice = visitCheckNotice(check);
     if (checkNotice) {
@@ -99,7 +101,10 @@ export default function ConfirmWishScreen() {
           <>
             {notice && <Text className="text-center text-sm text-gray-600">{notice}</Text>}
             <ErrorText error={error} />
-            <Button label="명소 인증하고 시작하기" onPress={handleStartWithVisit} disabled={!pledged || !spots.data || done} loading={busy} />
+            <Button label="명소 인증하고 시작하기" onPress={() => handleStartWithVisit()} disabled={!pledged || !spots.data || done} loading={busy} />
+            {canDemoVisit && (
+              <DemoVisitButton onPress={() => handleStartWithVisit(true)} disabled={!pledged || !spots.data || done || busy} />
+            )}
             <Button label="다음에 인증하기" variant="secondary" onPress={handleStart} disabled={!pledged || busy || done} />
           </>
         )

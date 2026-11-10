@@ -29,6 +29,7 @@ import type { Spot } from '../types';
 import { useVisitVerification } from '../useVisitVerification';
 import { LIGHT_DIRECTION, spotAmbience, transparent } from '../spotAmbience';
 import { visitFog } from '../visitFog';
+import { DemoVisitButton, useCanDemoVisit } from './DemoVisitButton';
 
 // 피그마 "방문 인증 전" (204:74) 색과 크기
 const NAVY = '#332d73';
@@ -64,6 +65,7 @@ export function VisitScreen({
   const ambience = spotAmbience(spot.id);
   // 새 엽서는 안개가 걷힌 뒤(약 1.9초) 보여줍니다.
   const [gift, setGift] = useState<Postcard | null>(null);
+  const canDemoVisit = useCanDemoVisit();
   const { verify, busy, notice, error } = useVisitVerification(spot, (visit) => {
     onVisited();
     const postcard = visit.postcard;
@@ -245,7 +247,8 @@ export function VisitScreen({
                     <View style={{ gap: 8 }}>
                       <VerifyNotice notice={notice} />
                       <ErrorText error={error} />
-                      <PressScaleButton label="방문 인증하기" onPress={verify} loading={busy} />
+                      <PressScaleButton label="방문 인증하기" onPress={() => verify()} loading={busy} />
+                      {canDemoVisit && <DemoVisitButton onPress={() => verify(true)} disabled={busy} color={NAVY} />}
                     </View>
                   </Rise>
                 </Animated.View>

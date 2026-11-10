@@ -13,6 +13,7 @@ import { ErrorText } from '@/shared/components/ErrorText';
 import { Screen } from '@/shared/components/Screen';
 import { AsyncContent, EmptyState } from '@/shared/components/ScreenState';
 import { useApi } from '@/shared/hooks/useApi';
+import { DemoVisitButton, useCanDemoVisit } from '@/features/spot/components/DemoVisitButton';
 
 const fetchSpots = () => getSpots();
 
@@ -67,6 +68,7 @@ export default function SpotsScreen() {
 // 방문한 명소: 일러스트 보기 옆에, 지금 돌탑에서 아직 인증하지 않았으면 "다시 인증하기". 다시 인증하면 새 엽서
 function SpotActions({ spot, onOpen, onVisitedAgain }: { spot: Spot; onOpen: () => void; onVisitedAgain: () => void }) {
   const [gift, setGift] = useState<Postcard | null>(null);
+  const canDemoVisit = useCanDemoVisit();
   const { verify, busy, notice, error } = useVisitVerification(spot, (visit) => {
     setGift(visit.postcard);
     onVisitedAgain();
@@ -92,9 +94,10 @@ function SpotActions({ spot, onOpen, onVisitedAgain }: { spot: Spot; onOpen: () 
           <Button label="방문 완료 · 일러스트" onPress={onOpen} variant="secondary" />
         </View>
         <View className="flex-1">
-          <Button label="다시 인증하기" onPress={verify} loading={busy} />
+          <Button label="다시 인증하기" onPress={() => verify()} loading={busy} />
         </View>
       </View>
+      {canDemoVisit && <DemoVisitButton onPress={() => verify(true)} disabled={busy} />}
       {dialog}
     </View>
   );
