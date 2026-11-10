@@ -11,7 +11,11 @@ const formatDistance = (m: number) => (m < 1000 ? `${m}m` : `${(m / 1000).toFixe
 // 위치 확인 결과 안내 (반경 안이면 없음)
 export function visitCheckNotice(check: VisitCheck): string | undefined {
   if (check.status === 'denied') return '위치 권한이 필요해요. 기기 설정에서 허용한 뒤 다시 시도해 주세요.';
-  if (check.status === 'unavailable') return '현재 위치를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.';
+  if (check.status === 'unavailable') {
+    if (check.reason === 'off') return '현재 위치를 확인하지 못했어요. 기기의 위치 서비스가 켜져 있는지 확인해 주세요. (노트북은 와이파이도 켜 주세요)';
+    if (check.reason === 'timeout') return '위치를 잡는 데 시간이 오래 걸려요. 잠시 후 다시 시도해 주세요.';
+    return '현재 위치를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.';
+  }
   if (check.status === 'outOfRange') return `명소까지 약 ${formatDistance(check.distanceM)} 남았어요. 명소 가까이에서 다시 시도해 주세요.`;
   return undefined;
 }
