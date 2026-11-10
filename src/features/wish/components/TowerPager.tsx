@@ -134,7 +134,7 @@ function TowerCard({ wish, onOpenReflection }: { wish: WishSummary; onOpenReflec
       </View>
       <View className="items-center gap-1">
         <Text className="text-xs text-gray-500">
-          {wish.startDate} · {wish.spotName}
+          {towerPeriod(wish.startDate, wish.endDate)} · {wish.spotName}
         </Text>
         <Text className="text-center text-lg font-bold text-gray-900">{wish.content}</Text>
         <Text className="text-gray-600">
@@ -171,4 +171,11 @@ function ArrowButton({
       <Ionicons name={icon} size={22} color="#374151" />
     </Pressable>
   );
+}
+
+// 돌탑을 쌓은 기간: 2026.10.22 ~ 11.20 (해가 바뀌면 끝 날짜에도 연도)
+function towerPeriod(startDate: string, endDate: string) {
+  const [sy, sm, sd] = startDate.split('-');
+  const [ey, em, ed] = endDate.split('-');
+  return `${sy}.${sm}.${sd} ~ ${ey === sy ? '' : `${ey}.`}${em}.${ed}`;
 }
