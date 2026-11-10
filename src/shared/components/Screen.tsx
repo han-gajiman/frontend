@@ -39,7 +39,12 @@ export function Screen({ title, showBack = false, onBack, footer, scroll = true,
               <Text className="text-2xl text-gray-900">‹</Text>
             </Pressable>
           )}
-          {title && <Text className="text-lg font-bold text-gray-900">{title}</Text>}
+          {/* 뒤로 화살표(‹)와 글자 높이를 맞추려고 제목을 2px 내림 */}
+          {title && (
+            <Text className="text-lg font-bold text-gray-900" style={{ transform: [{ translateY: 2 }] }}>
+              {title}
+            </Text>
+          )}
         </View>
       )}
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
