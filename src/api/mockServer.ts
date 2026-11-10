@@ -20,7 +20,7 @@ import {
   WISH_PLAN_LIMIT,
   type WishPlan,
 } from '@/features/plan/types';
-import type { Letter, Postcard, SendLetterRequest } from '@/features/postcard/types';
+import { LETTER_MAX_LENGTH, type Letter, type Postcard, type SendLetterRequest } from '@/features/postcard/types';
 import type { Spot, VisitResponse } from '@/features/spot/types';
 import type { CreateStoneResponse, StoneItem, StoneType } from '@/features/stone/types';
 import type {
@@ -246,7 +246,7 @@ const FIXED_TODO_SUGGESTIONS = [
 
 // WISH-02 고정 답변. 실제 AI가 붙기 전까지 어떤 소원을 적어도 이 답변을 번갈아 보여줍니다.
 const SUGGESTION_LIMIT_PER_DAY = 10;
-const FIXED_SUGGESTIONS: WishSuggestion[] = [
+const FIXED_SUGGESTIONS: Omit<WishSuggestion, 'remaining'>[] = [
   {
     actionGoals: ['매일 영어 문장 3개 소리 내어 읽기', '하루 10분 영어 영상 따라 말하기', '매일 영어로 일기 한 문장 쓰기'],
     spot: { spotId: 3, spotName: '호미곶 해맞이광장', reason: '새로운 나를 시작하는 소원이니, 해가 가장 먼저 뜨는 곳에서 다짐해 봐요.' },
@@ -280,6 +280,18 @@ function dailyLog(actionGoal: string, day: number) {
   return day % 8 === 0 ? `${actionGoal} 완료!` : DAILY_NOTES[day % DAILY_NOTES.length];
 }
 
+// 받은 엽서 예시 글 (긴 글, 줄바꿈 섞음)
+const LETTER_SENDERS = ['지기', '돌돌이', '면주', '현', '바람결', '새벽별'];
+const LONG_LETTERS = [
+  '오늘 드디어 여기 왔어! 생각보다 훨씬 넓고 예뻐서 깜짝 놀랐어. 네 소원도 같이 빌었으니까 꼭 이루어질 거야. 우리 남은 날도 하루도 빼먹지 말고 끝까지 같이 쌓자. 진짜 응원해!!',
+  '여기 와 보니까 네가 왜 이곳을 골랐는지 알겠더라. 바람도 좋고 하늘도 맑아서 한참을 앉아 있었어. 우리 30일 꼭 채우자! 다 채우면 같이 오자.',
+  '오늘도 돌 하나 쌓았지?\n나는 오늘 좀 힘들었는데 네 돌탑 보고 다시 힘냈어.\n조금만 더 가면 반이야. 끝까지 같이 가자, 응원할게!',
+  '엽서 받으면 꼭 답장해 줘! 요즘 매일 아침에 일어나서 제일 먼저 하는 게 돌 쌓기야. 덕분에 습관이 생긴 것 같아. 너도 꾸준히 하고 있지? 고마워 정말로.',
+  '하루하루 쌓다 보면 어느새 탑이 되어 있을 거야.\n\n오늘 여기서 네 소원도 같이 빌었어. 꼭 이루어지길 바라. 다음 달에는 우리 같이 가 보자.',
+  '사진으로만 보던 곳을 직접 와 보니 훨씬 멋지다. 소원 하나만 빌 수 있다고 해서 고민하다가 네 합격을 빌었어. 이번엔 진짜 될 거야. 늘 응원하고 있어!',
+  'ㅋㅋㅋ 여기 사람 진짜 많다\n그래도 줄 서서 소원 빌고 왔어\n돌탑도 하나 몰래 올려놓고 옴\n너도 오늘 쌓는 거 잊지 마!!\n내일 또 콕 찌를 거야',
+];
+
 // 시나리오별 초기 데이터
 function seed() {
   if (MOCK_SCENARIO === 'empty') return;
@@ -303,19 +315,27 @@ function seed() {
   db.postcards = spots.flatMap((spot) =>
     [1, 2, 3, 4].map((style) => ({ spotId: spot.id, spotName: spot.name, style, issuedAt: `${addDays(today(), -30)}T10:00:00+09:00` })),
   );
-  db.letters = [
-    {
-      letterId: 801,
-      spotId: 8,
-      spotName: '영덕 해맞이공원',
-      style: 3,
-      message: '영덕에서 해 뜨는 거 보다가 네 생각 났어! 우리 30일 꼭 채우자.',
-      fromNickname: '지기',
-      toMe: false,
-      read: false,
-      sentAt: new Date().toISOString(),
-    },
-  ];
+  // 받은 엽서 40장: 명소 10곳 × 4종을 한 장씩, 글은 최대 길이(100자) 가까이 채워 엽서 그림과 글이 겹치는지 확인합니다.
+  // 첫 장(영덕 3번)만 안 읽은 상태
+  db.letters = spots.flatMap((spot, si) =>
+    [1, 2, 3, 4].map((style, ti) => {
+      const n = si * 4 + ti;
+      return {
+        letterId: 801 + n,
+        spotId: spot.id,
+        spotName: spot.name,
+        style,
+        message: LONG_LETTERS[n % LONG_LETTERS.length].slice(0, LETTER_MAX_LENGTH),
+        fromNickname: LETTER_SENDERS[n % LETTER_SENDERS.length],
+        toMe: false,
+        read: true,
+        sentAt: `${addDays(today(), -n)}T${String(9 + (n % 12)).padStart(2, '0')}:20:00+09:00`,
+      };
+    }),
+  );
+  const unread = db.letters.findIndex((l) => l.spotId === 8 && l.style === 3);
+  const [first] = db.letters.splice(unread, 1);
+  db.letters.unshift({ ...first, read: false, sentAt: new Date().toISOString() });
   db.sentLetters = [
     {
       letterId: 802,
@@ -756,7 +776,8 @@ export const mockServer = {
       throw new ApiError('AI_RATE_LIMIT', '오늘은 추천을 다 썼어요.', 429);
     }
     db.suggestionUse.count++;
-    return FIXED_SUGGESTIONS[db.suggestionTurn++ % FIXED_SUGGESTIONS.length];
+    const picked = FIXED_SUGGESTIONS[db.suggestionTurn++ % FIXED_SUGGESTIONS.length];
+    return { ...picked, remaining: SUGGESTION_LIMIT_PER_DAY - db.suggestionUse.count };
   },
 
   getStones(wishId: number): { content: StoneItem[]; page: number; size: number; hasNext: boolean } {

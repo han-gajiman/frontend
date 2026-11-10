@@ -18,6 +18,9 @@ export default function NewWishScreen() {
   const [content, setContent] = useState(draft.content);
   const [actionGoal, setActionGoal] = useState(draft.actionGoal);
   const suggest = useSubmit(suggestForWish);
+  // 오늘 남은 추천 횟수. 소원을 고쳐 추천이 지워져도 횟수는 그대로 보여 줍니다. (모르면 null)
+  const [remaining, setRemaining] = useState<number | null>(draft.suggestion?.remaining ?? null);
+  const usedUp = suggest.error?.code === 'AI_RATE_LIMIT' ? 0 : remaining;
   const latestContent = useRef(content); // 기다리는 사이 소원을 고쳤으면 도착한 추천을 버립니다.
   const wishPlans = useApi(getWishPlans); // 소원 캘린더에 메모해 둔 소원 (PLAN-01)
 
@@ -34,7 +37,9 @@ export default function NewWishScreen() {
   const handleSuggest = async () => {
     const requested = content.trim();
     const result = await suggest.run(requested);
-    if (result.ok && latestContent.current.trim() === requested) draft.setSuggestion(result.data);
+    if (!result.ok) return;
+    setRemaining(typeof result.data.remaining === 'number' ? result.data.remaining : null); // 서버 업데이트 전이면 모름
+    if (latestContent.current.trim() === requested) draft.setSuggestion(result.data);
   };
 
   const handleNext = () => {
@@ -96,6 +101,7 @@ export default function NewWishScreen() {
             disabled={content.trim().length === 0}
             loading={suggest.submitting}
             again={draft.suggestion !== null}
+            remaining={usedUp}
             onPress={handleSuggest}
           />
           {suggest.error && !suggest.submitting && <SuggestError error={suggest.error} />}

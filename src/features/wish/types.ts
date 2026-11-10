@@ -54,6 +54,7 @@ export type WishSuggestion = {
   spot: { spotId: number; spotName: string; reason: string } | null;
   fallback: boolean; // AI가 실패해 기본 문구를 씀
   supportMessage: string | null; // 위험한 소원이면 추천 대신 도움 안내
+  remaining: number; // 오늘 남은 소원 추천 횟수 (이번 추천까지 뺀 값, 하루 10번)
 };
 
 // GET /wishes?round=1

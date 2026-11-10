@@ -5,20 +5,30 @@ import type { ApiError } from '@/api/client';
 import { ErrorText } from '@/shared/components/ErrorText';
 
 const ACCENT = '#6d4fc2';
+export const WISH_SUGGEST_LIMIT = 10;
 
 // WISH-02 "AI에게 추천받기" 버튼. 소원을 적어야 누를 수 있습니다.
 export function SuggestButton({
   disabled,
   loading,
   again,
+  remaining,
   onPress,
 }: {
   disabled: boolean;
   loading: boolean;
   again: boolean; // 이미 추천을 받았으면 "다시 추천받기"
+  remaining: number | null; // 오늘 남은 횟수 (아직 모르면 null)
   onPress: () => void;
 }) {
-  const inactive = disabled || loading;
+  const usedUp = remaining === 0;
+  const inactive = disabled || loading || usedUp;
+  const count = remaining === null ? `하루 ${WISH_SUGGEST_LIMIT}번` : `남은 ${remaining}/${WISH_SUGGEST_LIMIT}`;
+  const label = loading
+    ? '추천을 고르는 중…'
+    : usedUp
+      ? '오늘 추천을 다 썼어요'
+      : `${again ? '다시 추천받기' : 'AI에게 추천받기'} (${count})`;
   return (
     <Pressable
       onPress={onPress}
@@ -28,7 +38,7 @@ export function SuggestButton({
       className={`h-12 flex-row items-center justify-center gap-2 rounded-xl bg-violet-50 ${inactive && !loading ? 'opacity-40' : ''}`}>
       {loading ? <ActivityIndicator size="small" color={ACCENT} /> : <Ionicons name="sparkles" size={16} color={ACCENT} />}
       <Text className="font-semibold" style={{ color: ACCENT }}>
-        {loading ? '추천을 고르는 중…' : again ? '다시 추천받기' : 'AI에게 추천받기'}
+        {label}
       </Text>
     </Pressable>
   );
