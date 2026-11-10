@@ -23,3 +23,11 @@ export function resetTimeTravel(): Promise<{ serverNow: string }> {
   }
   return apiRequest<{ serverNow: string }>('/demo/time-travel/reset', { method: 'POST' });
 }
+
+// POST /demo/reset-scenario (DEMO-03) — 시연 계정을 처음 세팅한 상태로 (날짜·기록·친구 계정). 시연 계정 본인만
+export function resetDemoScenario(): Promise<void> {
+  if (USE_MOCK) {
+    return mockCall(() => mockServer.resetTimeTravel()).then(() => undefined);
+  }
+  return apiRequest<void>('/demo/reset-scenario', { method: 'POST' });
+}

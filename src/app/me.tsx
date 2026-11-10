@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { logout } from '@/features/auth/api';
 import { signOutSocial } from '@/features/auth/social';
 import { useAuthStore } from '@/features/auth/store';
+import { resetDemoScenario } from '@/features/demo/api';
 import { changeNickname, deleteAccount, getMe } from '@/features/user/api';
 import type { Me } from '@/features/user/types';
 import { Button } from '@/shared/components/Button';
@@ -58,6 +59,7 @@ function MeContent({ me, reload }: { me: Me; reload: () => void }) {
       </View>
 
       <View className="gap-3">
+        {me.canResetDemo && <DemoResetButton onDone={reload} />}
         <Button label="로그아웃" variant="secondary" onPress={handleLogout} />
 
         {confirmingDelete ? (
@@ -131,6 +133,42 @@ function NicknameRow({ nickname, onChanged }: { nickname: string; onChanged: () 
           <Button label="저장" onPress={handleSave} disabled={trimmed.length === 0} loading={save.submitting} />
         </View>
       </View>
+    </View>
+  );
+}
+
+// DEMO-03 시연 계정만: 처음 세팅한 상태(날짜·돌탑·엽서·캘린더·친구 돌탑)로 되돌리기. 눌러도 되는지 한 번 더 묻습니다.
+function DemoResetButton({ onDone }: { onDone: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [done, setDone] = useState(false);
+  const reset = useSubmit(resetDemoScenario);
+
+  const handleReset = async () => {
+    if ((await reset.run()).ok) {
+      setConfirming(false);
+      setDone(true);
+      onDone();
+    }
+  };
+
+  if (!confirming) {
+    return (
+      <View className="gap-1">
+        <Button label="시연 처음 상태로" variant="secondary" onPress={() => setConfirming(true)} />
+        {done && <Text className="text-center text-sm text-gray-500">처음 세팅한 상태로 돌아왔어요.</Text>}
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-3 rounded-2xl border border-gray-200 p-4">
+      <Text className="text-center font-semibold text-gray-900">시연 처음 상태로 돌릴까요?</Text>
+      <Text className="text-center text-sm text-gray-500">
+        시연하며 쌓은 돌, 쓴 회고, 보낸 엽서가 지워지고 날짜도 오늘로 돌아가요.
+      </Text>
+      <ErrorText error={reset.error} />
+      <Button label="처음 상태로" onPress={handleReset} loading={reset.submitting} />
+      <Button label="취소" variant="secondary" onPress={() => setConfirming(false)} />
     </View>
   );
 }
